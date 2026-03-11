@@ -95,7 +95,7 @@
     swipeResetTimer = setTimeout(function () {
       body.classList.remove('tab-swipe-left', 'tab-swipe-right', 'tab-drag-left', 'tab-drag-right');
       swipeResetTimer = null;
-    }, 420);
+    }, 640);
   }
 
   function positionIndicator() {
