@@ -109,7 +109,7 @@ button {
     padding: 0;
     overflow: hidden;
     border: 0;
-    border-radius: 20px;
+    border-radius: 8px;
     background: #f8fafc;
     box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
     cursor: pointer;
@@ -143,17 +143,31 @@ button {
     position: fixed;
     inset: 0;
     z-index: 100;
-    display: none;
     background: #000;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.26s ease, visibility 0s linear 0.26s;
 }
 
 .photo-story-viewer.open {
-    display: block;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 0.26s ease;
 }
 
 .photo-story-viewer-swiper {
     width: 100%;
     height: 100%;
+    opacity: 0;
+    transform: scale(0.985);
+    transition: opacity 0.26s ease, transform 0.26s ease;
+}
+
+.photo-story-viewer.open .photo-story-viewer-swiper {
+    opacity: 1;
+    transform: scale(1);
 }
 
 .photo-story-viewer-swiper .swiper-slide {
@@ -183,6 +197,15 @@ button {
 .photo-story-viewer-counter {
     position: absolute;
     z-index: 101;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.photo-story-viewer.open .photo-story-viewer-close,
+.photo-story-viewer.open .photo-story-viewer-counter {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .photo-story-viewer-close {

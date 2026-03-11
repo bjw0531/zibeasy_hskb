@@ -10,7 +10,7 @@
     <title>천안하우스 매물 사진 - {{ property.code }}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     {% include 'include.html' %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/view-photos.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/view-photos.css') }}?v=3">
 </head>
 
 <body>
@@ -90,7 +90,7 @@
             totalPhotos: {{ ns.photo_count }}
         };
     </script>
-    <script type="module" src="{{ url_for('static', filename='js/view-photos.js') }}?v=2"></script>
+    <script type="module" src="{{ url_for('static', filename='js/view-photos.js') }}?v=3"></script>
 </body>
 
 </html>
