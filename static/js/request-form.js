@@ -297,24 +297,31 @@
         const container = document.createElement('div');
         const wrap = document.createElement('div');
         wrap.className = 'sf-choices';
+        const nextBtn = createNextBtn();
+        nextBtn.disabled = !answers[step.field];
+
         step.choices.forEach(c => {
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'sf-choice-btn';
+            if (answers[step.field] === c) btn.classList.add('is-selected');
             btn.textContent = c;
             btn.addEventListener('click', () => {
-                btn.classList.add('is-selected');
-                setTimeout(() => {
-                    answers[step.field] = c;
-                    advance();
-                }, 90);
+                answers[step.field] = c;
+                wrap.querySelectorAll('.sf-choice-btn').forEach((choiceBtn) => {
+                    choiceBtn.classList.toggle('is-selected', choiceBtn === btn);
+                });
+                nextBtn.disabled = false;
             });
             wrap.appendChild(btn);
         });
+
         container.appendChild(wrap);
-        if (currentStep > 0) {
-            container.appendChild(createActions());
-        }
+        nextBtn.addEventListener('click', () => {
+            if (!answers[step.field]) return;
+            advance();
+        });
+        container.appendChild(createActions(nextBtn));
         return container;
     }
 
