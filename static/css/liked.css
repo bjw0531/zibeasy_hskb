@@ -818,16 +818,7 @@ body.liked-page .page-header {
   top: auto;
   left: auto;
   right: auto;
-  background: transparent;
-  border-bottom: 0;
-  padding: 10px 20px 0;
-}
-
-body.liked-page .page-header-title {
-  color: #6b7280;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
+  display: none;
 }
 
 body.liked-page .tab-bar-wrap {
@@ -838,7 +829,7 @@ body.liked-page .tab-bar-wrap {
   z-index: 1;
   background: transparent;
   border-bottom: 0;
-  padding: 10px 20px 0;
+  padding: 14px 20px 0;
 }
 
 body.liked-page .tab-bar {
@@ -880,10 +871,6 @@ body.liked-page .tab-btn.active {
   background: #fff1f4;
   border-color: #f5c8d0;
   box-shadow: 0 1px 3px rgba(224, 41, 74, 0.08);
-}
-
-body.liked-page.tab-recent-active .page-header-title {
-  color: #6b7280;
 }
 
 body.liked-page.tab-recent-active .tab-btn.active {
