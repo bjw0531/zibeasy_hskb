@@ -961,6 +961,10 @@ body.liked-page .liked-hero-sub {
   line-height: 1.55;
 }
 
+body.liked-page .hero-copy-liked .liked-hero-title span {
+  color: var(--rose);
+}
+
 body.liked-page .hero-copy-recent .liked-hero-title span {
   color: var(--blue);
 }

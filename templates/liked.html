@@ -8,7 +8,7 @@
 
   <link rel="stylesheet" href="{{ url_for('static', filename='css/bottom-nav.css') }}?v=7">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/list-view.css') }}?v=4">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/liked.css') }}?v=31">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/liked.css') }}?v=32">
 
   <script>
   if ('onpagereveal' in window) {
@@ -78,7 +78,7 @@
     </div>
 
     <div class="liked-hero-copy hero-copy hero-copy-liked {{ 'is-hidden' if current_tab != 'liked' else '' }}" id="hero-copy-liked">
-      <h1 class="liked-hero-title">내가 찜한 매물들</h1>
+      <h1 class="liked-hero-title">내가 <span>찜한</span> 매물들</h1>
       <p class="liked-hero-sub">마음에 든 매물을 모아 빠르게 비교해보세요</p>
     </div>
 
