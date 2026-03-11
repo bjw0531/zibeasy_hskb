@@ -73,6 +73,16 @@ Tech stack commonly used in this project:
   - visual polish third
 - Avoid making the screen feel busy or overwhelming.
 
+## Style Consistency Rules
+- Reuse one visual system across pages: white card surfaces, subtle borders, soft shadows, and rounded corners that stay in a narrow range instead of each section inventing a new style.
+- Keep spacing on a simple rhythm such as 8px, 12px, 16px, 24px. If a section feels cramped, increase spacing before adding more decoration.
+- On small action cards, keep hierarchy consistent:
+  - icon first
+  - title second
+  - supporting description last
+- Titles should stay dark and readable; accent colors should be used mainly for icons, badges, or small emphasis points.
+- Prefer refining an existing card style over introducing gradients, glow effects, or special surfaces that appear only in one section.
+
 ---
 
 ## Real Estate Domain Rules
