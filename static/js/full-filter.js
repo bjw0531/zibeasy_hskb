@@ -59,7 +59,11 @@ window.fullFilterState = {
     // 건물년차 (전체 = 초기값)
     buildingAge: ['all'],
     // 기타사항 (미선택 = 초기값)
-    options: []
+    options: [],
+    // 매물 상태 (기본: 계약가능 매물)
+    propertyStatus: ['available'],
+    // 매물 범위 (기본: 최신 확인 매물)
+    listingScope: ['recent']
 };
 
 // ============ 페이지 열기/닫기 ============
@@ -191,6 +195,26 @@ function syncFilterUIWithState() {
     document.querySelectorAll('[data-filter="options"]').forEach(btn => {
         const value = btn.dataset.value;
         if (state.options.includes(value)) {
+            btn.classList.add('selected');
+        } else {
+            btn.classList.remove('selected');
+        }
+    });
+
+    // 매물 상태 버튼 동기화
+    document.querySelectorAll('[data-filter="property_status"]').forEach(btn => {
+        const value = btn.dataset.value;
+        if (state.propertyStatus.includes(value)) {
+            btn.classList.add('selected');
+        } else {
+            btn.classList.remove('selected');
+        }
+    });
+
+    // 매물 범위 버튼 동기화
+    document.querySelectorAll('[data-filter="listing_scope"]').forEach(btn => {
+        const value = btn.dataset.value;
+        if (state.listingScope.includes(value)) {
             btn.classList.add('selected');
         } else {
             btn.classList.remove('selected');
@@ -555,6 +579,28 @@ function toggleBuildingAgeBtn(btn) {
 }
 
 /**
+ * 단일 선택 필터 버튼 토글 (항상 1개 선택)
+ */
+function toggleSingleSelectBtn(btn) {
+    const filter = btn.dataset.filter;
+    const value = btn.dataset.value;
+    if (!filter || !value) return;
+    if (btn.classList.contains('selected')) return;
+
+    document.querySelectorAll(`[data-filter="${filter}"]`).forEach(b => {
+        b.classList.remove('selected');
+    });
+    btn.classList.add('selected');
+
+    const stateKey = getStateKey(filter);
+    if (stateKey) {
+        window.fullFilterState[stateKey] = [value];
+    }
+
+    updateFilterIconState();
+}
+
+/**
  * 필터 이름을 상태 키로 변환
  */
 function getStateKey(filter) {
@@ -565,7 +611,9 @@ function getStateKey(filter) {
         'room_type': 'roomType',
         'floor': 'floor',
         'building_age': 'buildingAge',
-        'options': 'options'
+        'options': 'options',
+        'property_status': 'propertyStatus',
+        'listing_scope': 'listingScope'
     };
     return keyMap[filter] || null;
 }
@@ -627,6 +675,12 @@ function checkIfFilterActive() {
     // 기타사항: 미선택이 기본값
     if (state.options.length > 0) return true;
 
+    // 매물 상태: 계약가능 매물이 기본값
+    if (state.propertyStatus.length !== 1 || state.propertyStatus[0] !== 'available') return true;
+
+    // 매물 범위: 최신 확인 매물이 기본값
+    if (state.listingScope.length !== 1 || state.listingScope[0] !== 'recent') return true;
+
     return false;
 }
 
@@ -674,7 +728,9 @@ function resetAllFiltersConfirmed() {
         areaMax: 8,
         floor: ['all'],
         buildingAge: ['all'],
-        options: []
+        options: [],
+        propertyStatus: ['available'],
+        listingScope: ['recent']
     };
 
     // UI 초기화 - 거래유형
@@ -727,6 +783,18 @@ function resetAllFiltersConfirmed() {
     document.querySelectorAll('[data-filter="options"]').forEach(btn => {
         btn.classList.remove('selected');
     });
+
+    // UI 초기화 - 매물 상태
+    document.querySelectorAll('[data-filter="property_status"]').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    document.querySelector('[data-filter="property_status"][data-value="available"]').classList.add('selected');
+
+    // UI 초기화 - 매물 범위
+    document.querySelectorAll('[data-filter="listing_scope"]').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    document.querySelector('[data-filter="listing_scope"][data-value="recent"]').classList.add('selected');
 
     // 확인 팝업 닫기 (테마별 검색은 별도 관리 - 전체필터 초기화와 무관)
     closeResetConfirm();
@@ -949,6 +1017,16 @@ function buildFilterParams() {
     // 기타사항
     if (state.options.length > 0) {
         params.options = state.options.join(',');
+    }
+
+    // 매물 상태
+    if (state.propertyStatus.length === 1 && state.propertyStatus[0] !== 'available') {
+        params.property_status = state.propertyStatus[0];
+    }
+
+    // 매물 범위
+    if (state.listingScope.length === 1 && state.listingScope[0] !== 'recent') {
+        params.listing_scope = state.listingScope[0];
     }
 
     // 테마별

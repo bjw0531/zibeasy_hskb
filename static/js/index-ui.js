@@ -592,7 +592,9 @@ window.resetAllFilters = function() {
             areaMin: 0, areaMax: 8,
             floor: ['all'],
             buildingAge: ['all'],
-            options: []
+            options: [],
+            propertyStatus: ['available'],
+            listingScope: ['recent']
         };
         const filterIconBtn = document.getElementById('filterIconBtn');
         if (filterIconBtn) {

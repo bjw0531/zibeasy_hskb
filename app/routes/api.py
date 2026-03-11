@@ -41,6 +41,19 @@ BUS_CATEGORY = 'bus'
 BUS_DATA_FILE = Path(__file__).parent.parent.parent / 'data' / 'bus_stops_cheonan.json'
 BUS_STOPS_DATA = None  # 앱 시작 시 로드됨
 
+
+def _append_listing_visibility_conditions(where_conditions, property_status='available', listing_scope='recent'):
+    """매물 노출 기본 조건을 전체필터 상태에 맞게 추가."""
+    where_conditions.append("state = '등록'")
+
+    if listing_scope != 'all_registered':
+        where_conditions.append("ldate >= DATE_SUB(NOW(), INTERVAL 30 DAY)")
+
+        if property_status != 'all_status':
+            where_conditions.append("(contract IS NULL OR contract = '' OR contract = '계약가능')")
+
+    return where_conditions
+
 def load_bus_data():
     """로컬 버스 데이터 로드"""
     global BUS_STOPS_DATA
@@ -120,7 +133,9 @@ def get_properties():
                 'building_age': request.args.get('building_age', ''),  # 건물년차: 5,10,15,15over
                 'options': request.args.get('options', ''),  # 기타사항: south,internet_included,...
                 'thema': request.args.get('thema', ''),  # ✅ 테마 필터: thema14 등
-                'thema_categories': request.args.get('thema_categories', '')  # ✅ 테마+카테고리 필터: thema10:91
+                'thema_categories': request.args.get('thema_categories', ''),  # ✅ 테마+카테고리 필터: thema10:91
+                'property_status': request.args.get('property_status', 'available'),  # available | all_status
+                'listing_scope': request.args.get('listing_scope', 'recent')  # recent | all_registered
             }
             
             # 지도 화면 영역 파라미터
@@ -176,11 +191,13 @@ def get_properties():
             else:
                 # 지도 등 일반 조회에서는 기존 조건 유지
                 where_conditions = [
-                    "COALESCE(is_deleted, 0) = 0",
-                    "state = '등록'",
-                    "ldate >= DATE_SUB(NOW(), INTERVAL 30 DAY)",  # ✅ 정확히 30일 기준
-                    "(contract IS NULL OR contract = '' OR contract = '계약가능')"
+                    "COALESCE(is_deleted, 0) = 0"
                 ]
+                _append_listing_visibility_conditions(
+                    where_conditions,
+                    property_status=full_filters['property_status'],
+                    listing_scope=full_filters['listing_scope']
+                )
 
                 if filters['si']:
                     where_conditions.append(f"si LIKE :param_{param_index}")

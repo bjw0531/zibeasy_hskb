@@ -1074,7 +1074,9 @@ class MapManager {
                 areaMax: 8,
                 floor: ['all'],
                 buildingAge: ['all'],
-                options: []
+                options: [],
+                propertyStatus: ['available'],
+                listingScope: ['recent']
             };
             // 필터 아이콘 상태 업데이트
             const filterIconBtn = document.getElementById('filterIconBtn');

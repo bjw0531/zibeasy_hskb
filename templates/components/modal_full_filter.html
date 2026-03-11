@@ -222,6 +222,28 @@
                     onclick="toggleFilterBtn(this)">테라스</button>
             </div>
         </div>
+
+        <div class="filter-section-divider" aria-hidden="true"></div>
+
+        <div class="filter-section filter-section--compact">
+            <h3 class="filter-section-title">매물 상태</h3>
+            <div class="filter-buttons-row filter-buttons-row--equal">
+                <button class="filter-btn selected" data-filter="property_status" data-value="available"
+                    onclick="toggleSingleSelectBtn(this)">계약가능 매물</button>
+                <button class="filter-btn" data-filter="property_status" data-value="all_status"
+                    onclick="toggleSingleSelectBtn(this)">계약완료 포함 매물</button>
+            </div>
+        </div>
+
+        <div class="filter-section filter-section--compact">
+            <h3 class="filter-section-title">매물 범위</h3>
+            <div class="filter-buttons-row filter-buttons-row--equal">
+                <button class="filter-btn selected" data-filter="listing_scope" data-value="recent"
+                    onclick="toggleSingleSelectBtn(this)">최신 확인 매물</button>
+                <button class="filter-btn" data-filter="listing_scope" data-value="all_registered"
+                    onclick="toggleSingleSelectBtn(this)">등록된 전체 매물</button>
+            </div>
+        </div>
     </div>
 
     <!-- ✅ 하단 버튼 영역 -->

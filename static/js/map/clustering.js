@@ -1244,6 +1244,28 @@ class ClusteringManager {
         }
 
         return properties.filter(property => {
+            const listingScope = filterParams.listing_scope || 'recent';
+            const propertyStatus = filterParams.property_status || 'available';
+            const propertyState = property.state || '';
+            const propertyContract = property.contract || '';
+
+            if (propertyState !== '등록') return false;
+
+            if (listingScope !== 'all_registered') {
+                const ldateRaw = property.ldate;
+                const ldate = ldateRaw ? new Date(String(ldateRaw).replace(' ', 'T')) : null;
+                const threshold = new Date(Date.now() - (30 * 24 * 60 * 60 * 1000));
+                if (!(ldate instanceof Date) || Number.isNaN(ldate.getTime()) || ldate < threshold) {
+                    return false;
+                }
+
+                if (propertyStatus !== 'all_status') {
+                    if (!(propertyContract === '' || propertyContract === '계약가능')) {
+                        return false;
+                    }
+                }
+            }
+
             // 거래 유형 필터
             if (filterParams.transaction_type) {
                 const type = filterParams.transaction_type;

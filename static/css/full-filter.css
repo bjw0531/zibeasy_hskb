@@ -103,6 +103,17 @@
     border-bottom: none;
 }
 
+.filter-section--compact {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.filter-section-divider {
+    height: 1px;
+    margin: 6px 0 2px;
+    background: #e5e7eb;
+}
+
 .filter-section-header {
     display: flex;
     align-items: center;
@@ -190,6 +201,11 @@
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
+}
+
+.filter-buttons-row--equal .filter-btn {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
 }
 
 .filter-btn {
