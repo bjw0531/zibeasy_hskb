@@ -371,7 +371,6 @@
                 state.budget_deposit = DEPOSIT_OPTIONS[idx] || DEPOSIT_OPTIONS[0];
                 depositValue.textContent = formatBudgetValue(state.budget_deposit);
                 setRangeProgress(depositRange);
-                restartAnimation(depositWrap, 'is-reactive');
                 restartAnimation(depositValue, 'is-pulsing');
                 restartAnimation(depositRange, 'is-bumping');
             });
@@ -404,7 +403,6 @@
                 state.budget_monthly = MONTHLY_OPTIONS[idx] || MONTHLY_OPTIONS[0];
                 monthlyValue.textContent = formatBudgetValue(state.budget_monthly);
                 setRangeProgress(monthlyRange);
-                restartAnimation(monthlyWrap, 'is-reactive');
                 restartAnimation(monthlyValue, 'is-pulsing');
                 restartAnimation(monthlyRange, 'is-bumping');
             });
