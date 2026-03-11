@@ -16,7 +16,8 @@
     ];
     const TYPE_OPTIONS = ['원룸', '투베이', '투룸', '쓰리룸', '기타'];
     const DEPOSIT_OPTIONS = [
-        ...Array.from({ length: 30 }, (_, i) => String((i + 1) * 100)),
+        '100', '150', '200', '250', '300',
+        ...Array.from({ length: 27 }, (_, i) => String((i + 4) * 100)),
         '기타'
     ];
     const MONTHLY_OPTIONS = [
