@@ -1032,8 +1032,8 @@ body.liked-page .panel-recent .btn-clear-all {
 body.liked-page #liked-list,
 body.liked-page #recent-list {
   grid-template-columns: 1fr 1fr;
-  column-gap: 8px;
-  row-gap: 10px;
+  column-gap: 4px;
+  row-gap: 6px;
   padding: 10px 10px 16px;
   max-width: 644px;
 }
@@ -1075,8 +1075,8 @@ body.liked-page #recent-list .lv-card-thumb::after {
 
 body.liked-page #liked-list .lv-card-info,
 body.liked-page #recent-list .lv-card-info {
-  padding: 12px 12px 16px;
-  gap: 6px;
+  padding: 9px 9px 12px;
+  gap: 4px;
 }
 
 body.liked-page #liked-list .lv-card-num,
@@ -1115,9 +1115,9 @@ body.liked-page #recent-list .lv-card-price .lv-price-mgmt {
 @media (max-width: 380px) {
   body.liked-page #liked-list,
   body.liked-page #recent-list {
-    column-gap: 7px;
-    row-gap: 10px;
-    padding: 8px 8px 14px;
+    column-gap: 4px;
+    row-gap: 6px;
+    padding: 8px 8px 12px;
   }
 }
 
