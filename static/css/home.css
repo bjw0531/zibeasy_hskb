@@ -155,16 +155,19 @@ body {
 }
 
 /* 큰 버튼 행 */
-.home-buttons-row-big {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+.home-feature-flex {
+    display: flex;
+    flex-wrap: wrap;
     gap: 12px;
 }
 
 /* 큰 버튼 */
 .home-btn-big {
+    flex: 1 1 calc(50% - 6px);
+    min-width: calc(50% - 6px);
+    min-height: 112px;
     background: #ffffff;
-    border: 1px solid #ddd;
+    border: 1px solid #ff5055;
     border-radius: 14px;
     padding: 25px 12px;
     display: flex;
@@ -173,6 +176,8 @@ body {
     gap: 8px;
     text-decoration: none;
     color: inherit;
+    box-sizing: border-box;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
 .home-btn-big:hover {
@@ -188,7 +193,7 @@ body {
 /* Primary CTA — 브랜드 컬러 배경으로 시선 유도 */
 .home-btn-big.btn-primary {
     background: #fff;
-    border-color: #ddd;
+    border-color: #ff5055;
 }
 
 .home-btn-big.btn-primary .btn-text {
@@ -197,6 +202,25 @@ body {
 
 .home-btn-big.btn-primary .btn-icon svg {
     fill: #ff5055;
+}
+
+.home-btn-big.home-btn-request {
+    border-color: #e7edf5;
+    background: linear-gradient(180deg, #ffffff 0%, #fff7f8 100%);
+}
+
+.home-btn-big.home-btn-request .btn-text {
+    color: #333;
+}
+
+.home-btn-big.home-btn-request .btn-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff0f4;
 }
 
 
@@ -404,7 +428,7 @@ body {
 
 .home-menu-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px 6px;
 }
 
@@ -479,6 +503,13 @@ body {
 
     .home-btn-big .btn-text {
         font-size: 16px;
+    }
+}
+
+@media (max-width: 380px) {
+    .home-btn-big {
+        padding: 22px 11px;
+        min-height: 104px;
     }
 }
 

@@ -24,7 +24,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Tilt+Warp&display=swap" rel="stylesheet">
     <link rel="icon" href="/static/images/icon.png" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bottom-nav.css') }}?v=7">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}?v=6">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}?v=7">
 
 
     <!-- ✅ View Transitions 활성화: include.html 없는 home.html에 직접 추가
@@ -102,7 +102,7 @@
 
         <!-- ✅ 핵심 CTA: 큰 버튼 2개 -->
         <div class="home-buttons">
-            <div class="home-buttons-row-big">
+            <div class="home-feature-flex">
                 <!-- 리스트로 매물 보기 (/list 로 이동) -->
                 <a href="/list" class="home-btn-big" id="btnListView">
                     <span class="btn-text">리스트로<br>매물 보기</span>
@@ -125,6 +125,16 @@
                         <svg width="40" height="40" viewBox="0 -960 960 960" fill="#ff5055">
                             <path
                                 d="M480-80q-106 0-173-33.5T240-200q0-35 29-61t80-41l23 76q-17 5-31 12.5T322-200q13 16 60 28t98 12q51 0 98.5-12t60.5-28q-5-6-19-13.5T589-226l23-76q51 15 79.5 41t28.5 61q0 53-67 86.5T480-80Zm0-120q-11 0-20-6.5T447-224q-23-71-58-119t-68-92q-32-44-55.5-91T242-642q0-100 69-169t169-69q100 0 169 69t69 169q0 69-23 116t-56 91q-32 44-67.5 92T513-224q-4 11-13 17.5t-20 6.5Zm0-357q35 0 60-25t25-60q0-35-25-60t-60-25q-35 0-60 25t-25 60q0 35 25 60t60 25Z" />
+                        </svg>
+                    </span>
+                </a>
+
+                <a href="/request" class="home-btn-big home-btn-request" id="btnFindHome">
+                    <span class="btn-text">집 구하기<br>/ 내놓기</span>
+                    <span class="btn-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ff5055" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4.8 11.3l5.9-5.3a1.9 1.9 0 0 1 2.6 0l5.9 5.3a2.1 2.1 0 0 1 .7 1.6v5.4a2.4 2.4 0 0 1-2.4 2.4h-11a2.4 2.4 0 0 1-2.4-2.4v-5.4a2.1 2.1 0 0 1 .7-1.6z"/>
+                            <path d="M9.2 20.2v-2.7a2.8 2.8 0 0 1 5.6 0v2.7"/>
                         </svg>
                     </span>
                 </a>
@@ -198,14 +208,6 @@
                 <span class="menu-text">나침반</span>
             </a>
 
-            <!-- 집 구하기/내놓기 — 하단 탭바 홈 아이콘과 동일 -->
-            <a href="/request" class="home-menu-item" id="btnFindHome">
-                <svg class="menu-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M4.8 11.3l5.9-5.3a1.9 1.9 0 0 1 2.6 0l5.9 5.3a2.1 2.1 0 0 1 .7 1.6v5.4a2.4 2.4 0 0 1-2.4 2.4h-11a2.4 2.4 0 0 1-2.4-2.4v-5.4a2.1 2.1 0 0 1 .7-1.6z"/>
-                    <path d="M9.2 20.2v-2.7a2.8 2.8 0 0 1 5.6 0v2.7"/>
-                </svg>
-                <span class="menu-text">집 구하기<br>/ 내놓기</span>
-            </a>
             </div>
         </div>
 
