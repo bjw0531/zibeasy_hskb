@@ -972,7 +972,7 @@ body.liked-page.tab-recent-active .liked-hero-sub {
 body.liked-page .liked-content-shell {
   margin-top: 0;
   border-radius: 0;
-  background: #f6f7fa;
+  background: #f4f6f9;
   color: #111111;
   min-height: calc(100dvh - 230px);
   padding-top: 10px;
@@ -1032,8 +1032,8 @@ body.liked-page .panel-recent .btn-clear-all {
 body.liked-page .liked-grid {
   grid-template-columns: 1fr 1fr;
   column-gap: 12px;
-  row-gap: 16px;
-  padding: 10px 12px 18px;
+  row-gap: 22px;
+  padding: 12px 12px 22px;
   max-width: 644px;
 }
 
@@ -1046,6 +1046,7 @@ body.liked-page .liked-grid .lv-card {
     0 6px 18px rgba(15, 23, 42, 0.04);
   overflow: hidden;
   margin-bottom: 0;
+  background-clip: padding-box;
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease,
@@ -1103,8 +1104,8 @@ body.liked-page .liked-grid .lv-card-price .lv-price-mgmt {
 @media (max-width: 380px) {
   body.liked-page .liked-grid {
     column-gap: 10px;
-    row-gap: 14px;
-    padding: 8px 10px 16px;
+    row-gap: 18px;
+    padding: 10px 10px 18px;
   }
 }
 
