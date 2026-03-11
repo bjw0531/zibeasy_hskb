@@ -1005,11 +1005,11 @@ body.liked-page.tab-dragging .liked-content-shell {
 
 body.liked-page .list-header {
   padding: 0 14px;
-  min-height: 40px;
+  min-height: 24px;
   align-items: center;
   line-height: 1.2;
   border-bottom: 0;
-  margin-bottom: 2px;
+  margin-bottom: 0;
 }
 
 body.liked-page .list-count {
