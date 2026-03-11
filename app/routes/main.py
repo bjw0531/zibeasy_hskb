@@ -527,6 +527,36 @@ def _fetch_previews(ids):
         return {}
 
 
+def _prepare_property_view_data(property: dict) -> dict:
+    """상세/사진 페이지에서 공통으로 쓰는 매물 표시용 필드 정리."""
+    property['price_text'] = get_price_text(property)
+    _price_parts = property['price_text'].split(' ', 1) if property['price_text'] else []
+    property['price_type'] = _price_parts[0] if _price_parts else ''
+    property['price_only'] = _price_parts[1] if len(_price_parts) > 1 else ''
+
+    try:
+        property['public_money'] = int(property.get('public_money') or 0) // 10000
+    except Exception:
+        property['public_money'] = 0
+
+    property['last_edit'] = time_ago(property.get('ldate'))
+    _add_public_money_details(property)
+    property['title'] = re.sub(r'\[.*?\]', '', property.get('title') or '').strip()
+
+    if property.get('movie'):
+        match = re.search(r'src=\\?["\'](.*?)\\?["\']', property['movie'])
+        property['youtube_url'] = match.group(1).replace('\\', '') if match else None
+    else:
+        property['youtube_url'] = None
+
+    if property.get('youtube_url'):
+        video_id = property['youtube_url'].split('/')[-1].split('?')[0]
+        property['youtube_thumb'] = f"https://img.youtube.com/vi/{video_id}/0.jpg"
+        property['video_id'] = video_id
+
+    return property
+
+
 def _render_saved_properties_page(default_tab='liked'):
     """관심목록/최근 본 매물 통합 페이지 렌더링."""
     active_tab = request.args.get('tab', default_tab)
@@ -963,43 +993,7 @@ def view_property(code):
 
             logging.info(f"매물 조회 성공: code={code}")
 
-            # 가격 텍스트 추가 (maxsplit=1 으로 IndexError 방지)
-            property['price_text'] = get_price_text(property)
-            _price_parts = property['price_text'].split(' ', 1) if property['price_text'] else []
-            property['price_type'] = _price_parts[0] if _price_parts else ''
-            property['price_only'] = _price_parts[1] if len(_price_parts) > 1 else ''
-            
-            # 관리비 만원 단위로 변경
-            property['public_money'] = int(property['public_money']) // 10000
-            
-            # 수정 시간 확인
-            property['last_edit'] = time_ago(property['ldate'])
-            
-            # 관리비 상세 보기 정보
-            _add_public_money_details(property)
-            
-            # 제목에서 대괄호 정규식으로 제거
-            property['title'] = re.sub(r'\[.*?\]', '', property['title']).strip()
-
-            if property.get('movie'):
-                # 역슬래시(\)가 있든 없든 src= 뒤의 URL을 추출하는 정규식
-                # 따옴표 앞에 \ 가 붙어있을 가능성까지 고려: \\?["']
-                match = re.search(r'src=\\?["\'](.*?)\\?["\']', property['movie'])
-                
-                if match:
-                    # 추출된 URL에서 혹시 남아있을지 모르는 역슬래시 제거
-                    property['youtube_url'] = match.group(1).replace('\\', '')
-                else:
-                    property['youtube_url'] = None
-
-            if property.get('youtube_url'):
-                # URL에서 마지막 ID값만 추출 (예: QM9gu0i_dWo)
-                video_id = property['youtube_url'].split('/')[-1].split('?')[0]
-                property['youtube_thumb'] = f"https://img.youtube.com/vi/{video_id}/0.jpg"
-                property['video_id'] = video_id
-
-            else:
-                property['youtube_url'] = None
+            property = _prepare_property_view_data(property)
 
             resp = make_response(render_template(
                 'view.html',
@@ -1055,6 +1049,34 @@ def view_property(code):
 
     except Exception as e:
         logging.error(f"매물 조회 오류: {str(e)}")
+        return "요청을 처리하는 중 오류가 발생했습니다.", 500
+
+
+@bp.route('/view/<code>/photos')
+def view_property_photos(code):
+    """매물 사진 전용 페이지."""
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(
+                text("""
+                    SELECT *
+                    FROM sswp_maemul
+                    WHERE code = :code
+                      AND COALESCE(is_deleted, 0) = 0
+                    LIMIT 1
+                """),
+                {'code': code}
+            )
+            property_data = result.fetchone()
+
+        if not property_data:
+            return f"매물번호 {code}를 찾을 수 없습니다.", 404
+
+        property = _prepare_property_view_data(dict(property_data._mapping))
+        return render_template('view_photos.html', property=property)
+
+    except Exception as e:
+        logging.error(f"매물 사진 페이지 조회 오류: {str(e)}")
         return "요청을 처리하는 중 오류가 발생했습니다.", 500
 
 
