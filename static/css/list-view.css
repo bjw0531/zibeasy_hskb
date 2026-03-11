@@ -148,6 +148,10 @@ body.lv-body {
     display: none;
 }
 
+.lv-filter-bar .filter-icon-btn {
+    box-shadow: none;
+}
+
 /* ── 필터 칩 공통 스타일 ──────────────────────────────────── */
 .lv-filter-chip {
     display: flex;
