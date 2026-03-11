@@ -16,8 +16,7 @@
     ];
     const TYPE_OPTIONS = ['원룸', '투베이', '투룸', '쓰리룸', '기타'];
     const DEPOSIT_OPTIONS = [
-        '100', '150', '200', '250', '300',
-        ...Array.from({ length: 27 }, (_, i) => String((i + 4) * 100)),
+        ...Array.from({ length: 30 }, (_, i) => String((i + 1) * 100)),
         '기타'
     ];
     const MONTHLY_OPTIONS = [
@@ -172,6 +171,28 @@
     function formatBudgetValue(value) {
         if (!value || value === '기타') return value || '';
         return `${value}만원`;
+    }
+
+    function setRangeProgress(input) {
+        const min = Number(input.min || 0);
+        const max = Number(input.max || 0);
+        const value = Number(input.value || 0);
+        const percent = max > min ? ((value - min) / (max - min)) * 100 : 0;
+        input.style.setProperty('--range-progress', `${percent}%`);
+    }
+
+    function createRangeMeta(minLabel, maxLabel) {
+        const meta = document.createElement('div');
+        meta.className = 'fh-range-meta';
+
+        const left = document.createElement('span');
+        left.textContent = minLabel;
+        const right = document.createElement('span');
+        right.textContent = maxLabel;
+
+        meta.appendChild(left);
+        meta.appendChild(right);
+        return meta;
     }
 
     function initDatePicker(input, onChange) {
@@ -342,9 +363,12 @@
                 const idx = Number(depositRange.value);
                 state.budget_deposit = DEPOSIT_OPTIONS[idx] || DEPOSIT_OPTIONS[0];
                 depositValue.textContent = formatBudgetValue(state.budget_deposit);
+                setRangeProgress(depositRange);
             });
+            setRangeProgress(depositRange);
             depositWrap.appendChild(depositHead);
             depositWrap.appendChild(depositRange);
+            depositWrap.appendChild(createRangeMeta('100만원', '3000만원+'));
 
             const monthlyWrap = document.createElement('div');
             monthlyWrap.className = 'fh-range-wrap';
@@ -369,9 +393,12 @@
                 const idx = Number(monthlyRange.value);
                 state.budget_monthly = MONTHLY_OPTIONS[idx] || MONTHLY_OPTIONS[0];
                 monthlyValue.textContent = formatBudgetValue(state.budget_monthly);
+                setRangeProgress(monthlyRange);
             });
+            setRangeProgress(monthlyRange);
             monthlyWrap.appendChild(monthlyHead);
             monthlyWrap.appendChild(monthlyRange);
+            monthlyWrap.appendChild(createRangeMeta('20만원', '120만원'));
 
             field.appendChild(depositWrap);
             field.appendChild(monthlyWrap);
