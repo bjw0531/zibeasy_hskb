@@ -205,7 +205,7 @@ body {
 .home-btn-big.home-btn-request {
     grid-column: 1 / -1;
     width: calc((100% - 12px) / 2);
-    justify-self: center;
+    justify-self: start;
 }
 
 
