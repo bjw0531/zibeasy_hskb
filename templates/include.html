@@ -1,0 +1,68 @@
+<!-- viewport는 index.html/view.html에서 설정 (중복 방지) -->
+<meta name="csrf-token" content="{{ csrf_token }}">
+
+<script>
+(function () {
+  if (!window.fetch) return;
+  var tokenMeta = document.querySelector('meta[name="csrf-token"]');
+  var csrfToken = tokenMeta ? tokenMeta.getAttribute('content') : '';
+  if (!csrfToken) return;
+
+  var originalFetch = window.fetch;
+  var unsafeMethods = { POST: true, PUT: true, PATCH: true, DELETE: true };
+
+  window.fetch = function (input, init) {
+    init = init || {};
+    var method = String(init.method || 'GET').toUpperCase();
+    if (!unsafeMethods[method]) {
+      return originalFetch(input, init);
+    }
+
+    var rawUrl = (typeof input === 'string') ? input : (input && input.url ? input.url : '');
+    try {
+      var urlObj = new URL(rawUrl || window.location.href, window.location.href);
+      if (urlObj.origin === window.location.origin) {
+        var headers = new Headers(init.headers || {});
+        if (!headers.has('X-CSRF-Token')) {
+          headers.set('X-CSRF-Token', csrfToken);
+        }
+        init.headers = headers;
+        if (!init.credentials) init.credentials = 'same-origin';
+      }
+    } catch (e) {}
+
+    return originalFetch(input, init);
+  };
+})();
+</script>
+
+<!-- ✅ [2단계] Pretendard Variable 폰트 — preload로 우선 로드, Google Fonts 제거 -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preload" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+<!-- ❌ [2단계 제거] Noto Sans KR + Tilt Warp Google Fonts — Pretendard로 통일, CDN 연결 1개 감소 -->
+
+<!-- ✅ [1단계] Tailwind CSS 빌드된 정적 파일 — 런타임 컴파일 제거 (기존 CDN 스크립트 대체) -->
+<!-- ❌ 기존: <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"> (매 로드마다 실시간 컴파일) -->
+<!-- ❌ 기존: FOUC 방지용 body visibility:hidden 패턴 (정적 CSS로 불필요) -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.output.css') }}?v=2">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=3">
+
+<!-- ✅ View Transitions: pagereveal 지원 브라우저에서만 @view-transition 활성화
+     WebView는 CSS @view-transition을 인식하지만 pagereveal을 지원하지 않아
+     폴백 애니메이션(pushState+popstate)이 방해받는 문제 방지 -->
+<script>
+if ('onpagereveal' in window) {
+    var s = document.createElement('style');
+    s.textContent = '@view-transition { navigation: auto; }';
+    document.head.appendChild(s);
+}
+</script>
+<!-- ✅ [3단계] Lucide 아이콘 — unpkg@latest → jsdelivr 버전 고정 (캐시 히트율 향상) -->
+<!-- ❌ 기존: <script src="https://unpkg.com/lucide@latest"> (@latest = 매번 버전 확인, 느린 CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+
+<link rel="icon" href="{{ url_for('static', filename='images/icon.png') }}"/>
+<!-- ✅ 로그인 상태 확인 + 찜 목록 서버 동기화 (모든 페이지 공통) -->
+<script src="{{ url_for('static', filename='js/auth.js') }}?v=1" defer></script>

@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>천안하우스 - 천안 원룸 전문 플랫폼</title>
+    <meta name="description" content="공인중개사가 직접 개발 및 운영하는 중복 매물 없는 천안 원룸 전문 플랫폼">
+
+    <!-- Open Graph 메타 태그 (링크 공유 시 미리보기) -->
+    <meta property="og:title" content="천안하우스 - 천안 원룸 전문 플랫폼">
+    <meta property="og:description" content="공인중개사가 직접 개발 및 운영하는 중복 매물 없는 천안 원룸 전문 플랫폼">
+    <meta property="og:image" content="https://house.zibeasy.com/static/images/icon.png">
+    <meta property="og:url" content="https://house.zibeasy.com">
+    <meta property="og:type" content="website">
+
+    <!-- 필요한 리소스만 직접 로드 (TailwindCSS/Lucide CDN 불필요) -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tilt+Warp&display=swap" rel="stylesheet">
+    <link rel="icon" href="/static/images/icon.png" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bottom-nav.css') }}?v=7">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}?v=5">
+
+
+    <!-- ✅ View Transitions 활성화: include.html 없는 home.html에 직접 추가
+         다른 페이지들과 동일하게 pagereveal 지원 브라우저에서만 @view-transition 활성화 -->
+    <script>
+    if ('onpagereveal' in window) {
+        /* @view-transition { navigation: auto } → 크로스 페이드 효과 활성화 */
+        var s = document.createElement('style');
+        s.textContent = '@view-transition { navigation: auto; }';
+        document.head.appendChild(s);
+
+        /* 도착 시: navDirection 읽어서 방향 클래스 부여 */
+        window.addEventListener('pagereveal', function(e) {
+            var dir = sessionStorage.getItem('navDirection');
+            if (dir && e.viewTransition) {
+                /* ✅ 뒤로가기 시 bottom-nav를 root 스냅샷에 포함
+                   → 모바일에서 VT 종료 후 bottom-nav 아래서 올라오는 현상 방지 */
+                if (dir === 'slide-left') {
+                    var bn = document.querySelector('.bottom-nav');
+                    if (bn) bn.style.viewTransitionName = 'none';
+                }
+                document.documentElement.classList.add('vt-' + dir);
+                e.viewTransition.finished.then(function() {
+                    document.documentElement.classList.remove('vt-' + dir);
+                });
+            }
+            sessionStorage.removeItem('navDirection');
+        });
+
+        /* 떠날 때: 브라우저 뒤로가기/스와이프 시 방향 자동 설정 */
+        window.addEventListener('pageswap', function(e) {
+            if (!e.viewTransition || !e.activation) return;
+            if (sessionStorage.getItem('navDirection')) return;
+            if (e.activation.navigationType === 'traverse') {
+                sessionStorage.setItem('navDirection', 'slide-down');
+            }
+        });
+    }
+    </script>
+</head>
+
+<body>
+    <!-- 메인 컨테이너 -->
+    <div class="home-container">
+
+        <!-- 상단 헤더: 검색창 + 로고 -->
+        <div class="home-header">
+            <!-- 검색창: 클릭 시 지도 화면 검색창으로 이동 (동일한 동작 보장) -->
+            <div class="home-search" onclick="location.href='/map?search=open'">
+                <input type="text" placeholder="어느 지역 방을 찾으세요?" readonly>
+                <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                </svg>
+            </div>
+
+            <!-- 로고 -->
+            <div class="home-logo">
+                <div class="logo-main">천안하우스</div>
+                <div class="logo-sub">by bangteam</div>
+            </div>
+        </div>
+
+        <!-- ✅ 롤링 텍스트: 세로 클립 슬라이드 순환 (헤더 아래 배치) -->
+        <div class="rolling-text">
+            <div class="rolling-text-track" id="rollingTrack">
+                <div class="rolling-text-item"><span class="rolling-highlight">공인중개사가 직접 만든</span> 원룸 플랫폼</div>
+                <div class="rolling-text-item"><span class="rolling-highlight">중복/허위 매물 없이</span> 실시간 업데이트</div>
+                <div class="rolling-text-item"><span class="rolling-highlight">사진+영상 제공</span>으로 공간 구조를 한눈에</div>
+                <!-- 무한 루프를 위한 첫 번째 문구 복제 -->
+                <div class="rolling-text-item"><span class="rolling-highlight">공인중개사가 직접 만든</span> 원룸 플랫폼</div>
+            </div>
+        </div>
+
+        <!-- ✅ 핵심 CTA: 큰 버튼 2개 -->
+        <div class="home-buttons">
+            <div class="home-buttons-row-big">
+                <!-- 리스트로 매물 보기 (/list 로 이동) -->
+                <a href="/list" class="home-btn-big" id="btnListView">
+                    <span class="btn-text">리스트로<br>매물 보기</span>
+                    <span class="btn-icon">
+                        <svg width="40" height="40" viewBox="0 0 22 22" fill="none" stroke="#ff5055" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="6.2" cy="7" r="1.25" fill="#ff5055" stroke="none"></circle>
+                            <circle cx="6.2" cy="12" r="1.25" fill="#ff5055" stroke="none"></circle>
+                            <circle cx="6.2" cy="17" r="1.25" fill="#ff5055" stroke="none"></circle>
+                            <path d="M10.2 7h8"></path>
+                            <path d="M10.2 12h8"></path>
+                            <path d="M10.2 17h8"></path>
+                        </svg>
+                    </span>
+                </a>
+
+                <!-- 지도에서 매물 찾기 — Primary CTA -->
+                <a href="/map" class="home-btn-big btn-primary" id="btnMapView">
+                    <span class="btn-text">지도에서<br>매물 찾기</span>
+                    <span class="btn-icon">
+                        <svg width="40" height="40" viewBox="0 -960 960 960" fill="#ff5055">
+                            <path
+                                d="M480-80q-106 0-173-33.5T240-200q0-35 29-61t80-41l23 76q-17 5-31 12.5T322-200q13 16 60 28t98 12q51 0 98.5-12t60.5-28q-5-6-19-13.5T589-226l23-76q51 15 79.5 41t28.5 61q0 53-67 86.5T480-80Zm0-120q-11 0-20-6.5T447-224q-23-71-58-119t-68-92q-32-44-55.5-91T242-642q0-100 69-169t169-69q100 0 169 69t69 169q0 69-23 116t-56 91q-32 44-67.5 92T513-224q-4 11-13 17.5t-20 6.5Zm0-357q35 0 60-25t25-60q0-35-25-60t-60-25q-35 0-60 25t-25 60q0 35 25 60t60 25Z" />
+                        </svg>
+                    </span>
+                </a>
+            </div>
+
+            <!-- 중간 이어보기 섹션 -->
+            <section class="home-continue" aria-label="이어보기">
+                <div class="home-continue-head">
+                    <h2>이어보기</h2>
+                    <p>자주 보는 메뉴를 바로 이동하세요</p>
+                </div>
+
+                <div class="home-continue-grid">
+                    <a href="/liked?tab=liked" class="home-continue-item home-continue-item-liked">
+                        <span class="continue-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+                            </svg>
+                        </span>
+                        <span class="continue-title">관심목록</span>
+                        <span class="continue-desc">찜한 매물 빠르게 확인</span>
+                    </a>
+
+                    <a href="/recents?tab=recent" class="home-continue-item home-continue-item-recent">
+                        <span class="continue-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M13 3a9 9 0 1 0 0 18A9 9 0 0 0 13 3zm0 16a7 7 0 1 1 0-14A7 7 0 0 1 13 19zm.5-11H12v6l5.25 3.15.75-1.23-4.5-2.67V8z"></path>
+                            </svg>
+                        </span>
+                        <span class="continue-title">최근 본 매물</span>
+                        <span class="continue-desc">방문했던 매물 다시 보기</span>
+                    </a>
+                </div>
+            </section>
+        </div>
+
+        <!-- ✅ 하단 메뉴 카드 — 3개로 정리 (이용약관 삭제, 오류제보 푸터로 이동) -->
+        <div class="home-menu-card">
+            <div class="home-menu-grid">
+            <!-- 앱 다운로드 — 라인 아이콘 -->
+            <a href="javascript:void(0)" class="home-menu-item" id="btnAppDownload" onclick="goToAppStore()">
+                <svg class="menu-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                <span class="menu-text">앱<br>다운로드</span>
+            </a>
+
+            <!-- 중개보수 계산기 — 라인 아이콘 -->
+            <a href="javascript:void(0)" class="home-menu-item" id="btnCalculator" onclick="openFeeCalc(event)">
+                <svg class="menu-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="4" y="2" width="16" height="20" rx="2"/>
+                    <line x1="8" y1="6" x2="16" y2="6"/>
+                    <line x1="8" y1="10" x2="10" y2="10"/>
+                    <line x1="14" y1="10" x2="16" y2="10"/>
+                    <line x1="8" y1="14" x2="10" y2="14"/>
+                    <line x1="14" y1="14" x2="16" y2="14"/>
+                    <line x1="8" y1="18" x2="10" y2="18"/>
+                    <line x1="14" y1="18" x2="16" y2="18"/>
+                </svg>
+                <span class="menu-text">중개보수<br>계산기</span>
+            </a>
+
+            <!-- 나침반 — 라인 아이콘 -->
+            <a href="/compass" class="home-menu-item" id="btnCompassPage">
+                <svg class="menu-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor" stroke="none"/>
+                </svg>
+                <span class="menu-text">나침반</span>
+            </a>
+
+            <!-- 집 구하기/내놓기 — 하단 탭바 홈 아이콘과 동일 -->
+            <a href="/request" class="home-menu-item" id="btnFindHome">
+                <svg class="menu-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4.8 11.3l5.9-5.3a1.9 1.9 0 0 1 2.6 0l5.9 5.3a2.1 2.1 0 0 1 .7 1.6v5.4a2.4 2.4 0 0 1-2.4 2.4h-11a2.4 2.4 0 0 1-2.4-2.4v-5.4a2.1 2.1 0 0 1 .7-1.6z"/>
+                    <path d="M9.2 20.2v-2.7a2.8 2.8 0 0 1 5.6 0v2.7"/>
+                </svg>
+                <span class="menu-text">집 구하기<br>/ 내놓기</span>
+            </a>
+            </div>
+        </div>
+
+
+        <!-- ─ 중개보수 계산기 오버레이 ─ -->
+        <div id="feeCalcOverlay">
+            <div id="feeCalcBar">
+                <button class="fc-close-btn" onclick="closeFeeCalc()" aria-label="닫기">
+                    <!-- X 아이콘 -->
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+                <span class="fc-title">중개보수 계산기</span>
+            </div>
+            <iframe id="feeCalcFrame" src="" title="중개보수 계산기" loading="lazy"></iframe>
+        </div>
+
+        <!-- 하단 설명 텍스트 (2줄만 표시) -->
+        <div class="home-footer">
+            <div class="footer-title">
+                <span>천안하우스 <span style="font-size:12px; font-weight:400; color:#999;">by bangteam</span></span>
+                <a href="tel:010-6560-1250" class="footer-contact-link">전화: <strong>010-6560-1250</strong></a>
+            </div>
+            <div class="footer-desc">
+                <span>Copyright © 2010-2026 천안하우스 All rights reserved.</span>
+            </div>
+        </div>
+    </div>
+
+    {% set active_nav = 'home' %}
+    {% include 'components/bottom-nav.html' %}
+
+    <script>
+        /* ───────────────────────────────────────────────────
+           중개보수 계산기 오버레이 열기/닫기
+        ___________________________________________________ */
+        function openFeeCalc(event) {
+            var overlay = document.getElementById('feeCalcOverlay');
+            var frame = document.getElementById('feeCalcFrame');
+
+            // 버튼(또는 클릭된 요소)의 화면 중앙 좌표 계산
+            var btn = document.getElementById('btnCalculator');
+            var rect = btn.getBoundingClientRect();
+            var originX = Math.round(rect.left + rect.width / 2);
+            var originY = Math.round(rect.top + rect.height / 2);
+
+            // transform-origin을 버튼 중심으로 설정
+            overlay.style.transformOrigin = originX + 'px ' + originY + 'px';
+
+            // 열 때마다 항상 새로 로드 (닫기 시 about:blank로 초기화했으므로)
+            frame.src = '/fee-calc/';
+
+            // 혹시 닫힘 애니메이션 중이면 제거
+            overlay.classList.remove('fee-closing');
+            overlay.style.display = 'flex';
+
+            // 한 프레임 후 애니메이션 클래스 추가 (display flex 반영 후)
+            requestAnimationFrame(function () {
+                requestAnimationFrame(function () {
+                    overlay.classList.add('fee-opening');
+                });
+            });
+
+            // 애니메이션 끝나면 클래스 정리
+            overlay.addEventListener('animationend', function onOpen() {
+                overlay.removeEventListener('animationend', onOpen);
+                overlay.classList.remove('fee-opening');
+            });
+
+            // 뒤로가기 지원
+            history.pushState({ modal: 'feeCalc' }, '', '');
+            window._feeCalcHistoryPushed = true;
+        }
+
+        function closeFeeCalc() {
+            var overlay = document.getElementById('feeCalcOverlay');
+            var btn = document.getElementById('btnCalculator');
+            var rect = btn.getBoundingClientRect();
+            var originX = Math.round(rect.left + rect.width / 2);
+            var originY = Math.round(rect.top + rect.height / 2);
+
+            /* 닫기 즉시 iframe 초기화 — animationend 콜백 의존 제거
+               애니메이션이 오버레이를 가리는 동안 리셋되므로 사용자에게 보이지 않음 */
+            var frame = document.getElementById('feeCalcFrame');
+            if (frame) frame.src = 'about:blank';
+
+            overlay.style.transformOrigin = originX + 'px ' + originY + 'px';
+            overlay.classList.remove('fee-opening');
+            overlay.classList.add('fee-closing');
+
+            overlay.addEventListener('animationend', function onClose() {
+                overlay.removeEventListener('animationend', onClose);
+                overlay.classList.remove('fee-closing');
+                overlay.style.display = 'none';
+            });
+
+            if (window._feeCalcHistoryPushed) {
+                window._feeCalcHistoryPushed = false;
+                history.back();
+            }
+        }
+
+        // 뒤로가기로 닫기
+        window.addEventListener('popstate', function (e) {
+            var overlay = document.getElementById('feeCalcOverlay');
+            if (overlay && overlay.style.display === 'flex') {
+                /* 뒤로가기로 닫힐 때도 즉시 iframe 초기화 */
+                var frame = document.getElementById('feeCalcFrame');
+                if (frame) frame.src = 'about:blank';
+
+                var btn = document.getElementById('btnCalculator');
+                var rect = btn.getBoundingClientRect();
+                overlay.style.transformOrigin =
+                    Math.round(rect.left + rect.width / 2) + 'px ' +
+                    Math.round(rect.top + rect.height / 2) + 'px';
+                overlay.classList.add('fee-closing');
+                overlay.addEventListener('animationend', function onClose() {
+                    overlay.removeEventListener('animationend', onClose);
+                    overlay.classList.remove('fee-closing');
+                    overlay.style.display = 'none';
+                });
+                window._feeCalcHistoryPushed = false;
+            }
+        });
+
+        /* 지도에서 매물 찾기 버튼 클릭 시 즉시 페이지 이동
+           - 스피너는 /map 페이지 HTML에 하드코딩되어 즉시 표시됨 (이중 스피너 방지)
+           - 클릭 순간 SDK preload 시작 (방법 B) + 즉시 이동 */
+        document.getElementById('btnMapView').addEventListener('click', function (e) {
+            e.preventDefault();
+
+            /* ✅ 클릭 즉시 네이버 지도 SDK preload 시작
+               - /map 페이지 로드 시 이미 캐시된 파일을 즉시 사용 → SDK 블로킹 지연 단축 */
+            var preloadLink = document.createElement('link');
+            preloadLink.rel = 'preload';
+            preloadLink.href = 'https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=zjivkpcd8a';
+            preloadLink.as = 'script';
+            document.head.appendChild(preloadLink);
+
+            /* 즉시 이동 — /map 페이지의 스피너가 로딩을 처리 */
+            window.location.href = '/map';
+        });
+
+        /* ───────────────────────────────────────────────────
+           앱 다운로드 — OS별 스토어 자동 분기
+           Android → Google Play / iOS → App Store / 기타 → 토스트 안내
+        ___________________________________________________ */
+        function goToAppStore() {
+            var ua = navigator.userAgent || navigator.vendor || window.opera;
+            if (/android/i.test(ua)) {
+                /* Android: 구글 플레이 */
+                window.location.href = 'https://play.google.com/store/apps/details?id=com.housekb.v2';
+            } else if (/iPad|iPhone|iPod/i.test(ua) && !window.MSStream) {
+                /* iOS: 앱 스토어 */
+                window.location.href = 'https://itunes.apple.com/app/id6475390756';
+            } else {
+                /* PC 등 기타: 안내 토스트 */
+                showPwaToast('모바일 기기에서 이용해 주세요 📱');
+            }
+        }
+
+
+        /**
+         * 롤링 텍스트 — 세로 클립 슬라이드 순환
+         * 3개 문구 + 복제된 첫 문구(4번째)로 끊김 없는 무한 루프 구현
+         */
+        (function initRollingText() {
+            var track = document.getElementById('rollingTrack');
+            if (!track) return;
+
+            var totalItems = 3;
+            var currentIndex = 0;
+            var itemHeight = 24;
+            var interval = 3000;
+            var isTransitioning = false;
+
+            setInterval(function () {
+                if (isTransitioning) return;
+                isTransitioning = true;
+                currentIndex++;
+
+                track.style.transform = 'translateY(-' + (currentIndex * itemHeight) + 'px)';
+
+                if (currentIndex >= totalItems) {
+                    track.addEventListener('transitionend', function reset() {
+                        track.removeEventListener('transitionend', reset);
+                        track.style.transition = 'none';
+                        track.style.transform = 'translateY(0)';
+                        currentIndex = 0;
+                        requestAnimationFrame(function () {
+                            requestAnimationFrame(function () {
+                                track.style.transition = 'transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1)';
+                                isTransitioning = false;
+                            });
+                        });
+                    });
+                } else {
+                    setTimeout(function () { isTransitioning = false; }, 850);
+                }
+            }, interval);
+        })();
+
+    </script>
+
+    <!-- 오시는 길 지도 팝업 컴포넌트 -->
+    {% include 'components/map_popup.html' %}
+</body>
+
+</html>

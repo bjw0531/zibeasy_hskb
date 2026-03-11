@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>천안하우스 매물 지도</title>
+    <meta name="description" content="천안 지역 매물 검색 지도 서비스">
+
+    <!-- Open Graph 메타 태그 (링크 공유 시 미리보기) -->
+    <meta property="og:title" content="천안하우스 매물 지도">
+    <meta property="og:description" content="천안 지역 매물 검색 지도 서비스">
+    <meta property="og:image" content="https://house.zibeasy.com/static/images/icon.png">
+    <meta property="og:url" content="https://house.zibeasy.com">
+    <meta property="og:type" content="website">
+
+    <link rel="icon" href="data:,">
+
+    <!-- 네이버 지도 SDK -->
+    <script src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=zjivkpcd8a"></script>
+
+    <!-- ✅ 브라우저 설정 (다른 JS보다 먼저 로드) -->
+    <script src="{{ url_for('static', filename='js/browser-config.js') }}?v=10"></script>
+
+    <!-- ✅ 재사용 로딩 스피너 컴포넌트 CSS -->
+    <link rel="stylesheet" href="/static/css/loading-spinner.css">
+
+    <!-- CSS 파일들 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}?v=7">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/heart.css') }}?v=7">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/map.css') }}?v=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/list.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/detail.css') }}?v=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}?v=5">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/full-filter.css') }}?v=1">
+    <!-- ✅ 퀵 필터 스타일 (역 주변, 테마별 검색 모달) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/quick-filter.css') }}?v=1">
+    <!-- ✅ 매물 목록 페이지 버튼 스타일 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/property-list-page.css') }}?v=8">
+    <!-- ✅ 하단 내비게이션 바 스타일 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bottom-nav.css') }}?v=7">
+    {% include 'include.html' %}
+
+    <!-- ✅ 방향별 VT 애니메이션: 목록에서 뒤로가기로 돌아올 때 방향 적용 -->
+    <script>
+        (function () {
+            /* 로딩 오버레이 표시 헬퍼 */
+            function showOverlay() {
+                var el = document.getElementById('global-loading-overlay');
+                if (el) el.style.display = 'flex';
+            }
+
+            if ('onpagereveal' in window) {
+                window.addEventListener('pagereveal', function (e) {
+                    /* ✅ VT 스냅샷 캡처 전 오버레이 즉시 표시
+                       → VT 애니메이션 중 빈 지도 컨텐츠가 노출되는 깜빡임 방지
+                       → 오버레이가 하단 탭바 영역은 가리지 않아 탭바는 항상 먼저 보임
+                          (CSS에서 bottom 값으로 탭바 높이만큼 제외됨) */
+                    showOverlay();
+
+                    var dir = sessionStorage.getItem('navDirection');
+
+                    if (dir && e.viewTransition) {
+                        /* 방향 있는 슬라이드 VT — 완료 후 방향 클래스 제거 */
+                        document.documentElement.classList.add('vt-' + dir);
+                        e.viewTransition.finished.then(function () {
+                            document.documentElement.classList.remove('vt-' + dir);
+                        });
+                    }
+                    /* e.viewTransition 없는 경우(직접 URL 접근)에도 위에서 showOverlay() 호출됨 */
+
+                    sessionStorage.removeItem('navDirection');
+                });
+            } else {
+                /* VT 미지원 브라우저 → 로딩 오버레이 즉시 표시 */
+                showOverlay();
+            }
+        })();
+    </script>
+
+    <!-- ✅ 드래그 패널 숨기기 + 새 버튼 표시 (되돌리려면 이 style 블록만 삭제) -->
+    <style>
+        .list-panel {
+            display: none !important;
+        }
+
+        /* ✅ 지도 페이지 전용: 로딩 오버레이가 하단 탭바를 가리지 않도록 bottom 제한
+           탭바 높이(52px) + iOS safe-area 만큼 오버레이 하단을 올려
+           VT 애니메이션 중에도 탭바가 항상 먼저 보이게 함 */
+        #global-loading-overlay {
+            bottom: calc(52px + env(safe-area-inset-bottom));
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ✅ 재사용 로딩 스피너
+         display:none 으로 시작 → pagereveal 핸들러에서 VT 스냅샷 캡처 전 즉시 표시
+         (VT 애니메이션 중 빈 지도 컨텐츠 노출 방지 + 탭바 영역은 bottom CSS로 제외) -->
+    <div id="global-loading-overlay" style="display:none">
+        <div class="gls-ring"></div>
+    </div>
+
+    <!-- 로딩 화면 (기존 코드 보존 — 새 스피너로 대체되어 CSS로만 숨김) -->
+    <div id="loading" class="loading-screen" style="display:none">
+        <div class="loading-spinner"></div>
+        <div class="loading-text"></div>
+    </div>
+
+    <!-- 통합 검색창 (상단) -->
+    <div class="search-bar-container min-w-10">
+        <div class="search-bar min-w-10" id="searchBar">
+            <input type="text" id="unifiedSearch" class="unified-search-input flex-1 min-w-0"
+                placeholder="매물번호/지역/역으로 검색" readonly onclick="openSearchPage()">
+            <!-- ✅ SVG 돋보기 아이콘 -->
+            <div class="block">
+                <svg class="block w-5 h-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35"></path>
+                </svg>
+            </div>
+        </div>
+
+        <!-- ✅ 매물종류 선택박스 추가 -->
+        <div class="property-type-selector" id="propertyTypeSelector" onclick="openPropertyTypeModal()">
+            <span class="property-type-text" id="propertyTypeText">매물종류</span>
+            <span class="property-type-arrow">▼</span>
+        </div>
+    </div>
+
+    <!-- ✅ 필터 버튼 컨테이너 (필터 아이콘 + 추천 매물 + 테마별 매물) -->
+    <div class="station-filter-container">
+        <!-- ✅ 필터 아이콘 버튼 -->
+        <button class="filter-icon-btn" id="filterIconBtn" onclick="openFullFilterPage()" aria-label="필터">
+            <img src="/static/images/icon-filter.png" alt="필터" width="18" height="18" style="transform: rotate(90deg);">
+        </button>
+        <!-- ✅ 역 주변 버튼 -->
+        <button class="station-floating-btn" id="stationFilterBtn" onclick="openStationModal()" aria-label="역 주변">
+            <span id="stationFilterText" class="station-btn-text">역 주변</span>
+            <span class="station-arrow">▼</span>
+        </button>
+        <!-- ✅ 테마별 검색 버튼 -->
+        <button class="station-floating-btn" id="recommendFilterBtn" onclick="openRecommendModal()" aria-label="테마별 검색">
+            <span id="recommendFilterText" class="station-btn-text">테마별 검색</span>
+            <span class="station-arrow">▼</span>
+        </button>
+    </div>
+
+    <!-- ✅ 매물종류 선택 모달 -->
+    <!-- ✅ 매물종류 선택 모달 (components/modal_property_type.html로 분리) -->
+    {% include 'components/modal_property_type.html' %}
+
+    <!-- 지도 -->
+    <div id="map">
+        <!-- ✅ 지도 중심 크로스헤어: 매물목록 거리순 정렬의 기준점 표시 -->
+        <!-- ✅ 기본 상태: 꺼짐 (crosshair-hidden + crosshair-user-hidden) -->
+        <div id="mapCrosshair" class="map-crosshair crosshair-hidden crosshair-user-hidden" aria-hidden="true">
+            <svg class="map-crosshair-svg" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- 상단 틱 -->
+                <line x1="22" y1="4" x2="22" y2="15" stroke="white" stroke-width="2" stroke-linecap="round" />
+                <!-- 하단 틱 -->
+                <line x1="22" y1="29" x2="22" y2="40" stroke="white" stroke-width="2" stroke-linecap="round" />
+                <!-- 좌측 틱 -->
+                <line x1="4" y1="22" x2="15" y2="22" stroke="white" stroke-width="2" stroke-linecap="round" />
+                <!-- 우측 틱 -->
+                <line x1="29" y1="22" x2="40" y2="22" stroke="white" stroke-width="2" stroke-linecap="round" />
+                <!-- 중앙 원 (채움) -->
+                <circle cx="22" cy="22" r="3.5" fill="white" />
+                <!-- 펄스 파문 (애니메이션) -->
+                <circle cx="22" cy="22" r="3.5" fill="none" stroke="white" stroke-width="1.5" class="crosshair-pulse" />
+            </svg>
+            <div class="map-crosshair-label">거리 기준</div>
+        </div>
+        <style>
+            /* ── 크로스헤어 위치: 기본값 (JS로 덮어씌워짐)
+           실제 위치는 body 끝단 스크립트에서 동적 계산:
+           top = 50vh + (topUIHeight - bottomNavHeight) / 2
+           → map.getCenter() 기준점과 정확히 일치 ── */
+            .map-crosshair {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                /* JS 실행 전 임시 기본값 */
+                transform: translate(-50%, -50%);
+                pointer-events: none;
+                /* 지도 터치/클릭 통과 */
+                z-index: 50;
+                width: 44px;
+                height: 44px;
+                user-select: none;
+            }
+
+            /* ── SVG 아이콘: 흰색 + 드롭섀도우 (어떤 배경에서도 선명) ── */
+            .map-crosshair-svg {
+                display: block;
+                width: 44px;
+                height: 44px;
+                filter:
+                    drop-shadow(0 1px 4px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 1px rgba(0, 0, 0, 0.35));
+                opacity: 0.88;
+            }
+
+            /* ── 라벨: 블러 글래스모피즘 뱃지 ── */
+            .map-crosshair-label {
+                position: absolute;
+                left: 50%;
+                top: calc(100% + 5px);
+                transform: translateX(-50%);
+                font-size: 10px;
+                font-weight: 600;
+                color: rgba(255, 255, 255, 0.95);
+                background: rgba(0, 0, 0, 0.38);
+                backdrop-filter: blur(6px);
+                -webkit-backdrop-filter: blur(6px);
+                padding: 2px 8px 3px;
+                border-radius: 20px;
+                letter-spacing: 0.6px;
+                white-space: nowrap;
+                opacity: 0.88;
+                line-height: 1.4;
+            }
+
+            /* ── 펄스 파문 애니메이션 ── */
+            .crosshair-pulse {
+                transform-box: fill-box;
+                transform-origin: center;
+                animation: crosshair-pulse 3s ease-out infinite;
+            }
+
+            @keyframes crosshair-pulse {
+                0% {
+                    transform: scale(1);
+                    opacity: 0.9;
+                }
+
+                55% {
+                    transform: scale(3.6);
+                    opacity: 0;
+                }
+
+                100% {
+                    transform: scale(3.6);
+                    opacity: 0;
+                }
+            }
+
+            /* ── 역 주변 필터 활성화 시 숨김 (역이 기준점이 되므로) ── */
+            .map-crosshair.crosshair-hidden {
+                opacity: 0;
+                transition: opacity 0.25s ease;
+            }
+
+            .map-crosshair:not(.crosshair-hidden) {
+                transition: opacity 0.25s ease;
+            }
+        </style>
+    </div>
+    <style>
+        #map {
+            /* 초기 폴백값 — JS adjustMapBottom()이 즉시 실제 값으로 덮어씀 */
+            height: calc(100dvh - 120px - env(safe-area-inset-bottom)) !important;
+            bottom: 0 !important;
+        }
+
+        /* ✅ 로고/거리자 위치 조정은 map.js adjustLogoPosition()에서 JS로만 처리
+           CSS 셀렉터([style*="bottom"], nth-last-child)는 거리자 내부 요소까지 잡아
+           눈금선이 깨지는 부작용이 있어 제거 */
+    </style>
+
+
+    <!-- ✅ 역 선택 모달 (components/modal_station.html로 분리) -->
+    {% include 'components/modal_station.html' %}
+
+    <!-- ✅ 테마별 검색 모달 (components/modal_recommend.html로 분리) -->
+    {% include 'components/modal_recommend.html' %}
+
+    <!-- ✅ 역/테마 관련 CSS는 quick-filter.css로 분리됨 -->
+
+    <!-- 지도 로딩 인디케이터 제거됨 -->
+
+    <!-- ✅ 새로고침 중 오버레이 -->
+    <div id="refreshOverlay" class="refresh-overlay">
+        <div class="refresh-overlay-content">
+            <div class="refresh-spinner"></div>
+            <span>새로고침 중...</span>
+        </div>
+    </div>
+
+
+    <!-- ✅ 플로팅 버튼 그룹 (새로고침, GPS, 피드백 - components/floating_buttons.html로 분리) -->
+    {% include 'components/floating_buttons.html' %}
+
+    <!-- ✅ 하단 매물 목록 패널 + 목록 이동 버튼 (components/list_panel.html로 분리) -->
+    {% include 'components/list_panel.html' %}
+
+    <!-- ✅ 전체 필터 페이지 + 초기화 확인 팝업 (components/modal_full_filter.html로 분리) -->
+    {% include 'components/modal_full_filter.html' %}
+
+
+    <!-- ✅ 검색 전용 페이지 (components/modal_search_page.html로 분리) -->
+    {% include 'components/modal_search_page.html' %}
+
+    <!-- ✅ 매물 상세 패널 (components/panel_detail.html로 분리) -->
+    {% include 'components/panel_detail.html' %}
+
+    <!-- JavaScript 파일들 -->
+    <!-- 애니메이션 -->
+    <script src="{{ url_for('static', filename='js/animations.js') }}"></script>
+
+    <!-- 지도 모듈들 로드 -->
+    <script src="{{ url_for('static', filename='js/map/gps.js') }}?v=2"></script>
+    <script src="{{ url_for('static', filename='js/map/markers.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/map/clustering.js') }}?v=13"></script>
+    <script src="{{ url_for('static', filename='js/map/events.js') }}?v=4"></script>
+    <script src="{{ url_for('static', filename='js/map/stations.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/map.js') }}?v=16"></script>
+    <script src="{{ url_for('static', filename='js/list.js') }}?v=8"></script>
+    <script src="{{ url_for('static', filename='js/detail.js') }}?v=8"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}?v=9"></script>
+
+    <script src="/static/js/liked.js?v=9"></script>
+
+    <!-- 스피너 애니메이션 제거됨 -->
+
+    <!-- ✅ UI 함수 모음 (js/index-ui.js로 분리) -->
+    <script src="{{ url_for('static', filename='js/index-ui.js') }}?v=3"></script>
+    <!--
+    [BACKUP-B1] 원본 인라인 스크립트 — 문제 발생 시 위 script src를 제거하고 아래 주석 해제
+    <script>
+        console.log('🎯 index.html 스크립트 로드됨');
+
+        // ✅ 관심목록 상태 복구 함수 추가
+        function restoreFromLikedFilter() {
+            if (window.appManager && window.appManager.mapManager) {
+                window.appManager.mapManager.restoreFromLikedFilter();
+            }
+        }
+
+        // 검색 페이지 열기/닫기
+        function openSearchPage() {
+            // ✅ 관심목록 상태 복구
+            restoreFromLikedFilter();
+
+            // ✅ 검색 모드 초기화
+            if (window.appManager) {
+                window.appManager.isSearchMode = false;
+            }
+
+            // ✅ 이전 검색 결과 타이틀 초기화 (지역명 숨기기)
+            const locationElement = document.getElementById('propertyLocation');
+            if (locationElement) {
+                locationElement.textContent = '';
+                locationElement.style.display = 'none';
+            }
+
+            // ✅ 지역 검색 상태 초기화
+            window.currentLocationSearch = null;
+
+            // ✅ 역 필터 해제 (이전 역 검색 결과 초기화)
+            if (window.stationManager && window.stationManager.isStationFilterActive) {
+                window.stationManager.clearStationFilter();
+            }
+
+            // ✅ 동 선택 해제 (동 경계, 마커 색상, 패널 헤더 초기화)
+            clearDongSelectionGlobal();
+
+
+
+            // ✅ 히스토리에 상태 추가 (뒤로가기 지원)
+            history.pushState({ page: 'search' }, '', '');
+            window.searchPageHistoryPushed = true;  // ✅ 히스토리 푸시 여부 추적
+
+            // ✅ 검색 페이지 열기
+            document.getElementById('searchPage').classList.add('active');
+
+            // ✅ 검색창 초기화 및 포커스
+            const searchInput = document.getElementById('searchPageInput');
+            if (searchInput) {
+                searchInput.value = '';  // 입력값 초기화
+                searchInput.focus();     // 포커스
+            }
+        }
+
+        function closeSearchPage() {
+            // ✅ 뒤로가기로 닫힌 게 아니면 히스토리 뒤로가기
+            if (!window.isClosingByBackButton && window.searchPageHistoryPushed) {
+                window.searchPageHistoryPushed = false;
+                history.back();
+            }
+            document.getElementById('searchPage').classList.remove('active');
+
+            // ✅ 지도 영역 기반 매물 개수 다시 계산
+            if (window.appManager && window.appManager.mapManager) {
+                const mapManager = window.appManager.mapManager;
+                if (mapManager.map && mapManager.properties && mapManager.properties.length > 0) {
+                    const bounds = mapManager.map.getBounds();
+                    const sw = bounds.getSW();
+                    const ne = bounds.getNE();
+
+                    const visibleProperties = mapManager.properties.filter(property => {
+                        const lat = parseFloat(property.lat);
+                        const lng = parseFloat(property.lng);
+                        return lat >= sw.lat() && lat <= ne.lat() &&
+                            lng >= sw.lng() && lng <= ne.lng();
+                    });
+
+                    // 매물 개수 업데이트
+                    const countElement = document.getElementById('propertyCount');
+                    if (countElement) {
+                        countElement.textContent = visibleProperties.length;
+                    }
+                }
+            }
+        }
+
+        // 매물 목록 토글
+        function toggleListPanel() {
+            if (window.appManager) {
+                window.appManager.toggleListPanel();
+            }
+        }
+
+        // ✅ 역 모달 열기
+        function openStationModal() {
+            // 역 필터가 이미 활성화되어 있으면 해제
+            if (window.stationManager && window.stationManager.isStationFilterActive) {
+                window.stationManager.clearStationFilter();
+                // return 제거 - 해제 후 바로 모달 다시 열기
+            }
+            // ✅ 히스토리에 상태 추가 (뒤로가기 지원)
+            history.pushState({ modal: 'station' }, '', '');
+            window.stationModalHistoryPushed = true;  // ✅ 히스토리 푸시 여부 추적
+            document.getElementById('stationModal').classList.add('active');
+        }
+
+        // ✅ 역 모달 닫기
+        function closeStationModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            // ✅ 뒤로가기로 닫힌 게 아니면 히스토리 뒤로가기
+            if (!window.isClosingByBackButton && window.stationModalHistoryPushed) {
+                window.stationModalHistoryPushed = false;
+                history.back();
+            }
+            document.getElementById('stationModal').classList.remove('active');
+        }
+
+        // ✅ 모달에서 역 선택
+        function selectStationFromModal(stationId) {
+            if (window.stationManager) {
+                window.stationManager.selectStationFromModal(stationId);
+            }
+        }
+
+        // ✅ StationManager 초기화 (앱 로드 후)
+        document.addEventListener('DOMContentLoaded', () => {
+            // appManager가 준비된 후 StationManager 초기화
+            const checkAndInit = () => {
+                if (window.appManager && window.appManager.mapManager && window.appManager.mapManager.map) {
+                    window.initStationManager();
+                } else {
+                    setTimeout(checkAndInit, 100); // 100ms마다 체크
+                }
+            };
+            setTimeout(checkAndInit, 0); // ✅ 즉시 체크 시작
+
+            // ✅ 홈 화면 검색창에서 넘어온 경우: 검색 페이지 자동 오픈
+            if (new URLSearchParams(location.search).get('search') === 'open') {
+                // URL에서 파라미터 제거 (뒤로가기 시 홈으로 돌아가도록)
+                history.replaceState(null, '', '/map');
+                // openSearchPage 함수 준비될 때까지 대기 후 실행
+                const waitAndOpen = () => {
+                    if (typeof openSearchPage === 'function') {
+                        openSearchPage();
+                    } else {
+                        setTimeout(waitAndOpen, 100);
+                    }
+                };
+                setTimeout(waitAndOpen, 300);
+            }
+        });
+
+        // ✅ 동 선택 해제 전역 함수
+        function clearDongSelectionGlobal() {
+            // 동 검색 상태 초기화
+            if (window.currentDongSearch) {
+                window.currentDongSearch = null;
+            }
+
+            // 동 경계 폴리곤 제거
+            if (window.dongBoundaryManager) {
+                window.dongBoundaryManager.clearBoundary();
+            }
+
+            // 동 마커 색상 반전 효과 해제 및 마커 재렌더링
+            if (window.appManager && window.appManager.mapManager &&
+                window.appManager.mapManager.clusteringManager) {
+                window.appManager.mapManager.clusteringManager.selectedDongName = null;
+                // ✅ 마커 재렌더링 (색상 원상복구)
+                window.appManager.mapManager.clusteringManager.showClusteredMarkers();
+            }
+
+            // 패널 헤더의 지역명 숨기기
+            const locationElement = document.getElementById('propertyLocation');
+            if (locationElement) {
+                locationElement.textContent = '';
+                locationElement.style.display = 'none';
+            }
+
+            console.log('🏠 동 선택 해제됨 (전역)');
+        }
+
+        // ✅ 역 선택 해제 전역 함수
+        function clearStationSelectionGlobal() {
+            if (window.stationManager && window.stationManager.isStationFilterActive) {
+                window.stationManager.clearStationFilter();
+                console.log('🚇 역 선택 해제됨 (전역)');
+            }
+        }
+
+        // ========================================
+        // ✅ 테마별 검색 기능
+        // ========================================
+
+        // 현재 활성화된 테마 필터
+        window.currentThemeFilter = null;
+
+        // 테마별 검색 모달 열기
+        // ✅ 팝업 열릴 때 기존 테마 필터 즉시 초기화
+        function openRecommendModal() {
+            // ✅ 기존 적용된 테마가 있으면 선택 상태 복원
+            if (window.currentThemeFilter && window.currentThemeFilter.types && window.currentThemeFilter.types.length > 0) {
+                window.selectedThemes = [...window.currentThemeFilter.types];
+
+                // 버튼 선택 상태 복원
+                document.querySelectorAll('.theme-btn').forEach(btn => {
+                    const type = btn.getAttribute('onclick')?.match(/,\s*'(\w+)'/)?.[1];
+                    if (type && window.selectedThemes.includes(type)) {
+                        btn.classList.add('selected');
+                    } else {
+                        btn.classList.remove('selected');
+                    }
+                });
+                console.log('🎯 기존 테마 선택 복원:', window.selectedThemes);
+            } else {
+                // ✅ 적용된 테마 없으면 초기 상태
+                window.selectedThemes = [];
+                document.querySelectorAll('.theme-btn').forEach(btn => {
+                    btn.classList.remove('selected');
+                });
+            }
+
+            // ✅ 히스토리에 상태 추가 (뒤로가기 지원)
+            history.pushState({ modal: 'recommend' }, '', '');
+            window.recommendModalHistoryPushed = true;  // ✅ 히스토리 푸시 여부 추적
+            document.getElementById('recommendModal').classList.add('active');
+        }
+
+        // 테마별 검색 모달 닫기
+        function closeRecommendModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            // ✅ 뒤로가기로 닫힌 게 아니면 히스토리 뒤로가기
+            if (!window.isClosingByBackButton && window.recommendModalHistoryPushed) {
+                window.recommendModalHistoryPushed = false;
+                history.back();
+            }
+            document.getElementById('recommendModal').classList.remove('active');
+        }
+
+        // ✅ 테마 유형 선택 (클릭 효과 포함)
+        // 테마별 db 컬럼명 및 라벨 매핑
+        // 테마별 표시 문구 매핑 (팝업 문구와 버튼/패널 표시 문구 분리)
+        const themeConfig = {
+            'realtime': { column: 'good6', label: '실시간 추천' },
+            'premium': { column: 'thema1', label: '신축 고급형' },
+            'budget_oneroom': { column: 'thema9', label: '알뜰 원룸' },
+            'budget_twobay': { column: 'thema10', label: '알뜰 투베이/투룸' },
+            'deposit100': { column: 'thema2', label: '보 100 가능' },
+            'big_oneroom': { column: 'thema8', label: '큰 원룸' },
+            'separate_oneroom': { column: 'thema11', label: '분리형 원룸' },
+            'arch_twobay': { column: 'thema4', label: '아치형 투베이' },
+            'living_twobay': { column: 'thema12', label: '분리형 투베이' },
+            'wide_tworoom': { column: 'thema13', label: '거실있는 투룸' },
+            'unique': { column: 'thema5', label: '독특한 집' }
+        };
+
+        // ✅ 선택된 테마 목록 (단일 선택)
+        window.selectedThemes = [];
+
+        // ✅ 테마 옵션 토글 (단일 선택 - 하나만 선택 가능)
+        function toggleThemeOption(btn, type) {
+            const index = window.selectedThemes.indexOf(type);
+
+            if (index > -1) {
+                // 이미 선택됨 → 해제
+                window.selectedThemes.splice(index, 1);
+                btn.classList.remove('selected');
+            } else {
+                // ✅ 기존 선택 모두 해제
+                document.querySelectorAll('.theme-btn.selected').forEach(b => b.classList.remove('selected'));
+                window.selectedThemes = [];
+
+                // 새로 선택
+                window.selectedThemes.push(type);
+                btn.classList.add('selected');
+            }
+
+            console.log('📌 선택된 테마:', window.selectedThemes);
+        }
+        window.toggleThemeOption = toggleThemeOption;  // ✅ 전역 노출
+
+        // ✅ 테마 초기화 버튼 - 확인 팝업 표시 (테마 모달은 유지)
+        function resetThemeSelection() {
+            // 확인 팝업 표시 ("필터를 초기화 하시겠습니까?") - 테마 모달은 닫지 않음
+            showResetConfirm();
+        }
+        window.resetThemeSelection = resetThemeSelection;  // ✅ 전역 노출
+
+        // ✅ (레거시) 단일 선택용 함수 - 하위 호환성 유지
+        async function selectThemeType(btn, type) {
+            btn.classList.add('clicked');
+
+            setTimeout(async () => {
+                // ✅ 테마 적용 중 플래그 설정 (popstate에서 동/역 해제 방지)
+                window.isApplyingThemeFilter = true;
+                closeRecommendModal();
+                setTimeout(() => { window.isApplyingThemeFilter = false; }, 300);
+
+                btn.classList.remove('clicked');
+
+                const config = themeConfig[type];
+                if (config) {
+                    await applyThemeFilterSingle(type, config.column, config.label);
+                } else {
+                    console.error('알 수 없는 테마 유형:', type);
+                }
+            }, 150);
+        }
+
+        // ✅ 테마 필터 적용 함수 (적용하기 버튼 클릭 시)
+        async function applyThemeFilter() {
+            // 선택된 테마가 없으면 안내
+            if (window.selectedThemes.length === 0) {
+                alert('테마를 하나 이상 선택해주세요.');
+                return;
+            }
+
+            // ✅ 테마 적용 중 플래그 설정 (popstate에서 동/역 해제 방지)
+            window.isApplyingThemeFilter = true;
+
+            // 모달 닫기
+            closeRecommendModal();
+
+            // ✅ popstate 비동기 처리 후 플래그 해제
+            setTimeout(() => { window.isApplyingThemeFilter = false; }, 300);
+
+            // 선택된 테마들의 컬럼, 라벨, 카테고리 수집
+            const columns = [];
+            const labels = [];
+            const themeCategories = [];  // 테마별 카테고리 조건
+
+            window.selectedThemes.forEach(type => {
+                const config = themeConfig[type];
+                if (config) {
+                    // column:category 형태로 저장 (카테고리가 있는 경우)
+                    if (config.category) {
+                        themeCategories.push(`${config.column}:${config.category}`);
+                    } else {
+                        columns.push(config.column);
+                    }
+                    labels.push(config.label);
+                }
+            });
+
+            // 라벨 조합 (1개면 그대로, 2개 이상이면 "00개 테마")
+            let displayLabel;
+            if (labels.length === 1) {
+                displayLabel = labels[0];
+            } else {
+                displayLabel = `${labels.length}개 테마`;
+            }
+
+            try {
+                console.log(`🎯 테마 필터 적용: ${displayLabel}`);
+
+                // ✅ 좌표 클러스터 선택 해제 (동/역 선택은 유지)
+                if (window.appManager && window.appManager.mapManager && window.appManager.mapManager.clusteringManager) {
+                    if (window.appManager.mapManager.clusteringManager.selectedClusterIndex !== null) {
+                        window.appManager.mapManager.clusteringManager.selectedClusterIndex = null;
+                        const locationElement = document.getElementById('propertyLocation');
+                        if (locationElement) {
+                            locationElement.textContent = '';
+                            locationElement.style.display = 'none';
+                        }
+                        console.log('📍 테마 선택으로 인해 좌표 클러스터 선택 해제');
+                    }
+                }
+
+                // ✅ 동/역 선택은 유지 (테마 필터는 동/역 선택 해제 안 함)
+
+                // 테마 필터 상태 저장 (복수 선택 지원)
+                window.currentThemeFilter = {
+                    types: window.selectedThemes,
+                    columns: columns,
+                    themeCategories: themeCategories,
+                    label: displayLabel
+                };
+
+                // 버튼 활성화 표시
+                document.getElementById('recommendFilterBtn').classList.add('active');
+                document.getElementById('recommendFilterText').textContent = displayLabel;
+
+                // ✅ 현재 지도 위치/줌 유지하면서 매물 로드
+                if (window.appManager && window.appManager.mapManager) {
+                    const mapManager = window.appManager.mapManager;
+
+                    // 테마 필터 파라미터 저장 (복수 컬럼 쉼표로 연결)
+                    mapManager.themeFilterParams = {
+                        thema: columns.length > 0 ? columns.join(',') : null,
+                        thema_categories: themeCategories.length > 0 ? themeCategories.join(',') : null
+                    };
+
+                    // 캐시 초기화
+                    if (mapManager.propertyCache) {
+                        mapManager.propertyCache.clear();
+                    }
+
+                    // 현재 지도 영역에서 매물 로드 (위치/줌 변경 없음)
+                    await mapManager.loadPropertiesInBounds();
+
+                    console.log(`✅ 테마 필터 적용 완료: ${displayLabel}`);
+                }
+
+                // ✅ 선택 초기화 제거 - 다시 열 때 기존 선택 상태 복원용으로 유지
+
+            } catch (error) {
+                console.error('테마 필터 적용 오류:', error);
+                alert('필터 적용 중 오류가 발생했습니다.');
+            }
+        }
+        window.applyThemeFilter = applyThemeFilter;  // ✅ 전역 노출
+
+        // ✅ 단일 테마 필터 적용 함수 (레거시 지원)
+        async function applyThemeFilterSingle(type, column, label) {
+            try {
+                console.log(`🎯 ${label} 필터 적용 중...`);
+
+                // ✅ 좌표 클러스터 선택 해제 (동/역 선택은 유지)
+                if (window.appManager && window.appManager.mapManager && window.appManager.mapManager.clusteringManager) {
+                    if (window.appManager.mapManager.clusteringManager.selectedClusterIndex !== null) {
+                        window.appManager.mapManager.clusteringManager.selectedClusterIndex = null;
+                        const locationElement = document.getElementById('propertyLocation');
+                        if (locationElement) {
+                            locationElement.textContent = '';
+                            locationElement.style.display = 'none';
+                        }
+                        console.log('📍 테마 선택으로 인해 좌표 클러스터 선택 해제');
+                    }
+                }
+
+                // ✅ 동/역 선택은 유지 (테마 필터는 동/역 선택 해제 안 함)
+
+                // 테마 필터 상태 저장
+                window.currentThemeFilter = { type, column, label };
+
+                // 버튼 활성화 표시
+                document.getElementById('recommendFilterBtn').classList.add('active');
+                document.getElementById('recommendFilterText').textContent = label;
+
+                // ✅ 현재 지도 위치/줌 유지하면서 매물 로드
+                if (window.appManager && window.appManager.mapManager) {
+                    const mapManager = window.appManager.mapManager;
+
+                    // 테마 필터 파라미터 저장
+                    mapManager.themeFilterParams = { thema: column };
+
+                    // 캐시 초기화
+                    if (mapManager.propertyCache) {
+                        mapManager.propertyCache.clear();
+                    }
+
+                    // 현재 지도 영역에서 매물 로드 (위치/줌 변경 없음)
+                    await mapManager.loadPropertiesInBounds();
+
+                    console.log(`✅ ${label} 필터 적용 완료`);
+                }
+
+            } catch (error) {
+                console.error('테마 필터 적용 오류:', error);
+                alert('필터 적용 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 테마 필터 해제
+        function clearThemeFilter() {
+            window.currentThemeFilter = null;
+            document.getElementById('recommendFilterBtn').classList.remove('active');
+            document.getElementById('recommendFilterText').textContent = '테마별 검색';
+
+            // 테마 필터 파라미터 제거
+            if (window.appManager && window.appManager.mapManager) {
+                window.appManager.mapManager.themeFilterParams = null;
+
+                // 캐시 초기화 후 매물 다시 로드
+                if (window.appManager.mapManager.propertyCache) {
+                    window.appManager.mapManager.propertyCache.clear();
+                }
+                window.appManager.mapManager.loadPropertiesInBounds();
+            }
+        }
+
+        // ✅ 기존 호환성 유지 (window.currentRecommendFilter → currentThemeFilter)
+        window.currentRecommendFilter = null;
+        function clearRecommendFilter() {
+            clearThemeFilter();
+        }
+
+        // ✅ 모든 필터 및 선택 초기화 함수
+        function resetAllFilters() {
+            console.log('🔄 모든 필터 초기화 시작...');
+
+            // ✅ 새로고침 오버레이 표시
+            const refreshOverlay = document.getElementById('refreshOverlay');
+            if (refreshOverlay) {
+                refreshOverlay.classList.add('active');
+            }
+
+            // ✅ 새로고침 버튼 회전 효과
+            const refreshBtn = document.querySelector('.refresh-floating-btn');
+            if (refreshBtn) {
+                refreshBtn.classList.add('spinning');
+                setTimeout(() => {
+                    refreshBtn.classList.remove('spinning');
+                }, 600);
+            }
+
+            // 1. 동 선택 해제
+            clearDongSelectionGlobal();
+
+            // 1-1. ✅ 좌표 클러스터 선택 해제
+            if (window.appManager && window.appManager.mapManager && window.appManager.mapManager.clusteringManager) {
+                if (window.appManager.mapManager.clusteringManager.selectedClusterIndex !== null) {
+                    window.appManager.mapManager.clusteringManager.selectedClusterIndex = null;
+                    console.log('📍 좌표 클러스터 선택 해제됨');
+                }
+            }
+
+            // 2. 역 필터 해제
+            if (window.stationManager && window.stationManager.isStationFilterActive) {
+                window.stationManager.clearStationFilter();
+                console.log('🚇 역 필터 해제됨');
+            }
+
+            // 2-1. ✅ 테마 필터 해제
+            if (window.currentThemeFilter) {
+                clearThemeFilter();
+                console.log('🎯 테마 필터 해제됨');
+            }
+
+            // 3. 매물종류 필터 초기화 (전체 선택)
+            if (window.propertyTypeFilter) {
+                window.propertyTypeFilter.resetToDefault();
+                console.log('🏠 매물종류 필터 초기화됨');
+            }
+
+            // 3-1. ✅ 전체 필터 초기화
+            if (typeof resetAllFiltersConfirmed === 'function') {
+                // 전체 필터 상태 초기화 (팝업 없이)
+                window.fullFilterState = {
+                    tradeType: ['monthly', 'jeonse', 'short_term'],
+                    depositMin: 0,
+                    depositMax: 20,
+                    monthlyMin: 0,
+                    monthlyMax: 20,
+                    includeManagement: false,
+                    kitchen: ['separate', 'open'],
+                    balcony: ['separate', 'extended'],
+                    roomType: [],
+                    areaMin: 0,
+                    areaMax: 8,
+                    floor: ['all'],
+                    buildingAge: ['all'],
+                    options: []
+                };
+                // 필터 아이콘 상태 업데이트
+                const filterIconBtn = document.getElementById('filterIconBtn');
+                if (filterIconBtn) {
+                    filterIconBtn.classList.remove('active');
+                }
+                console.log('🔍 전체 필터 초기화됨');
+            }
+
+            // 4. 관심목록 필터 해제
+            if (window.appManager && window.appManager.mapManager && window.appManager.mapManager.isLikedFilterActive) {
+                window.appManager.mapManager.restoreFromLikedFilter();
+                console.log('❤️ 관심목록 필터 해제됨');
+            }
+
+
+
+            // ✅ 6. 매물 캐시 및 카테고리 필터 초기화
+            if (window.appManager && window.appManager.mapManager) {
+                window.appManager.mapManager.currentCategory = null;
+                window.appManager.mapManager.fullFilterParams = null;  // ✅ 전체 필터 파라미터 초기화
+                if (window.appManager.mapManager.propertyCache) {
+                    window.appManager.mapManager.propertyCache.clear();
+                }
+                console.log('🗑️ 캐시 및 카테고리 초기화됨');
+            }
+
+            // ✅ 6-1. 드래그패널 헤더 지역명 숨기기
+            const locationElement = document.getElementById('propertyLocation');
+            if (locationElement) {
+                locationElement.textContent = '';
+                locationElement.style.display = 'none';
+            }
+
+            // 7. 지도에 영역 내 매물 다시 로드
+            if (window.appManager && window.appManager.mapManager) {
+                window.appManager.mapManager.loadPropertiesInBounds();
+                console.log('🗺️ 지도 매물 다시 로드');
+            }
+
+            // 8. 클러스터링 마커 재렌더링
+            if (window.appManager && window.appManager.mapManager && window.appManager.mapManager.clusteringManager) {
+                window.appManager.mapManager.clusteringManager.showClusteredMarkers();
+            }
+
+            console.log('✅ 모든 필터 초기화 완료');
+
+            // ✅ 새로고침 오버레이 숨기기 (약간의 지연 후)
+            setTimeout(() => {
+                const refreshOverlay = document.getElementById('refreshOverlay');
+                if (refreshOverlay) {
+                    refreshOverlay.classList.remove('active');
+                }
+            }, 500);
+        }
+
+        // 가격 포맷팅 헬퍼 함수
+        function formatPropertyPrice(prop) {
+            if (prop.jen_money && parseInt(prop.jen_money) > 0) {
+                return `전세 ${formatMoney(prop.jen_money)}`;
+            } else if (prop.security_money && prop.month_money) {
+                return `${formatMoney(prop.security_money)}/${prop.month_money}`;
+            } else if (prop.maemae_money && parseInt(prop.maemae_money) > 0) {
+                return `매매 ${formatMoney(prop.maemae_money)}`;
+            }
+            return '가격 문의';
+        }
+
+        function formatMoney(value) {
+            const num = parseInt(value) || 0;
+            if (num >= 10000) {
+                const uk = Math.floor(num / 10000);
+                const man = num % 10000;
+                return man > 0 ? `${uk}억 ${man}` : `${uk}억`;
+            }
+            return `${num}`;
+        }
+    </script>
+    -->
+
+    <!-- 매물종류 필터 -->
+    <script src="{{ url_for('static', filename='js/property-type-filter.js') }}"></script>
+    <!-- ✅ 전체 필터 페이지 -->
+    <script src="{{ url_for('static', filename='js/full-filter.js') }}?v=1"></script>
+    <!-- 동 경계 표시 -->
+    <script src="{{ url_for('static', filename='js/dong-boundary.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/search.js') }}?v=2"></script>
+    <!-- ✅ 이벤트 핸들러 (js/index-events.js로 분리) -->
+    <script src="{{ url_for('static', filename='js/index-events.js') }}"></script>
+
+    <!--
+    [BACKUP-B2] 원본 인라인 스크립트 — 문제 발생 시 위 script src를 제거하고 아래 주석 해제
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const target = document.getElementById('listContent');
+            if (!target) return;
+
+            const observer = new MutationObserver(() => {
+                // 하트 상태 다시 적용
+                initLikedHearts();
+            });
+
+            observer.observe(target, {
+                childList: true,  // 자식 추가/삭제
+                subtree: true     // 하위 요소 변화도 감지
+            });
+
+            // ✅ 여기부터 추가 (372번 줄 다음)
+            // 1. 드래그 패널 상단 매물 수량 클릭 이벤트
+            const propertyCount = document.getElementById('propertyCount');
+            if (propertyCount) {
+                propertyCount.addEventListener('click', function (e) {
+                    if (window.appManager && window.appManager.mapManager && window.appManager.mapManager.isLikedFilterActive) {
+                        e.stopPropagation();
+                        window.appManager.mapManager.restoreFromLikedFilter();
+                    }
+                });
+            }
+
+            // 2. 지도 클릭 이벤트
+            const mapElement = document.getElementById('map');
+            if (mapElement) {
+                mapElement.addEventListener('click', function (e) {
+                    if (window.appManager && window.appManager.mapManager && window.appManager.mapManager.isLikedFilterActive) {
+                        window.appManager.mapManager.restoreFromLikedFilter();
+                    }
+                });
+            }
+
+            // 3. 브라우저 뒤로가기 이벤트 - ✅ 전역 뒤로가기 핸들러
+            window.addEventListener('popstate', function (event) {
+                console.log('⬅️ 뒤로가기 감지');
+
+                // ✅ 우선순위에 따라 하나씩 닫기 (가장 위에 있는 것부터)
+
+                // 1. 검색창 페이지가 열려있으면 닫기
+                const searchPage = document.getElementById('searchPage');
+                if (searchPage && searchPage.classList.contains('active')) {
+                    console.log('⬅️ 검색창 닫기');
+                    window.isClosingByBackButton = true;
+                    closeSearchPage();
+                    window.isClosingByBackButton = false;
+                    return;
+                }
+
+                // 2. 전체 필터 페이지가 열려있으면 닫기
+                const fullFilterPage = document.getElementById('fullFilterPage');
+                if (fullFilterPage && fullFilterPage.classList.contains('active')) {
+                    console.log('⬅️ 전체 필터 페이지 닫기');
+                    window.isClosingByBackButton = true;
+                    closeFullFilterPage();
+                    window.isClosingByBackButton = false;
+                    return;
+                }
+
+                // 3. 매물종류 팝업이 열려있으면 닫기
+                const propertyTypeModal = document.getElementById('propertyTypeModal');
+                if (propertyTypeModal && propertyTypeModal.classList.contains('active')) {
+                    console.log('⬅️ 매물종류 팝업 닫기');
+                    window.isClosingByBackButton = true;
+                    closePropertyTypeModal();
+                    window.isClosingByBackButton = false;
+                    return;
+                }
+
+                // 4. 역주변 팝업이 열려있으면 닫기
+                const stationModal = document.getElementById('stationModal');
+                if (stationModal && stationModal.classList.contains('active')) {
+                    console.log('⬅️ 역주변 팝업 닫기');
+                    window.isClosingByBackButton = true;
+                    closeStationModal();
+                    window.isClosingByBackButton = false;
+                    return;
+                }
+
+                // 5. 테마별 검색 팝업이 열려있으면 닫기
+                const recommendModal = document.getElementById('recommendModal');
+                if (recommendModal && recommendModal.classList.contains('active')) {
+                    console.log('⬅️ 테마별 검색 팝업 닫기');
+                    window.isClosingByBackButton = true;
+                    closeRecommendModal();
+                    window.isClosingByBackButton = false;
+                    return;
+                }
+
+
+
+
+
+                // ✅ 테마 필터 적용 중이면 동/역 선택 유지 (모달 닫기의 history.back으로 인한 popstate)
+                if (window.isApplyingThemeFilter) {
+                    console.log('🎯 테마 필터 적용 중 - 동/역 선택 유지');
+                    return;
+                }
+
+                // 7. 동 마커 선택 상태면 해제 (실제 뒤로가기 버튼 눌렀을 때만)
+                if (window.currentDongSearch) {
+                    console.log('⬅️ 동 선택 해제');
+                    if (window.appManager && window.appManager.mapManager && window.appManager.mapManager.clusteringManager) {
+                        window.appManager.mapManager.clusteringManager.selectedDongName = null;
+                    }
+                    window.currentDongSearch = null;
+                    if (window.dongBoundaryManager) {
+                        window.dongBoundaryManager.clearBoundary();
+                    }
+                    const locationElement = document.getElementById('propertyLocation');
+                    if (locationElement) {
+                        locationElement.textContent = '';
+                        locationElement.style.display = 'none';
+                    }
+                    if (window.appManager && window.appManager.mapManager) {
+                        window.appManager.mapManager.updateStats();
+                        if (window.appManager.mapManager.clusteringManager) {
+                            window.appManager.mapManager.clusteringManager.showClusteredMarkers();
+                        }
+                    }
+                    return;
+                }
+
+                // 8. 역 필터 활성 상태면 해제
+                if (window.stationManager && window.stationManager.isStationFilterActive) {
+                    console.log('⬅️ 역 필터 해제');
+                    window.stationManager.clearStationFilter();
+                    return;
+                }
+
+                // 9. 관심목록 필터 활성 상태면 해제
+                if (window.appManager && window.appManager.mapManager && window.appManager.mapManager.isLikedFilterActive) {
+                    window.appManager.mapManager.restoreFromLikedFilter();
+                    return;
+                }
+            });
+        });
+        window.addEventListener("pageshow", (event) => {
+            initLikedHearts();
+            // ✅ bfcache에서 복원된 경우 (뒤로가기로 돌아온 경우)
+            // 페이지가 캐시에서 복원되면 JS 상태가 그대로 유지되므로 재로드 불필요
+            if (event.persisted) {
+                console.log('📱 pageshow: bfcache 복원 — 상태 유지됨');
+                // returningFromList 플래그가 있으면 제거 (bfcache에서는 복원 불필요)
+                sessionStorage.removeItem('returningFromList');
+            }
+        });
+        document.addEventListener("visibilitychange", () => {
+            if (!document.hidden) initLikedHearts();
+        });
+    </script>
+    -->
+
+    <!-- ✅ 매물 목록 페이지 버튼 연동 (js/list-page-btn.js로 분리) -->
+    <script src="{{ url_for('static', filename='js/list-page-btn.js') }}?v=7"></script>
+
+    <!-- ✅ 지도 bottom을 .list-page-btn 실제 높이 기준으로 자동 계산 -->
+    <script>
+        (function () {
+            var map = document.getElementById('map');
+            var btn = document.querySelector('.list-page-btn');
+            if (!map || !btn) return;
+
+            /* 버튼 상단이 viewport 바닥에서 얼마나 위에 있는지 */
+            function adjustMapBottom() {
+                var rect = btn.getBoundingClientRect();
+                var bottomPx = window.innerHeight - rect.top;
+                /* 최솟값: 내비 높이(52px) — 버튼이 숨겨진 경우 대비 */
+                bottomPx = Math.max(bottomPx, 52);
+
+                /* ✅ 2번 방식: bottom 이동 대신 실제 높이 축소 */
+                var mapHeight = Math.max(window.innerHeight - bottomPx, 0);
+                map.style.setProperty('bottom', '0px', 'important');
+                map.style.setProperty('height', mapHeight + 'px', 'important');
+            }
+
+            /* 즉시 실행 (DOM 끝에서 로드 → 요소 크기 확정된 상태) */
+            adjustMapBottom();
+
+            /* 창 크기 변경 / 화면 방향 전환 시 재계산 */
+            window.addEventListener('resize', adjustMapBottom);
+            window.addEventListener('orientationchange', function () {
+                /* orientationchange 후 레이아웃 안정될 때까지 짧게 대기 */
+                setTimeout(adjustMapBottom, 200);
+            });
+        })();
+    </script>
+
+    <!-- ✅ 재사용 로딩 스피너 JS + 스피너 숨기기 연동 -->
+    <script src="/static/js/loading-spinner.js"></script>
+    <script>
+        /* ── MapManager.hideLoadingIndicator 패치 ──────────────────────────
+           기존 동작(#loading 숨기기)은 그대로 유지하면서 전역 스피너도 함께 숨김.
+           prototype 패치 방식이므로:
+             - 인스턴스 생성 전에 실행되어 모든 인스턴스에 자동 적용
+             - tilesloaded 폴링의 race condition(이벤트 누락) 문제 없음
+             - hideLoadingIndicator 호출 타이밍 = 기존 코드와 동일하게 유지 */
+        (function patchHideLoadingIndicator() {
+            if (typeof MapManager !== 'undefined') {
+                var _orig = MapManager.prototype.hideLoadingIndicator;
+                MapManager.prototype.hideLoadingIndicator = function () {
+                    if (_orig) _orig.call(this);
+                    LoadingSpinner.hide(200);
+                };
+            }
+        })();
+
+        /* ── bfcache 복원 시 스피너 처리 ──────────────────────────────────
+           뒤로가기 후 재방문(bfcache 복원) 시 스피너가 남아있을 수 있으므로 즉시 숨김.
+           정상 첫 방문 시에는 e.persisted = false 이므로 이 분기가 실행되지 않음 */
+        window.addEventListener('pageshow', function (e) {
+            if (e.persisted) {
+                LoadingSpinner.hide(0);
+            }
+        });
+    </script>
+
+    <!--
+    [BACKUP-B3] 원본 인라인 스크립트 — 문제 발생 시 위 script src를 제거하고 아래 주석 해제
+    <script>
+    (function() {
+        'use strict';
+
+        // ✅ 새 버튼의 수량/레이블 요소
+        const btnCount = document.getElementById('listPageBtnCount');
+        const btnLabel = document.getElementById('listPageBtnLabel');
+
+        // ✅ 기존 패널의 수량 요소 (숨겨진 상태지만 여전히 업데이트됨)
+        const panelCount = document.getElementById('propertyCount');
+
+        // ── 1. MutationObserver로 수량 실시간 동기화 ──
+        // 기존 코드가 #propertyCount를 업데이트하면 새 버튼에도 반영
+        if (panelCount && btnCount) {
+            const countObserver = new MutationObserver(function() {
+                btnCount.textContent = panelCount.textContent;
+            });
+            countObserver.observe(panelCount, {
+                childList: true,
+                characterData: true,
+                subtree: true
+            });
+            // 초기값 동기화
+            btnCount.textContent = panelCount.textContent;
+        }
+
+        // ── 2. updatePanelLabel 래핑하여 새 버튼 레이블도 업데이트 ──
+        // 기존 updatePanelLabel이 호출될 때 새 버튼의 레이블도 함께 갱신
+        const originalUpdatePanelLabel = window.updatePanelLabel;
+
+        function syncBtnLabel() {
+            // 기존 함수 먼저 실행 (패널이 숨겨져 있어도 내부 상태는 갱신됨)
+            if (typeof originalUpdatePanelLabel === 'function') {
+                originalUpdatePanelLabel();
+            }
+            // 레이블 텍스트 결정 (updatePanelLabel과 동일한 우선순위 로직)
+            if (!btnLabel) return;
+
+            let labelText = '';
+
+            // 1순위: 지역 (동, 역, 지역 검색)
+            if (window.currentDongSearch && window.currentDongSearch.locationName) {
+                labelText = window.currentDongSearch.locationName;
+            } else if (window.stationManager && window.stationManager.isStationFilterActive && window.stationManager.selectedStation) {
+                labelText = window.stationManager.selectedStation.name;
+            } else if (window.currentLocationSearch && window.currentLocationSearch.locationName) {
+                labelText = window.currentLocationSearch.locationName;
+            } else if (window.appManager && window.appManager.mapManager &&
+                       window.appManager.mapManager.clusteringManager &&
+                       window.appManager.mapManager.clusteringManager.selectedDongName) {
+                labelText = window.appManager.mapManager.clusteringManager.selectedDongName;
+            }
+            // 2순위: 테마
+            else if (window.currentThemeFilter) {
+                if (window.currentThemeFilter.label) {
+                    labelText = window.currentThemeFilter.label;
+                } else if (typeof window.currentThemeFilter === 'string' && typeof getThemeDisplayName === 'function') {
+                    labelText = getThemeDisplayName(window.currentThemeFilter);
+                } else if (window.currentThemeFilter.column && typeof getThemeDisplayName === 'function') {
+                    labelText = getThemeDisplayName(window.currentThemeFilter.column);
+                }
+            }
+            // 레거시: currentRecommendFilter
+            else if (window.currentRecommendFilter) {
+                if (window.currentRecommendFilter.label) {
+                    labelText = window.currentRecommendFilter.label;
+                } else if (typeof getThemeDisplayName === 'function') {
+                    labelText = getThemeDisplayName(window.currentRecommendFilter);
+                }
+            }
+            // 3순위: 매물 종류
+            else if (window.selectedPropertyCategory && window.selectedPropertyCategory.length > 0) {
+                const cats = window.selectedPropertyCategory;
+                if (cats.length === 1 && typeof getPropertyTypeDisplayName === 'function') {
+                    labelText = getPropertyTypeDisplayName(cats[0]);
+                } else if (typeof getPropertyTypeDisplayName === 'function') {
+                    labelText = getPropertyTypeDisplayName(cats[0]) + ' 외';
+                }
+            }
+            // 4순위: 전체
+            else {
+                labelText = '전체';
+            }
+
+            btnLabel.textContent = labelText ? labelText + ' ' : '';
+        }
+
+        // 기존 함수 오버라이드
+        window.updatePanelLabel = syncBtnLabel;
+
+        // 초기 레이블 설정 (DOMContentLoaded 이후 약간 지연)
+        setTimeout(syncBtnLabel, 500);
+
+        // ── 3. 지도 상태 저장 함수 (목록 페이지 이동 전 호출) ──
+        function saveMapStateBeforeListPage() {
+            const mapManager = window.appManager && window.appManager.mapManager;
+
+            // ✅ 지도 위치/줌 저장
+            if (mapManager && mapManager.map) {
+                const center = mapManager.map.getCenter();
+                sessionStorage.setItem('mapState', JSON.stringify({
+                    lat: center.lat(),
+                    lng: center.lng(),
+                    zoom: mapManager.map.getZoom()
+                }));
+            }
+
+            // ✅ 필터 상태 저장
+            if (window.fullFilterState) {
+                sessionStorage.setItem('fullFilterState', JSON.stringify(window.fullFilterState));
+            }
+            if (mapManager) {
+                if (mapManager.fullFilterParams) {
+                    sessionStorage.setItem('fullFilterParams', JSON.stringify(mapManager.fullFilterParams));
+                }
+                if (mapManager.currentCategory) {
+                    sessionStorage.setItem('currentCategory', JSON.stringify(mapManager.currentCategory));
+                }
+                if (mapManager.themeFilterParams) {
+                    sessionStorage.setItem('themeFilterParams', JSON.stringify(mapManager.themeFilterParams));
+                }
+            }
+
+            // ✅ 매물종류 필터 UI 저장
+            if (window.selectedPropertyCategory && window.selectedPropertyCategory.length > 0) {
+                sessionStorage.setItem('selectedPropertyCategory', JSON.stringify(window.selectedPropertyCategory));
+                const typeText = document.getElementById('propertyTypeText');
+                if (typeText) {
+                    sessionStorage.setItem('propertyTypeText', typeText.textContent);
+                }
+            }
+
+            // ✅ 동 선택 상태 저장
+            if (window.currentDongSearch) {
+                sessionStorage.setItem('currentDongSearch', JSON.stringify(window.currentDongSearch));
+                if (mapManager && mapManager.clusteringManager && mapManager.clusteringManager.selectedDongName) {
+                    sessionStorage.setItem('selectedDongName', mapManager.clusteringManager.selectedDongName);
+                }
+            }
+
+            // ✅ 역 선택 상태 저장 (localStorage — 네이버앱 호환)
+            if (window.stationManager && window.stationManager.isStationFilterActive) {
+                const stationState = {
+                    isActive: true,
+                    selectedStation: window.stationManager.selectedStation,
+                    selectedZoomLevel: window.stationManager.selectedZoomLevel,
+                    filteredProperties: window.stationManager.filteredProperties,
+                    currentRadius: window.stationManager.currentRadius,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem('stationFilterState', JSON.stringify(stationState));
+            }
+
+            // ✅ 테마 필터 상태 저장
+            if (window.currentThemeFilter) {
+                sessionStorage.setItem('currentThemeFilter', JSON.stringify(window.currentThemeFilter));
+            }
+
+            // ✅ 패널 레이블 저장
+            if (btnLabel && btnLabel.textContent.trim()) {
+                sessionStorage.setItem('panelLabel', btnLabel.textContent.trim());
+            }
+            if (btnCount && btnCount.textContent.trim()) {
+                sessionStorage.setItem('panelCount', btnCount.textContent.trim());
+            }
+
+            // ✅ 목록 페이지에서 돌아왔음을 표시하는 플래그
+            sessionStorage.setItem('returningFromList', 'true');
+
+            console.log('💾 지도 상태 저장 완료 (목록 페이지 이동 전)');
+        }
+
+        // ── 4. openListPage() — 매물 목록 페이지로 이동 ──
+        window.openListPage = function() {
+            // ✅ 목록 페이지 이동 전 지도 상태 전체 저장 (뒤로가기 시 복원용)
+            saveMapStateBeforeListPage();
+
+            const params = new URLSearchParams();
+            const mapManager = window.appManager && window.appManager.mapManager;
+
+            // ✅ 지도 영역 좌표 (현재 화면 범위)
+            if (mapManager && mapManager.map) {
+                const bounds = mapManager.map.getBounds();
+                const sw = bounds.getSW();
+                const ne = bounds.getNE();
+                params.set('sw_lat', sw.lat().toFixed(6));
+                params.set('sw_lng', sw.lng().toFixed(6));
+                params.set('ne_lat', ne.lat().toFixed(6));
+                params.set('ne_lng', ne.lng().toFixed(6));
+
+                // 지도 중심 좌표 (뒤로가기 시 복원용)
+                const center = mapManager.map.getCenter();
+                params.set('center_lat', center.lat().toFixed(6));
+                params.set('center_lng', center.lng().toFixed(6));
+            }
+
+            // ✅ 카테고리 필터 (매물 종류)
+            if (mapManager && mapManager.currentCategory) {
+                const cat = Array.isArray(mapManager.currentCategory)
+                    ? mapManager.currentCategory.join(',')
+                    : mapManager.currentCategory;
+                if (cat) params.set('category', cat);
+            }
+
+            // ✅ 전체 필터 파라미터
+            if (mapManager && mapManager.fullFilterParams) {
+                Object.entries(mapManager.fullFilterParams).forEach(function(entry) {
+                    if (entry[1] !== undefined && entry[1] !== null && entry[1] !== '') {
+                        params.set(entry[0], entry[1]);
+                    }
+                });
+            }
+
+            // ✅ 테마 필터 파라미터
+            if (mapManager && mapManager.themeFilterParams) {
+                Object.entries(mapManager.themeFilterParams).forEach(function(entry) {
+                    if (entry[1] !== undefined && entry[1] !== null && entry[1] !== '') {
+                        params.set(entry[0], entry[1]);
+                    }
+                });
+            }
+
+            // ✅ 역 선택 필터
+            if (window.stationManager && window.stationManager.isStationFilterActive && window.stationManager.selectedStation) {
+                const station = window.stationManager.selectedStation;
+                params.set('station', station.name);
+                params.set('station_lat', station.lat || station.latitude);
+                params.set('station_lng', station.lng || station.longitude);
+                params.set('station_radius', window.stationManager.currentRadius || 500);
+            }
+
+            // ✅ 동 검색 필터
+            if (window.currentDongSearch && window.currentDongSearch.locationName) {
+                params.set('dong', window.currentDongSearch.locationName);
+            }
+
+            // ✅ 지역 검색 필터
+            if (window.currentLocationSearch && window.currentLocationSearch.locationName) {
+                params.set('location', window.currentLocationSearch.locationName);
+            }
+
+            // ✅ 테마 필터 (레이블용)
+            if (window.currentThemeFilter) {
+                if (window.currentThemeFilter.column) {
+                    params.set('thema', window.currentThemeFilter.column);
+                } else if (typeof window.currentThemeFilter === 'string') {
+                    params.set('thema', window.currentThemeFilter);
+                }
+            }
+
+            // ✅ 버튼 레이블 전달 (목록 페이지 헤더에 표시)
+            if (btnLabel && btnLabel.textContent.trim()) {
+                params.set('label', btnLabel.textContent.trim());
+            }
+
+            // ✅ 전체 매물 수량 전달 (목록 페이지 헤더에 표시)
+            if (btnCount && btnCount.textContent.trim()) {
+                params.set('total_count', btnCount.textContent.trim());
+            }
+
+            // ✅ VT 방향 설정 (지도→목록: 아래에서 위로 슬라이드)
+            sessionStorage.setItem('navDirection', 'slide-up');
+
+            // ✅ 페이지 이동
+            const url = '/list?' + params.toString();
+            console.log('📋 매물 목록 페이지 이동:', url);
+            window.location.href = url;
+        };
+
+    })();
+    </script>
+    -->
+
+    {# ── 하단 내비게이션 바 (지도 탭 활성) ── #}
+    {% set active_nav = 'map' %}
+    {% include 'components/bottom-nav.html' %}
+
+    {# ── 크로스헤어 위치 보정: map.getCenter() 기준점과 동일하게 맞춤 ──
+    문제: 기존 CSS top: calc((100vh - 56px) / 2) 은 상단 UI 높이(topUIHeight)를 미반영
+    수정: 지도 패딩 { top: topH, bottom: bottomNavH } 기준의 getCenter() 위치와 일치
+    → top = 50vh + (topH - bottomNavH) / 2
+    이 스크립트는 bottom-nav가 DOM에 삽입된 직후 실행되어야 offsetHeight 측정 가능 #}
+    <script>
+        (function () {
+            var crosshairEl = document.getElementById('mapCrosshair');
+            if (!crosshairEl || !window.browserConfig) return;
+
+            var topH = window.browserConfig.getTopUIHeight();
+            var bottomNavEl = document.querySelector('.bottom-nav');
+            var bottomNavH = (bottomNavEl && bottomNavEl.offsetHeight > 0)
+                ? bottomNavEl.offsetHeight : 52;
+
+            // #map 컨테이너의 bottom 오프셋 측정 (list-page-btn 영역)
+            // position:relative + bottom:XXpx → 지도 캔버스가 위로 밀림
+            var mapEl = document.getElementById('map');
+            var mapBottom = 0;
+            if (mapEl) {
+                var cs = getComputedStyle(mapEl);
+                mapBottom = parseFloat(cs.bottom) || 0;
+            }
+
+            // map.getCenter()가 가리키는 뷰포트 좌표와 일치시키기 위해
+            // mapBottom을 반영: 캔버스가 위로 밀린 만큼 크로스헤어도 위로 이동
+            var offsetPx = (topH - bottomNavH) / 2 - mapBottom;
+
+            // console.log('🎯 크로스헤어 위치: 50vh + ' + offsetPx + 'px (top=' + topH + ', nav=' + bottomNavH + ', mapBottom=' + mapBottom + ')');
+        })();
+    </script>
+</body>
+
+</html>

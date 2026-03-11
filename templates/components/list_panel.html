@@ -1,0 +1,36 @@
+{# ============================================================
+   하단 매물 목록 패널 컴포넌트
+   사용법: {% include 'components/list_panel.html' %}
+   포함 요소:
+     - listPanel: 드래그 가능한 매물 목록 패널 (하단 슬라이드)
+     - listPageBtn: 매물 목록 페이지 이동 버튼 (드래그 패널 대체)
+   사용 페이지: index.html
+   관련 JS: full-filter.js (openListPage, listContent 등)
+   ============================================================ #}
+
+<!-- 매물 목록 패널 (드래그 가능) -->
+<div class="list-panel bottom-0" id="listPanel">
+    <div class="list-header">
+        <div class="list-header-top">
+            <div class="panel-drag-handle"></div>
+            <div class="list-title">
+                <span class="list-label" id="propertyLabel"></span> <span class="list-count" id="propertyCount">0</span>개 매물 보기
+            </div>
+        </div>
+    </div>
+    <div class="list-content" id="listContent" style="max-width: 644px; margin: 0 auto;">
+        <div class="property-list-loading">
+            <p>매물을 불러오는 중...</p>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ 매물 목록 페이지 이동 버튼 (드래그 패널 대체) -->
+<div id="listPageBtn" class="list-page-btn" onclick="openListPage()">
+    <div class="list-page-btn-inner">
+        <div class="list-page-btn-title">
+            <span class="list-page-btn-label" id="listPageBtnLabel"></span>
+            <span class="list-page-btn-count" id="listPageBtnCount">0</span>개 매물 보기
+        </div>
+    </div>
+</div>

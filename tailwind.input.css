@@ -1,0 +1,7 @@
+/* Tailwind v4 빌드 입력 파일 */
+/* HTML, JS 파일에서 사용된 Tailwind 클래스를 자동 감지하여 빌드 */
+@import "tailwindcss";
+
+/* 스캔 대상 경로 지정 */
+@source "./templates/**/*.html";
+@source "./static/js/**/*.js";

@@ -1,0 +1,39 @@
+# Python cache / venv
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# Env files
+.env
+
+# Logs / runtime artifacts
+logs/
+*.log
+
+# Database dumps / backups
+*.sql
+*.sql.gz
+backup_*/
+data/backup_*.sql
+
+# Android / build artifacts
+**/build/
+**/.gradle/
+
+# IDE
+.vscode/
+
+# Local temp / old assets not part of code baseline
+2024 신규 앱 자료(https변경)/
+oldhouse_temp/
+.claude/
+data/
+
+# Large local exports
+*.xlsx
+
+# Local binaries
+tailwindcss

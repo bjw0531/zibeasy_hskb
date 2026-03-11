@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>개인정보처리방침 — 천안하우스</title>
+    {% include 'include.html' %}
+    <style>
+        body {
+            font-family: "Pretendard Variable", 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+            background: #f8f7f5;
+            color: #1a1a1a;
+            min-height: 100dvh;
+        }
+        .page-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: #fff;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            padding-top: max(14px, env(safe-area-inset-top));
+        }
+        .back-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #f5f5f5;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: #333;
+            flex-shrink: 0;
+        }
+        .page-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #111;
+        }
+        .doc-wrap {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 24px 20px 64px;
+        }
+        .doc-header {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px 20px;
+            margin-bottom: 16px;
+            border: 1px solid #f0f0f0;
+        }
+        .doc-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #111;
+            margin-bottom: 6px;
+        }
+        .doc-date {
+            font-size: 13px;
+            color: #888;
+        }
+        .doc-section {
+            background: #fff;
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 10px;
+            border: 1px solid #f0f0f0;
+        }
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #111;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        .section-body {
+            font-size: 14px;
+            color: #444;
+            line-height: 1.8;
+        }
+        .section-body p { margin-bottom: 8px; }
+        .section-body p:last-child { margin-bottom: 0; }
+        .section-body ul {
+            padding-left: 16px;
+            margin: 6px 0;
+        }
+        .section-body li {
+            list-style: disc;
+            margin-bottom: 4px;
+        }
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin: 10px 0;
+        }
+        .info-table th {
+            background: #f8f7f5;
+            padding: 8px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+            border: 1px solid #eee;
+        }
+        .info-table td {
+            padding: 8px 12px;
+            border: 1px solid #eee;
+            color: #444;
+            vertical-align: top;
+        }
+        .highlight-box {
+            background: #f8f7f5;
+            border-radius: 10px;
+            padding: 14px 16px;
+            font-size: 13px;
+            color: #555;
+            margin-top: 10px;
+            line-height: 1.7;
+        }
+        .effective-box {
+            background: rgba(255, 97, 96, 0.06);
+            border: 1px solid rgba(255, 97, 96, 0.2);
+            border-radius: 12px;
+            padding: 14px 18px;
+            font-size: 13px;
+            color: rgb(255, 97, 96);
+            font-weight: 600;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<header class="page-header">
+    <a href="javascript:history.back()" class="back-btn" aria-label="뒤로가기">
+        <i data-lucide="arrow-left" style="width:18px;height:18px;"></i>
+    </a>
+    <span class="page-title">개인정보처리방침</span>
+</header>
+
+<div class="doc-wrap">
+    <div class="doc-header">
+        <div class="doc-title">개인정보처리방침</div>
+        <div class="doc-date">시행일: {{ policy_effective_date }} | 최종 수정일: {{ policy_updated_date }}</div>
+    </div>
+
+    <div class="doc-section">
+        <div class="section-title">제1조 (개인정보 수집 항목 및 방법)</div>
+        <div class="section-body">
+            <table class="info-table">
+                <tr>
+                    <th>구분</th>
+                    <th>수집 항목</th>
+                    <th>수집 방법</th>
+                </tr>
+                <tr>
+                    <td>일반 회원가입/로그인</td>
+                    <td>아이디, 이메일, 비밀번호(암호화 저장)</td>
+                    <td>회원가입 및 로그인 시 이용자 입력</td>
+                </tr>
+                <tr>
+                    <td>소셜 로그인</td>
+                    <td>소셜 고유식별자, 닉네임(이름), 프로필 이미지, 이메일(제공 시)</td>
+                    <td>카카오/네이버 OAuth 연동</td>
+                </tr>
+                <tr>
+                    <td>집 구하기/내놓기 신청</td>
+                    <td>이름, 연락처, 이메일(선택), 신청 내용(희망지역/예산/주소/메모 등), 접속 IP, User-Agent</td>
+                    <td>신청 폼 입력 및 제출 시 자동 수집</td>
+                </tr>
+                <tr>
+                    <td>오류 제보/기능 제안</td>
+                    <td>이름, 연락처, 제보 내용, 첨부파일(선택), 접속 IP, User-Agent</td>
+                    <td>제보 폼 입력 및 제출 시 자동 수집</td>
+                </tr>
+                <tr>
+                    <td>서비스 이용기록</td>
+                    <td>접속 로그(IP, visitor_id, 브라우저/OS/기기 정보, 접속 페이지, 접속 시각, 리퍼러)</td>
+                    <td>서비스 이용 과정에서 자동 생성</td>
+                </tr>
+                <tr>
+                    <td>쿠키/웹 저장소</td>
+                    <td>관심 매물, 최근 본 매물 식별 정보</td>
+                    <td>브라우저 저장소(localStorage/cookie) 사용</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="doc-section">
+        <div class="section-title">제2조 (개인정보 처리 목적)</div>
+        <div class="section-body">
+            <ul>
+                <li>회원 식별 및 계정 관리</li>
+                <li>매물 조회, 관심 매물/최근 본 매물 등 사용자 편의 기능 제공</li>
+                <li>집 구하기/내놓기 신청 접수 및 상담 연락</li>
+                <li>오류 제보/기능 제안 접수 처리 및 서비스 개선</li>
+                <li>운영 보안, 악성 요청 차단, 통계 분석</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="doc-section">
+        <div class="section-title">제3조 (개인정보 보유 및 파기)</div>
+        <div class="section-body">
+            <p>① 서비스는 수집 목적 달성 시 개인정보를 지체 없이 파기합니다.</p>
+            <p>② 다만 아래 항목은 운영 정책에 따라 기간 보관 후 파기합니다.</p>
+            <ul>
+                <li>집 구하기/내놓기 신청 정보: 접수일로부터 {{ house_request_retention_days }}일</li>
+                <li>오류 제보/기능 제안 정보 및 첨부파일: 접수일로부터 {{ feedback_retention_days }}일</li>
+                <li>회원 계정 정보: 회원 탈퇴 시까지 (관련 법령상 보존 의무가 있는 경우 해당 기간 보관)</li>
+            </ul>
+            <p>③ 이용자의 삭제 요청이 있는 경우, 법령상 보관 의무가 없는 범위에서 지체 없이 삭제합니다.</p>
+        </div>
+    </div>
+
+    <div class="doc-section">
+        <div class="section-title">제4조 (개인정보 제3자 제공)</div>
+        <div class="section-body">
+            <p>서비스는 원칙적으로 이용자의 개인정보를 외부에 제공하지 않습니다.</p>
+            <p>다만, 다음의 경우에는 예외로 할 수 있습니다.</p>
+            <ul>
+                <li>이용자가 사전에 동의한 경우</li>
+                <li>법령에 근거가 있거나 수사기관의 적법한 요청이 있는 경우</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="doc-section">
+        <div class="section-title">제5조 (개인정보 처리 위탁)</div>
+        <div class="section-body">
+            <p>서비스 운영을 위해 필요한 범위에서 개인정보 처리 업무를 외부 서비스에 위탁할 수 있으며, 관련 법령에 따라 수탁자를 관리·감독합니다.</p>
+            <table class="info-table">
+                <tr>
+                    <th>수탁자</th>
+                    <th>위탁 업무</th>
+                </tr>
+                {% if consign_google_smtp %}
+                <tr>
+                    <td>Google LLC (Gmail SMTP)</td>
+                    <td>폼 접수 알림 메일 발송</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td>현재 고정 위탁 내역 없음</td>
+                    <td>향후 위탁 발생 시 본 방침에 즉시 반영</td>
+                </tr>
+                {% endif %}
+            </table>
+        </div>
+    </div>
+
+    <div class="doc-section">
+        <div class="section-title">제6조 (이용자 권리 및 행사 방법)</div>
+        <div class="section-body">
+            <p>이용자는 언제든지 개인정보 열람, 정정, 삭제, 처리정지를 요청할 수 있습니다.</p>
+            <p>권리 행사는 아래 이메일로 요청할 수 있으며, 서비스는 관련 법령에 따라 지체 없이 처리합니다.</p>
+            <div class="highlight-box">
+                개인정보 문의/삭제 요청 이메일: <strong>{{ privacy_contact_email or '운영자 문의 이메일 미설정' }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="doc-section">
+        <div class="section-title">제7조 (안전성 확보조치)</div>
+        <div class="section-body">
+            <ul>
+                <li>비밀번호 암호화 저장 및 민감정보 접근 통제</li>
+                <li>CSRF 보호, 세션 보안 설정, 레이트 리밋 적용</li>
+                <li>업로드 파일 확장자/용량 검증 및 운영 로그 모니터링</li>
+                <li>비밀키, API 키 등 인증정보의 주기적 교체 및 권한 최소화</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="doc-section">
+        <div class="section-title">제8조 (개인정보처리방침 변경)</div>
+        <div class="section-body">
+            <p>본 방침의 내용이 추가, 삭제, 수정될 경우 시행일자와 함께 본 페이지를 통해 고지합니다.</p>
+        </div>
+    </div>
+
+    <div class="effective-box">
+        부칙 — 본 방침은 {{ policy_effective_date }}부터 시행합니다.
+    </div>
+</div>
+
+<script>
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+</script>
+</body>
+</html>

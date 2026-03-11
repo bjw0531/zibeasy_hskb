@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>천안하우스 - 매물 목록</title>
+    <meta name="description" content="천안 지역 매물을 리스트로 검색하세요.">
+
+    <!-- 공통 리소스 (폰트, Tailwind, Material Symbols 등) -->
+    {% include 'include.html' %}
+
+    <!-- 하트 (찜하기) 스타일 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/heart.css') }}?v=7">
+    <!-- 하단 내비게이션 바 스타일 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bottom-nav.css') }}?v=7">
+    <!-- 리스트 뷰 전용 스타일 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/list-view.css') }}?v=9">
+    <!-- ✅ 전체 필터 + 테마 모달 스타일 (지도 페이지와 공유) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/full-filter.css') }}?v=7">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/quick-filter.css') }}?v=7">
+
+    <!-- ✅ VT 방향 핸들러: /property_list와 동일하게 /list에도 적용 -->
+    <script>
+    if ('onpagereveal' in window) {
+        // 크로스 문서 VT 지원 표시 (CSS 폴백 제어용)
+        document.documentElement.classList.add('vt-supported');
+
+        // 도착 시: navDirection 읽어서 방향 클래스 부여
+        window.addEventListener('pagereveal', function(e) {
+            var dir = sessionStorage.getItem('navDirection');
+            if (dir && e.viewTransition) {
+                // ✅ 상세→목록 뒤로가기 시 bottom-nav를 root 스냅샷에 포함시킴
+                //    → VT 종료 후 모바일에서 bottom-nav가 아래서 올라오는 현상 방지
+                if (dir === 'slide-left') {
+                    var bn = document.querySelector('.bottom-nav');
+                    if (bn) bn.style.viewTransitionName = 'none';
+                }
+                document.documentElement.classList.add('vt-' + dir);
+                e.viewTransition.finished.then(function() {
+                    document.documentElement.classList.remove('vt-' + dir);
+                });
+            }
+            sessionStorage.removeItem('navDirection');
+        });
+
+        // 떠날 때: 브라우저 뒤로가기/스와이프 시 방향 자동 설정
+        window.addEventListener('pageswap', function(e) {
+            if (!e.viewTransition || !e.activation) return;
+            if (sessionStorage.getItem('navDirection')) return;
+            if (e.activation.navigationType === 'traverse') {
+                sessionStorage.setItem('navDirection', 'slide-down');
+            }
+        });
+    }
+    </script>
+</head>
+
+<body class="lv-body">
+
+    {# ── 상단 헤더: 검색창 + 매물종류 버튼 ── #}
+    <header class="lv-header">
+        <div class="lv-header-inner">
+
+            {# 검색창 (클릭 시 검색 오버레이 열기) — 지도형과 동일: 텍스트 왼쪽, 아이콘 오른쪽 #}
+            <div class="lv-search-box" onclick="lvOpenSearch()">
+                <span class="lv-search-placeholder" id="lvSearchPlaceholder">매물번호로 검색</span>
+                <svg class="lv-search-icon" width="16" height="16" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2.2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+            </div>
+
+            {# 매물종류 버튼 #}
+            <button class="lv-type-btn" id="lvTypeBtn" onclick="lvOpenTypeModal()" aria-label="매물종류 선택">
+                <span id="lvTypeBtnText">매물종류</span>
+                <span class="lv-type-arrow">▼</span>
+            </button>
+
+        </div>
+    </header>
+
+    {# ── 필터 라인: 전체필터 | 가격 | 지역 | 테마별 검색 ── #}
+    <div class="lv-filter-bar" id="lvFilterBar">
+
+        {# 전체 필터 버튼 — 아이콘 + 텍스트 #}
+        <button class="lv-filter-chip lv-filter-chip--all" id="lvFilterAll" onclick="lvOpenFullFilter()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="4" y1="6" x2="20" y2="6"></line>
+                <line x1="8" y1="12" x2="16" y2="12"></line>
+                <line x1="11" y1="18" x2="13" y2="18"></line>
+            </svg>
+            <span>전체필터</span>
+        </button>
+
+        {# 가격 필터 버튼 #}
+        <button class="lv-filter-chip" id="lvFilterPrice" onclick="lvOpenPriceFilter()">
+            <span>가격</span>
+            <span class="lv-filter-arrow">▼</span>
+        </button>
+
+        {# 지역 필터 버튼 #}
+        <button class="lv-filter-chip" id="lvFilterArea" onclick="lvOpenAreaFilter()">
+            <span>지역</span>
+            <span class="lv-filter-arrow">▼</span>
+        </button>
+
+        {# 테마별 검색 버튼 #}
+        <button class="lv-filter-chip" id="lvFilterTheme" onclick="lvOpenThemeFilter()">
+            <span>테마별</span>
+            <span class="lv-filter-arrow">▼</span>
+        </button>
+
+    </div>
+
+    {# ── 매물 목록 스크롤 영역 ── #}
+    <div class="lv-scroll" id="lvScroll">
+        <div class="lv-grid" id="lvGrid">
+            {# JS에서 동적으로 카드 렌더링 #}
+            <div class="lv-loading">
+                <div class="lv-spinner"></div>
+                <span>매물을 불러오는 중...</span>
+            </div>
+        </div>
+    </div>
+
+    {# ── 검색 전용 페이지 (지도 페이지와 동일 구조) ── #}
+    <div class="search-page" id="searchPage">
+        <div class="search-page-header">
+            <button class="back-btn" onclick="closeSearchPage()" aria-label="뒤로가기">←</button>
+            <div class="search-page-input-wrapper">
+                <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="rgb(100, 100, 100)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                <input type="text" id="searchPageInput" class="search-page-input" placeholder="매물번호로 검색"
+                    autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+                <button type="button" class="search-clear-btn" id="searchClearBtn" onclick="clearSearchInput()"
+                    style="display:none;" aria-label="검색어 지우기">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" fill="#999" />
+                        <path d="M8 8l8 8M16 8l-8 8" stroke="white" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="search-page-content">
+            <div class="search-results" id="searchResults"></div>
+        </div>
+    </div>
+
+    {# ── 매물종류 선택 모달 (지도형과 동일 — 중앙 팝업) ── #}
+    <div class="lv-type-modal-backdrop" id="lvTypeModalBackdrop" onclick="lvCloseTypeModal(event)">
+        <div class="lv-type-modal" id="lvTypeModal" onclick="event.stopPropagation()">
+
+            {# X 닫기 버튼 #}
+            <button class="lv-type-close-btn" onclick="lvCloseTypeModal()" aria-label="닫기">×</button>
+
+            <div class="lv-type-modal-title">매물종류</div>
+            <div class="lv-type-modal-sub">(중복 선택 가능)</div>
+
+            {# 1번째 줄: 전체, 원룸, 투베이, 투룸 #}
+            <div class="lv-type-row">
+                <div class="lv-type-option selected" data-code="" data-label="전체"
+                    onclick="lvToggleType(this, '', '전체')"><span class="lv-opt-text">전체</span></div>
+                <div class="lv-type-option" data-code="90" data-label="원룸"
+                    onclick="lvToggleType(this, '90', '원룸')"><span class="lv-opt-text">원룸</span></div>
+                <div class="lv-type-option" data-code="91" data-label="투베이"
+                    onclick="lvToggleType(this, '91', '투베이')"><span class="lv-opt-text">투베이</span></div>
+                <div class="lv-type-option" data-code="93" data-label="투룸"
+                    onclick="lvToggleType(this, '93', '투룸')"><span class="lv-opt-text">투룸</span></div>
+            </div>
+
+            {# 2번째 줄: 쓰리룸, 무보증/단기 #}
+            <div class="lv-type-row">
+                <div class="lv-type-option" data-code="94" data-label="쓰리룸"
+                    onclick="lvToggleType(this, '94', '쓰리룸')"><span class="lv-opt-text">쓰리룸</span></div>
+                <div class="lv-type-option" data-code="92" data-label="무보증/단기"
+                    onclick="lvToggleType(this, '92', '무보증/단기')"><span class="lv-opt-text">무보증/단기</span></div>
+            </div>
+
+            {# 적용하기 버튼 #}
+            <div class="lv-type-apply-row">
+                <button class="lv-type-apply-btn" id="lvTypeApplyBtn" onclick="lvApplyType()">적용하기</button>
+            </div>
+
+        </div>
+    </div>
+
+    {# ── ✅ 전체 필터 모달 (지도 페이지와 동일 컴포넌트 재사용) ── #}
+    {% include 'components/modal_full_filter.html' %}
+
+    {# ── ✅ 테마별 검색 모달 (지도 페이지와 동일 컴포넌트 재사용) ── #}
+    {% include 'components/modal_recommend.html' %}
+
+    {# ── 찜하기 기능 (liked.js 재사용) ── #}
+    <script src="{{ url_for('static', filename='js/liked.js') }}?v=9"></script>
+
+    {# ── ✅ 전체 필터 JS (지도 페이지와 공유) ── #}
+    <script src="{{ url_for('static', filename='js/full-filter.js') }}?v=9"></script>
+
+    {# ── 리스트 뷰 전용 JS ── #}
+    <script src="{{ url_for('static', filename='js/list-view.js') }}?v=11"></script>
+
+    {# ── 하단 내비게이션 바 (리스트 탭 활성) ── #}
+    {% set active_nav = 'browse' %}
+    {% include 'components/bottom-nav.html' %}
+
+</body>
+
+</html>

@@ -1,0 +1,102 @@
+{# ============================================================
+   매물 상세 패널 컴포넌트 (지도 위 슬라이드 패널)
+   사용법: {% include 'components/panel_detail.html' %}
+   트리거: detail.js (openDetailPanel, closeDetailPanel)
+   사용 페이지: index.html
+   관련 JS: detail.js (갤러리, 가격, 정보, 연락처 동적 렌더링)
+   CSS: detail.css
+   ============================================================ #}
+
+<!-- 매물 상세 패널 -->
+<div class="detail-panel">
+    <div class="detail-header">
+        <div class="detail-header-top">
+            <button class="detail-back-btn" aria-label="뒤로가기">←</button>
+            <div class="detail-title">
+                <span class="code-label">매물번호</span>
+                <span class="code-value">-</span>
+            </div>
+            <div class="detail-actions">
+                <button class="detail-action-btn" data-action="share" aria-label="공유하기">
+                    <i class="fas fa-share-alt"></i>
+                </button>
+                <button class="detail-action-btn" data-action="favorite" aria-label="찜하기">
+                    <i class="fas fa-heart"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="detail-content">
+        <!-- 이미지 갤러리 -->
+        <div class="detail-gallery">
+            <div class="detail-gallery-container">
+                <div class="detail-gallery-slider">
+                    <!-- 이미지들이 여기에 동적으로 추가됩니다 -->
+                </div>
+            </div>
+
+            <!-- 갤러리 카운터 -->
+            <div class="detail-gallery-counter" style="display: none;">1 / 1</div>
+
+            <!-- 유튜브 아이콘 (동영상이 있는 경우만 표시) -->
+            <div class="detail-gallery-video-btn" style="display: none;">
+                <i class="fab fa-youtube"></i>
+            </div>
+
+            <!-- 이미지 아이콘 (동영상 모드일 때 표시) -->
+            <div class="detail-gallery-image-btn" style="display: none;">
+                <i class="fas fa-image"></i>
+            </div>
+        </div>
+
+        <!-- 매물 요약 정보 -->
+        <div class="detail-summary">
+            <div class="detail-summary-header">
+                <div class="detail-property-code-tag">
+                    <span class="code-label">매물번호</span>
+                    <span class="code-value">-</span>
+                </div>
+                <div class="detail-register-time">-</div>
+            </div>
+
+            <div class="detail-price-section">
+                <div class="detail-main-price">-</div>
+                <div class="detail-management-fee">-</div>
+            </div>
+
+            <div class="detail-description">
+                <h2 class="detail-property-title">-</h2>
+            </div>
+        </div>
+
+        <!-- 가격 정보 -->
+        <div class="detail-info">
+            <div class="detail-price-container"></div>
+            <div class="detail-address"></div>
+            <div class="detail-basic-info"></div>
+        </div>
+
+        <!-- 상세 정보 섹션 -->
+        <div class="detail-sections"></div>
+
+        <!-- 연락처 -->
+        <div class="detail-contact"></div>
+    </div>
+
+    <!-- 하단 액션 바 -->
+    <div class="detail-action-bar">
+        <div class="detail-action-price">-</div>
+        <div class="detail-action-buttons">
+            <button class="detail-action-btn detail-chat-btn" data-action="chat">
+                <i class="fas fa-comment"></i>
+            </button>
+            <button class="detail-action-btn detail-kakao-btn" data-action="kakao">
+                <i class="fab fa-telegram"></i>
+            </button>
+            <button class="detail-action-btn detail-call-btn" data-action="call">
+                <i class="fas fa-phone"></i>
+            </button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,976 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}매물 관리 · HouseKB Admin{% endblock %}
+
+{# 헤더 오른쪽: 기본(대시보드+로그아웃) 그대로 사용하므로 override 불필요 #}
+
+{% block head %}
+<style>
+  /* ── 본문 ── */
+  .main {
+    padding: 1.25rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* ── 상단 타이틀 바 ── */
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  .status-tabs {
+    display: flex;
+    gap: .45rem;
+    margin: -.35rem 0 .9rem;
+  }
+
+  .status-tab {
+    padding: .42rem .75rem;
+    border-radius: .55rem;
+    border: 1px solid rgba(255, 255, 255, .13);
+    background: rgba(255, 255, 255, .06);
+    color: rgba(255, 255, 255, .55);
+    text-decoration: none;
+    font-size: .82rem;
+    font-weight: 700;
+  }
+
+  .status-tab.active {
+    border-color: rgba(255, 112, 117, .4);
+    background: rgba(255, 112, 117, .2);
+    color: #FFB3B5;
+  }
+
+  .page-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .total-badge {
+    font-size: .78rem;
+    color: rgba(255, 255, 255, .45);
+    margin-left: .4rem;
+  }
+
+  .btn-new {
+    padding: .55rem 1.1rem;
+    background: linear-gradient(135deg, #FF7075, #FF4F56);
+    border: none;
+    border-radius: .6rem;
+    color: #fff;
+    font-size: .875rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(255, 112, 117, .35);
+    transition: transform .15s, box-shadow .15s;
+  }
+
+  .btn-new:active { transform: scale(.97); }
+
+  /* ── 검색 필터 ── */
+  .search-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .6rem;
+    background: rgba(255, 255, 255, .08);
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-radius: .85rem;
+    padding: .9rem 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .search-bar input,
+  .search-bar select {
+    background: rgba(255, 255, 255, .07);
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: .5rem;
+    color: #e8e6e3;
+    font-size: .85rem;
+    padding: .45rem .75rem;
+    outline: none;
+    transition: border-color .2s, background .2s;
+  }
+
+  .search-bar input:focus,
+  .search-bar select:focus {
+    border-color: #FF7075;
+    background: rgba(255, 112, 117, .1);
+  }
+
+  .search-bar input { flex: 1; min-width: 160px; }
+  .search-bar select option { background: #27243a; }
+
+  .btn-search {
+    padding: .45rem 1rem;
+    background: rgba(112, 255, 167, 0.25);
+    border: 1px solid rgba(112, 255, 167, 0.4);
+    border-radius: .5rem;
+    color: #b7ffb3;
+    font-size: .85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-search:active { background: rgba(112, 255, 167, 0.4); }
+
+  .btn-reset {
+    padding: .45rem 1rem;
+    background: rgba(255, 112, 117, .25);
+    border: 1px solid rgba(255, 112, 117, .4);
+    border-radius: .5rem;
+    color: #FFB3B5;
+    font-size: .85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-reset:active { background: rgba(255, 112, 117, .4); }
+
+  /* ── 테이블 카드 ── */
+  .table-wrap {
+    background: rgba(255, 255, 255, .08);
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-radius: .85rem;
+    overflow: hidden;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* 컬럼 너비 고정: 제목 컬럼이 나머지 공간 차지 */
+  }
+
+  thead tr { background: rgba(255, 255, 255, .09); }
+
+  thead th {
+    padding: .65rem .55rem;
+    font-size: .78rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, .45);
+    text-align: center;
+    white-space: nowrap;
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+  }
+
+  tbody tr {
+    border-bottom: 1px solid rgba(255, 255, 255, .09);
+    transition: background .1s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255, 255, 255, .08); }
+
+  tbody td {
+    padding: .65rem .55rem;
+    font-size: .9rem;
+    color: #c8c5c0;
+    vertical-align: middle;
+    text-align: center;
+  }
+
+  /* 썸네일 */
+  .thumb {
+    width: 52px;
+    height: 38px;
+    object-fit: cover;
+    border-radius: .35rem;
+    background: #27243a;
+  }
+
+  .thumb-empty {
+    width: 52px;
+    height: 38px;
+    background: rgba(255, 255, 255, .10);
+    border-radius: .35rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .thumb-empty svg { width: 18px; height: 18px; fill: rgba(255, 255, 255, .2); }
+
+  /* 상태 뱃지 */
+  .badge {
+    display: inline-block;
+    padding: .22rem .55rem;
+    border-radius: 9999px;
+    font-size: .76rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .badge-ok   { background: rgba(16, 185, 129, .15); color: #34d399; }
+  .badge-hide { background: rgba(100, 116, 139, .15); color: #9a9590; }
+  .badge-done { background: rgba(239, 68, 68, .15);   color: #fca5a5; }
+  .badge-check{ background: rgba(245, 158, 11, .15);  color: #fcd34d; }
+
+  /* 관리 컬럼 액션 버튼 */
+  .btn-edit {
+    padding: .28rem .52rem;
+    background: rgba(255, 255, 255, .10);
+    border: 1px solid rgba(255, 255, 255, .18);
+    border-radius: .4rem;
+    color: #c8c5c0;
+    font-size: .75rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s, border-color .15s;
+  }
+  .btn-edit:hover { background: rgba(255, 255, 255, .12); border-color: rgba(255, 255, 255, .3); }
+
+  .btn-del {
+    padding: .28rem .52rem;
+    background: rgba(239, 68, 68, .12);
+    border: 1px solid rgba(239, 68, 68, .25);
+    border-radius: .4rem;
+    color: #fca5a5;
+    font-size: .75rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s;
+  }
+  .btn-del:hover { background: rgba(239, 68, 68, .25); }
+
+  .btn-restore {
+    padding: .28rem .52rem;
+    background: rgba(34, 197, 94, .12);
+    border: 1px solid rgba(34, 197, 94, .32);
+    border-radius: .4rem;
+    color: #86efac;
+    font-size: .75rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s;
+  }
+  .btn-restore:hover { background: rgba(34, 197, 94, .24); }
+
+  .row-deleted td { opacity: .72; }
+  .badge-deleted { background: rgba(239, 68, 68, .16); color: #fca5a5; }
+
+  /* 빈 결과 */
+  .empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: rgba(255, 255, 255, .3);
+    font-size: .9rem;
+  }
+
+  /* ── 페이지네이션 ── */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: .3rem;
+    margin-top: 1.25rem;
+    flex-wrap: wrap;
+  }
+
+  .pagination a,
+  .pagination span {
+    padding: .4rem .65rem;
+    border-radius: .45rem;
+    font-size: .8rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, .1);
+    color: rgba(255, 255, 255, .5);
+    transition: background .15s, color .15s;
+  }
+  .pagination a:hover { background: rgba(255, 255, 255, .07); color: #e8e6e3; }
+  .pagination span.current { background: rgba(255, 112, 117, .25); border-color: rgba(255, 112, 117, .4); color: #FFB3B5; }
+  .pagination span.dots { border: none; }
+
+  /* 모바일: 일부 컬럼 숨김 */
+  @media (max-width: 760px) {
+    .col-hide,
+    .col-price-type,
+    .col-contract-mobile,
+    .col-code-mobile {
+      display: none;
+    }
+
+    .main { padding: .9rem; }
+    .thumb { width: 44px; height: 32px; }
+
+    td.title-cell {
+      min-width: 130px;
+      text-align: left !important;
+    }
+
+    td.title-cell a,
+    td.title-cell span {
+      white-space: normal !important;
+      display: -webkit-box !important;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.25;
+      max-height: 2.5em;
+    }
+
+    .btn-edit,
+    .btn-del,
+    .btn-restore {
+      padding: .24rem .45rem;
+      font-size: .72rem;
+    }
+  }
+
+  /* ── 커스텀 체크박스 ── */
+  .row-check {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 17px;
+    height: 17px;
+    border: 1.5px solid rgba(255, 255, 255, .2);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, .05);
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+    vertical-align: middle;
+    transition: border-color .15s, background .15s;
+  }
+  .row-check:hover { border-color: rgba(255, 112, 117, .55); background: rgba(255, 112, 117, .08); }
+  .row-check:checked { background: #FF7075; border-color: #FF7075; }
+
+  /* 체크 표시 */
+  .row-check:checked::after {
+    content: '';
+    position: absolute;
+    left: 4px; top: 1px;
+    width: 5px; height: 9px;
+    border: 2px solid #fff;
+    border-top: none; border-left: none;
+    transform: rotate(45deg);
+  }
+
+  /* 일부 선택 (indeterminate) */
+  .row-check:indeterminate { background: rgba(255, 112, 117, .3); border-color: #FF7075; }
+  .row-check:indeterminate::after {
+    content: '';
+    position: absolute;
+    left: 3px; top: 6px;
+    width: 9px; height: 2px;
+    background: #FF7075;
+    border-radius: 1px;
+  }
+
+  /* 선택된 행 하이라이트 */
+  tbody tr.row-selected { background: rgba(255, 112, 117, .07) !important; }
+
+  /* ── 일괄 작업 플로팅 바 ── */
+  .bulk-bar {
+    position: fixed;
+    bottom: 1.75rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(90px);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform .3s cubic-bezier(.34, 1.45, .64, 1), opacity .22s;
+    background: #27243a;
+    border: 1px solid rgba(255, 255, 255, .15);
+    border-radius: 1.1rem;
+    padding: .55rem .55rem .55rem 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    box-shadow: 0 14px 44px rgba(0, 0, 0, .6);
+    z-index: 50;
+    white-space: nowrap;
+  }
+  .bulk-bar.show { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
+
+  .bulk-count { font-size: .85rem; font-weight: 700; color: rgba(255, 255, 255, .6); min-width: 4rem; }
+  .bulk-count em { color: #FF7075; font-style: normal; }
+
+  .btn-bulk-date {
+    padding: .45rem .9rem;
+    background: rgba(100, 160, 255, .14);
+    border: 1px solid rgba(100, 160, 255, .28);
+    border-radius: .65rem;
+    color: #93c5fd;
+    font-size: .8rem; font-weight: 600; cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-bulk-date:hover { background: rgba(100, 160, 255, .28); }
+
+  .btn-bulk-del {
+    padding: .45rem .9rem;
+    background: rgba(239, 68, 68, .14);
+    border: 1px solid rgba(239, 68, 68, .28);
+    border-radius: .65rem;
+    color: #fca5a5;
+    font-size: .8rem; font-weight: 600; cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-bulk-del:hover { background: rgba(239, 68, 68, .28); }
+
+  .btn-bulk-copy {
+    padding: .45rem .9rem;
+    background: rgba(245, 158, 11, .14);
+    border: 1px solid rgba(245, 158, 11, .28);
+    border-radius: .65rem;
+    color: #fcd34d;
+    font-size: .8rem; font-weight: 600; cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-bulk-copy:hover { background: rgba(245, 158, 11, .28); }
+
+  .btn-bulk-cancel {
+    width: 30px; height: 30px;
+    background: rgba(255, 255, 255, .07);
+    border: 1px solid rgba(255, 255, 255, .1);
+    border-radius: .5rem;
+    color: rgba(255, 255, 255, .35);
+    font-size: .85rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s, color .15s;
+  }
+  .btn-bulk-cancel:hover { background: rgba(255, 255, 255, .12); color: #e8e6e3; }
+</style>
+{% endblock %}
+
+{% block body %}
+<main class="main">
+
+  <!-- 페이지 타이틀 -->
+  <div class="page-header">
+    <div>
+      <span class="page-title">매물 관리</span>
+      <span class="total-badge">
+        {% if scope == 'month' %}1달 이내 노출 {{ total }}건{% else %}전체 {{ total }}건{% endif %}
+      </span>
+    </div>
+    <a href="{{ url_for('admin.maemul_new') }}" class="btn-new">+ 매물 등록</a>
+  </div>
+
+  <div class="status-tabs">
+    <a href="{{ url_for('admin.maemul_list', deleted='active', scope='default') }}"
+       class="status-tab {% if scope != 'month' and deleted == 'active' %}active{% endif %}">정상 매물</a>
+    <a href="{{ url_for('admin.maemul_list', deleted='deleted', scope='default') }}"
+       class="status-tab {% if scope != 'month' and deleted == 'deleted' %}active{% endif %}">삭제된 매물</a>
+    <a href="{{ url_for('admin.maemul_list', deleted='all', scope='default') }}"
+       class="status-tab {% if scope != 'month' and deleted == 'all' %}active{% endif %}">전체 보기</a>
+    <a href="{{ url_for('admin.maemul_list', scope='month') }}"
+       class="status-tab {% if scope == 'month' %}active{% endif %}">1달 이내 매물</a>
+  </div>
+
+  <!-- 검색 필터 -->
+  <form class="search-bar" method="get">
+    <input type="hidden" name="scope" value="{{ scope }}" />
+    <input type="text" name="keyword" placeholder="제목·동·매물번호 검색" value="{{ keyword }}" />
+    {% if scope != 'month' %}
+    <select name="deleted">
+      <option value="active" {% if deleted=='active' %}selected{% endif %}>정상 매물</option>
+      <option value="deleted" {% if deleted=='deleted' %}selected{% endif %}>삭제된 매물</option>
+      <option value="all" {% if deleted=='all' %}selected{% endif %}>전체 보기</option>
+    </select>
+    {% else %}
+    <input type="hidden" name="deleted" value="active" />
+    {% endif %}
+    <select name="category">
+      <option value="">전체 카테고리</option>
+      {% for c in categories %}
+      <option value="{{ c.idx }}" {% if category==c.idx|string %}selected{% endif %}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+    <select name="state">
+      <option value="">전체 상태</option>
+      <option value="등록" {% if state=='등록' %}selected{% endif %}>등록</option>
+      <option value="숨김" {% if state=='숨김' %}selected{% endif %}>숨김</option>
+    </select>
+    <select name="contract">
+      <option value="">전체 계약</option>
+      <option value="계약가능" {% if contract=='계약가능' %}selected{% endif %}>계약가능</option>
+      <option value="계약완료" {% if contract=='계약완료' %}selected{% endif %}>계약완료</option>
+      <option value="확인필요" {% if contract=='확인필요' %}selected{% endif %}>확인필요</option>
+    </select>
+    <button type="submit" class="btn-search">검색</button>
+    <a href="{{ url_for('admin.maemul_list', scope=scope) }}" class="btn-reset" style="text-decoration:none">초기화</a>
+  </form>
+
+  <!-- 테이블 -->
+  <div class="table-wrap">
+    {% if rows %}
+    <table>
+      <thead>
+        <tr>
+          <th style="width:36px;">
+            <input type="checkbox" class="row-check" id="checkAll" title="전체 선택">
+          </th>
+          <th style="width:62px;"></th><!-- 썸네일 -->
+          <th class="col-code-mobile" style="width:64px;">매물번호</th>
+          <th class="col-hide" style="width:68px;">소재지</th>
+          <th>제목</th>
+          <th class="col-hide" style="width:56px;">면적</th>
+          <th class="col-hide" style="width:52px;">총층</th>
+          <th class="col-price-type" style="width:58px;">가격구분</th>
+          <th style="width:94px;">가격</th>
+          <th style="width:62px;">상태</th>
+          <th class="col-contract-mobile" style="width:62px;">계약</th>
+          <th class="col-hide" style="width:40px;">조회</th>
+          <th class="col-hide" style="width:80px;">최종수정</th>
+          <th style="width:120px;">관리</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr class="{% if r.is_deleted %}row-deleted{% endif %}">
+          <!-- 행 선택 체크박스 -->
+          <td>
+            <input type="checkbox" class="row-check row-item"
+                   value="{{ r.idx }}" data-title="{{ r.title[:15]|e }}">
+          </td>
+          <!-- 썸네일 -->
+          <td>
+            {% if r.picname1 %}
+            <img class="thumb" src="/images/maemul/big/{{ r.picname1 }}" alt="사진">
+            {% else %}
+            <div class="thumb-empty">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zm-8.5-1.5l-2.5-3-3 4h9l-3.5-1z" />
+              </svg>
+            </div>
+            {% endif %}
+          </td>
+          <!-- 매물번호 -->
+          <td class="col-code-mobile" style="font-size:.82rem; color:rgba(255,255,255,.45)">{{ r.code }}</td>
+          <!-- 소재지 -->
+          <td class="col-hide" style="font-size:.86rem">{{ r.dong or '-' }}</td>
+          <!-- 제목: 왼쪽 정렬 유지 -->
+          <td class="title-cell" style="overflow:hidden; max-width:0; text-align:left;">
+            {% if r.is_deleted %}
+            <span style="color:rgba(255,255,255,.55); font-weight:600; font-size:.92rem;
+                         display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+              {{ r.title }}
+            </span>
+            {% else %}
+            <a href="{{ url_for('admin.maemul_edit', idx=r.idx) }}"
+              style="color:#e8e6e3; text-decoration:none; font-weight:600; font-size:.92rem;
+                     display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+              {{ r.title }}
+            </a>
+            {% endif %}
+          </td>
+          <!-- 면적 -->
+          <td class="col-hide" style="font-size:.82rem; white-space:nowrap;">
+            {% if r.size %}{{ r.size }}㎡{% else %}-{% endif %}
+          </td>
+          <!-- 총층 -->
+          <td class="col-hide" style="font-size:.82rem; white-space:nowrap; color:rgba(255,255,255,.6)">
+            {% if r.now_floor or r.total_floor %}
+            {{ r.now_floor or '-' }}/{{ r.total_floor or '-' }}
+            {% else %}-{% endif %}
+          </td>
+          <!-- 가격구분 -->
+          <td class="col-price-type">
+            {% if r.part == '매매' %}
+            <span class="badge" style="background:rgba(251,191,36,.12);color:#fbbf24;">매매</span>
+            {% elif r.part == '전세' %}
+            <span class="badge" style="background:rgba(99,102,241,.12);color:#a5b4fc;">전세</span>
+            {% else %}
+            <span class="badge" style="background:rgba(16,185,129,.12);color:#34d399;">임대</span>
+            {% endif %}
+          </td>
+          <!-- 가격 -->
+          <td style="font-size:.86rem; white-space:nowrap;">
+            {% if r.part == '매매' %}
+            {{ '{:,}'.format(r.maemae_money or 0) }}
+            {% elif r.jen_money %}
+            {{ '{:,}'.format(r.jen_money) }}
+            {% elif r.security_money or r.month_money %}
+            {{ '{:,}'.format(r.security_money or 0) }}/{{ '{:,}'.format(r.month_money or 0) }}
+            {% else %}-{% endif %}
+          </td>
+          <!-- 상태 -->
+          <td class="col-contract-mobile">
+            {% if r.is_deleted %}
+            <span class="badge badge-deleted">삭제됨</span>
+            {% elif r.state == '등록' %}
+            <span class="badge badge-ok">등록</span>
+            {% else %}
+            <span class="badge badge-hide">숨김</span>
+            {% endif %}
+          </td>
+          <!-- 계약 -->
+          <td>
+            {% if r.contract == '계약완료' %}
+            <span class="badge badge-done">완료</span>
+            {% elif r.contract == '확인필요' %}
+            <span class="badge badge-check">확인</span>
+            {% else %}
+            <span class="badge badge-ok">가능</span>
+            {% endif %}
+          </td>
+          <!-- 조회수 -->
+          <td class="col-hide" style="font-size:.82rem; color:rgba(255,255,255,.45)">
+            {{ r.see or 0 }}
+          </td>
+          <!-- 최종수정 -->
+          <td class="col-hide" style="font-size:.78rem; color:rgba(255,255,255,.4)">
+            {{ r.ldate.strftime('%m/%d %H:%M') if r.ldate else '-' }}
+          </td>
+          <!-- 관리 -->
+          <td>
+            <div style="display:flex; gap:.3rem; align-items:center; justify-content:center;">
+              {% if r.is_deleted %}
+              <button class="btn-restore" onclick="restoreOne({{ r.idx }}, {{ r.title[:15]|tojson|forceescape }})">복구</button>
+              {% else %}
+              <a href="{{ url_for('admin.maemul_edit', idx=r.idx) }}" class="btn-edit">수정</a>
+              <button class="btn-del" onclick="confirmDelete({{ r.idx }}, {{ r.title[:15]|tojson|forceescape }})">삭제</button>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty">
+      {% if keyword or category or state or contract %}
+      검색 결과가 없습니다.
+      {% elif scope == 'month' %}
+      1달 이내 노출 매물이 없습니다.
+      {% elif deleted == 'deleted' %}
+      삭제된 매물이 없습니다.
+      {% else %}
+      등록된 매물이 없습니다.
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- 페이지네이션 -->
+  {% if total_pages > 1 %}
+  <nav class="pagination">
+    {% if page > 1 %}
+    <a href="?page={{ page-1 }}&keyword={{ keyword }}&category={{ category }}&state={{ state }}&contract={{ contract }}&deleted={{ deleted }}&scope={{ scope }}">‹</a>
+    {% endif %}
+
+    {% for p in range(1, total_pages+1) %}
+    {% if p == page %}
+    <span class="current">{{ p }}</span>
+    {% elif p == 1 or p == total_pages or (p >= page-2 and p <= page+2) %}
+    <a href="?page={{ p }}&keyword={{ keyword }}&category={{ category }}&state={{ state }}&contract={{ contract }}&deleted={{ deleted }}&scope={{ scope }}">{{ p }}</a>
+    {% elif p == page-3 or p == page+3 %}
+    <span class="dots">…</span>
+    {% endif %}
+    {% endfor %}
+
+    {% if page < total_pages %}
+    <a href="?page={{ page+1 }}&keyword={{ keyword }}&category={{ category }}&state={{ state }}&contract={{ contract }}&deleted={{ deleted }}&scope={{ scope }}">›</a>
+    {% endif %}
+  </nav>
+  {% endif %}
+
+</main>
+
+<!-- 일괄 작업 플로팅 바 -->
+<div class="bulk-bar" id="bulkBar">
+  <span class="bulk-count"><em id="bulkCount">0</em>개 선택</span>
+  {% if deleted == 'deleted' %}
+  <button class="btn-bulk-date" onclick="bulkRestore()">일괄 복구</button>
+  {% else %}
+  <button class="btn-bulk-copy" onclick="bulkCopy()">복사</button>
+  <button class="btn-bulk-date" onclick="bulkDateUpdate()">날짜 최신으로</button>
+  <button class="btn-bulk-del" onclick="bulkDeleteConfirm()">일괄 삭제</button>
+  {% endif %}
+  <button class="btn-bulk-cancel" onclick="clearSelection()" title="선택 해제">✕</button>
+</div>
+
+<!-- 일괄 삭제 확인 모달 -->
+<div id="bulkDelModal" style="
+  display:none; position:fixed; inset:0; z-index:100;
+  background:rgba(0,0,0,.6); backdrop-filter:blur(4px);
+  align-items:center; justify-content:center;">
+  <div style="background:#27243a; border:1px solid rgba(255,255,255,.12);
+    border-radius:1rem; padding:2rem 1.5rem;
+    width:calc(100% - 2rem); max-width:360px; text-align:center;">
+    <div style="font-size:1.5rem; margin-bottom:.75rem;">🗑️</div>
+    <div style="font-weight:700; font-size:1rem; margin-bottom:.4rem;">
+      선택한 <span id="bulkDelCount">0</span>개 매물을 삭제할까요?
+    </div>
+    <div style="font-size:.85rem; color:rgba(255,255,255,.45); margin-bottom:1.5rem;">
+      삭제 시 매물은 숨김 처리되어 사용자/관리자 목록에서 제외됩니다.
+    </div>
+    <div style="display:flex; gap:.75rem; justify-content:center;">
+      <button onclick="closeBulkModal()" style="flex:1; padding:.7rem; border-radius:.6rem;
+        border:1px solid rgba(255,255,255,.15); background:transparent;
+        color:#9a9590; font-weight:600; cursor:pointer;">취소</button>
+      <button id="bulkDelConfirmBtn" style="flex:1; padding:.7rem; border-radius:.6rem;
+        border:none; background:linear-gradient(135deg,#ef4444,#f97316);
+        color:#fff; font-weight:700; cursor:pointer;">삭제</button>
+    </div>
+  </div>
+</div>
+
+<!-- 단건 삭제 확인 모달 -->
+<div id="delModal" style="
+  display:none; position:fixed; inset:0; z-index:100;
+  background:rgba(0,0,0,.6); backdrop-filter:blur(4px);
+  align-items:center; justify-content:center;">
+  <div style="background:#27243a; border:1px solid rgba(255,255,255,.12);
+    border-radius:1rem; padding:2rem 1.5rem;
+    width:calc(100% - 2rem); max-width:360px; text-align:center;">
+    <div style="font-size:1.5rem; margin-bottom:.75rem;">🗑️</div>
+    <div style="font-weight:700; font-size:1rem; margin-bottom:.4rem;" id="delTitle"></div>
+    <div style="font-size:.85rem; color:rgba(255,255,255,.45); margin-bottom:1.5rem;">
+      삭제하면 매물은 숨김 처리되어 사용자/관리자 목록에서 제외됩니다.
+    </div>
+    <div style="display:flex; gap:.75rem; justify-content:center;">
+      <button onclick="closeModal()" style="flex:1; padding:.7rem; border-radius:.6rem;
+        border:1px solid rgba(255,255,255,.15); background:transparent;
+        color:#9a9590; font-weight:600; cursor:pointer;">취소</button>
+      <button id="delConfirmBtn" style="flex:1; padding:.7rem; border-radius:.6rem; border:none;
+        background:linear-gradient(135deg,#ef4444,#f97316);
+        color:#fff; font-weight:700; cursor:pointer;">삭제</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let _delIdx = null;
+  const deletedFilter = '{{ deleted }}';
+
+  /* 단건 삭제 모달 */
+  function confirmDelete(idx, title) {
+    _delIdx = idx;
+    document.getElementById('delTitle').textContent = '"' + title + '"';
+    document.getElementById('delModal').style.display = 'flex';
+  }
+  function closeModal() {
+    document.getElementById('delModal').style.display = 'none';
+    _delIdx = null;
+  }
+  document.getElementById('delConfirmBtn').addEventListener('click', function () {
+    if (!_delIdx) return;
+    fetch('/admin/maemul/' + _delIdx + '/delete', { method: 'POST' })
+      .then(r => r.json())
+      .then(data => {
+        if (data.ok) location.reload();
+        else alert('삭제 실패: ' + (data.error || ''));
+      });
+  });
+  document.getElementById('delModal').addEventListener('click', function (e) {
+    if (e.target === this) closeModal();
+  });
+
+  function restoreOne(idx, title) {
+    if (!confirm('"' + (title || '') + '" 매물을 복구할까요?')) return;
+    fetch('/admin/maemul/' + idx + '/restore', { method: 'POST' })
+      .then(r => r.json())
+      .then(data => {
+        if (data.ok) location.reload();
+        else alert('복구 실패: ' + (data.error || ''));
+      });
+  }
+
+  /* ── 일괄 작업: 체크박스 & 플로팅 바 ── */
+  (function () {
+    const checkAll    = document.getElementById('checkAll');
+    const bulkBar     = document.getElementById('bulkBar');
+    const bulkCountEl = document.getElementById('bulkCount');
+
+    function getChecked() {
+      return Array.from(document.querySelectorAll('.row-item:checked'));
+    }
+
+    function syncBar() {
+      const all     = document.querySelectorAll('.row-item');
+      const checked = getChecked();
+      const n = checked.length;
+
+      bulkCountEl.textContent = n;
+      if (n > 0) bulkBar.classList.add('show');
+      else       bulkBar.classList.remove('show');
+
+      if (n === 0) {
+        checkAll.checked = false; checkAll.indeterminate = false;
+      } else if (n === all.length) {
+        checkAll.checked = true;  checkAll.indeterminate = false;
+      } else {
+        checkAll.checked = false; checkAll.indeterminate = true;
+      }
+
+      all.forEach(function (chk) {
+        chk.closest('tr').classList.toggle('row-selected', chk.checked);
+      });
+    }
+
+    if (checkAll) {
+      checkAll.addEventListener('change', function () {
+        document.querySelectorAll('.row-item').forEach(function (chk) {
+          chk.checked = checkAll.checked;
+        });
+        syncBar();
+      });
+    }
+
+    document.querySelectorAll('.row-item').forEach(function (chk) {
+      chk.addEventListener('change', syncBar);
+    });
+
+    window.clearSelection = function () {
+      document.querySelectorAll('.row-item').forEach(function (chk) { chk.checked = false; });
+      if (checkAll) { checkAll.checked = false; checkAll.indeterminate = false; }
+      syncBar();
+    };
+
+    /* 일괄 복사 */
+    window.bulkCopy = function () {
+      const idxs = getChecked().map(function (chk) { return parseInt(chk.value); });
+      if (!idxs.length) return;
+      fetch('/admin/maemul/bulk-copy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idxs: idxs })
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data.ok) {
+            showQuickToast(data.count + '개 매물이 복사되었습니다.');
+            setTimeout(function () { location.reload(); }, 1200);
+          } else {
+            alert('복사 실패: ' + data.error);
+          }
+        });
+    };
+
+    /* 날짜 최신화 */
+    window.bulkDateUpdate = function () {
+      const idxs = getChecked().map(function (chk) { return parseInt(chk.value); });
+      if (!idxs.length) return;
+      fetch('/admin/maemul/bulk-date-update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idxs: idxs })
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data.ok) {
+            showQuickToast(data.count + '개 매물 날짜가 갱신되었습니다.');
+            setTimeout(function () { location.reload(); }, 1200);
+          } else {
+            alert('오류: ' + data.error);
+          }
+        });
+    };
+
+    /* 일괄 복구 */
+    window.bulkRestore = function () {
+      const idxs = getChecked().map(function (chk) { return parseInt(chk.value); });
+      if (!idxs.length) return;
+      fetch('/admin/maemul/bulk-restore', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idxs: idxs })
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data.ok) {
+            showQuickToast((data.count || 0) + '개 매물이 복구되었습니다.');
+            setTimeout(function () { location.reload(); }, 1200);
+          } else {
+            alert('복구 실패: ' + (data.error || ''));
+          }
+        });
+    };
+
+    /* 일괄 삭제 */
+    let _bulkIdxs = [];
+
+    window.bulkDeleteConfirm = function () {
+      if (deletedFilter === 'deleted') return;
+      _bulkIdxs = getChecked().map(function (chk) { return parseInt(chk.value); });
+      if (!_bulkIdxs.length) return;
+      document.getElementById('bulkDelCount').textContent = _bulkIdxs.length;
+      document.getElementById('bulkDelModal').style.display = 'flex';
+    };
+
+    window.closeBulkModal = function () {
+      document.getElementById('bulkDelModal').style.display = 'none';
+      _bulkIdxs = [];
+    };
+
+    document.getElementById('bulkDelConfirmBtn').addEventListener('click', function () {
+      if (!_bulkIdxs.length) return;
+      fetch('/admin/maemul/bulk-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idxs: _bulkIdxs })
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data.ok) location.reload();
+          else alert('삭제 실패: ' + data.error);
+        });
+    });
+
+    document.getElementById('bulkDelModal').addEventListener('click', function (e) {
+      if (e.target === this) window.closeBulkModal();
+    });
+
+    /* 간이 토스트 */
+    function showQuickToast(msg) {
+      const t = document.createElement('div');
+      t.textContent = msg;
+      Object.assign(t.style, {
+        position: 'fixed', bottom: '6rem', left: '50%',
+        transform: 'translateX(-50%)',
+        background: '#27243a', border: '1px solid rgba(255,255,255,.12)',
+        borderLeft: '3px solid #93c5fd', borderRadius: '.7rem',
+        padding: '.65rem 1.1rem', color: '#fff', fontSize: '.85rem',
+        fontWeight: '600', boxShadow: '0 8px 32px rgba(0,0,0,.45)',
+        zIndex: '9999', whiteSpace: 'nowrap',
+      });
+      document.body.appendChild(t);
+      setTimeout(function () { t.remove(); }, 1200);
+    }
+  })();
+
+  /* ── 저장 성공 토스트 ── */
+  (function () {
+    if (new URLSearchParams(location.search).get('saved') !== '1') return;
+    const toast = document.createElement('div');
+    toast.innerHTML = `
+      <svg viewBox="0 0 20 20" fill="currentColor" style="width:18px;height:18px;flex-shrink:0">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/>
+      </svg>
+      매물이 저장되었습니다`;
+    Object.assign(toast.style, {
+      position: 'fixed', bottom: '1.5rem', left: '50%',
+      transform: 'translateX(-50%) translateY(20px)',
+      display: 'flex', alignItems: 'center', gap: '0.5rem',
+      background: 'linear-gradient(135deg,#2d2a3e,#1e1b28)',
+      border: '1px solid rgba(255,255,255,.12)',
+      borderLeft: '3px solid #FF7075', borderRadius: '0.7rem',
+      padding: '0.75rem 1.25rem', color: '#fff',
+      fontSize: '0.88rem', fontWeight: '600',
+      boxShadow: '0 8px 32px rgba(0,0,0,.45)',
+      zIndex: '9999', opacity: '0',
+      transition: 'opacity .35s ease, transform .35s ease',
+      whiteSpace: 'nowrap',
+    });
+    document.body.appendChild(toast);
+    requestAnimationFrame(() => {
+      toast.style.opacity   = '1';
+      toast.style.transform = 'translateX(-50%) translateY(0)';
+    });
+    setTimeout(() => {
+      toast.style.opacity   = '0';
+      toast.style.transform = 'translateX(-50%) translateY(20px)';
+      setTimeout(() => toast.remove(), 400);
+    }, 3000);
+    history.replaceState(null, '', location.pathname);
+  })();
+</script>
+{% endblock %}

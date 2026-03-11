@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <!-- ✅ 모바일 뷰포트 설정 (미설정 시 PC 화면처럼 렌더링되는 문제 방지) -->
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="description" content="천안하우스 매물 상세 - {{ property.title }}">
+    <meta name="keywords" content="천안하우스, 부동산, 매물, {{ property.title }}">
+    <title>천안하우스 매물 상세 - {{ property.code }}</title>
+    <!-- ✅ defer: HTML 파싱 블로킹 방지, DOMContentLoaded 전에 실행됨 -->
+    {% if kakao_js_api_key %}
+    <script defer type="text/javascript"
+        src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_js_api_key }}&autoload=false"></script>
+    {% endif %}
+    <!-- 카카오톡 공유 SDK — shareToKakao() 호출 시 동적 로드로 변경하여 head에서 제거 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/heart.css') }}?v=7">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <!-- 하단 내비게이션 바 스타일 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bottom-nav.css') }}?v=7">
+    {% if property.youtube_url and property.contract != '계약완료' %}
+    <script defer src="https://www.youtube.com/iframe_api"></script>
+    {% endif %}
+    <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/lite-youtube-embed.css') }}" />
+    <script src="{{ url_for('static', filename='js/lite-youtube-embed.js') }}"></script> -->
+    <!-- ✅ 목록→상세 슬라이드인: VT 미지원 시 콘텐츠 래퍼만 화면 밖에 위치
+         (body/html transform 대신 클래스 방식 → position:fixed nav/footer는 제자리 유지) -->
+    <script>
+        if (sessionStorage.getItem('fromListPage') === 'true' && !('onpagereveal' in window)) {
+            /* html에 클래스 추가 → CSS가 #view-slide-wrapper만 translateX(100%) */
+            document.documentElement.classList.add('view-offscreen-init');
+        }
+
+        // ✅ 방향별 VT 애니메이션: pagereveal 이벤트에서 navDirection 읽어 클래스 부여
+        if ('onpagereveal' in window) {
+            window.addEventListener('pagereveal', function (e) {
+                // ✅ 관심목록 카드 클릭 경유: VT 스킵 (cross-fade 없이 즉시 표시)
+                if (sessionStorage.getItem('skipVT') === '1') {
+                    sessionStorage.removeItem('skipVT');
+                    if (e.viewTransition) e.viewTransition.skipTransition();
+                    return;
+                }
+                var dir = sessionStorage.getItem('navDirection');
+                if (dir && e.viewTransition) {
+                    document.documentElement.classList.add('vt-' + dir);
+                    e.viewTransition.finished.then(function () {
+                        document.documentElement.classList.remove('vt-' + dir);
+                    });
+                }
+                sessionStorage.removeItem('navDirection');
+            });
+
+            // ✅ 페이지를 떠날 때 방향 자동 설정 (브라우저 뒤로가기/스와이프 대응)
+            window.addEventListener('pageswap', function (e) {
+                if (!e.viewTransition || !e.activation) return;
+
+                // 이미 navDirection이 설정되어 있으면 (UI 버튼으로 설정됨) 스킵
+                if (sessionStorage.getItem('navDirection')) return;
+
+                var navigationType = e.activation.navigationType;
+                if (navigationType === 'traverse') {
+                    // 브라우저 뒤로가기 → 상세는 오른쪽으로 빠지는 방향
+                    sessionStorage.setItem('navDirection', 'slide-left');
+                }
+            });
+        }
+    </script>
+    <!-- 매물 상세 페이지 전용 스타일 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/view.css') }}?v=1">
+    {% include 'include.html' %}
+</head>
+
+<body class="bg-gray-50" style="padding-bottom: 0;">
+    <!-- 슬라이드 애니메이션 래퍼 — 이 div만 transform -->
+
+    <div id="view-slide-wrapper">
+        <!-- 헤더 -->
+        <header class="flex items-center justify-between px-4 py-3 bg-white shadow-sm sticky top-0 z-[100]">
+            <div class="flex items-center gap-1">
+                <button data-detail-close="1" class="text-gray-600 text-xl py-1 px-2 cursor-pointer"
+                    onclick="history.back()">←</button>
+                <h1 class="text-lg font-semibold">매물번호 {{ property.code }}</h1>
+            </div>
+            <div id="button-div" class="absolute right-4 flex justify-end gap-1">
+                <!-- 좋아요 -->
+                <button onclick="toggleLike('{{ property.code or property.idx }}')" class="flex items-center justify-between px-1.5 py-1 rounded-lg border transition-all duration-200 ease-in-out cursor-pointer
+                       text-gray-600 bg-white border-gray-200">
+                    <svg class="w-6 h-6 heart-unliked" data-like-btn="{{ property.code or property.idx }}"
+                        xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" stroke="black" stroke-width="0"
+                        fill="currentColor">
+                        <path
+                            d="M223,57a58.07,58.07,0,0,0-81.92-.1L128,69.05 114.91,56.86A58,58,0,0,0,33,139l89.35,90.66a8,8,0,0,0,11.4,0L223,139a58,58,0,0,0,0-82Z">
+                        </path>
+                    </svg>
+                </button>
+                <!-- 공유 -->
+                <button id="share-btn" onclick="openShareModal()"
+                    class="flex items-center justify-center gap-2 px-2.5 py-1 rounded-lg border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 transition-all cursor-pointer">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                        <polyline points="16 6 12 2 8 6" />
+                        <line x1="12" y1="2" x2="12" y2="15" />
+                    </svg>
+                </button>
+                <!-- 닫기 -->
+                <button data-detail-close="1" onclick="history.back()"
+                    class="flex items-center justify-center px-2.5 py-1 ml-2 text-gray-600 cursor-pointer"
+                    aria-label="닫기">✕</button>
+            </div>
+        </header>
+        <!-- {{ property }} -->
+        <!-- 이미지 섹션 -->
+        <section class="relative w-full overflow-hidden">
+            <!-- ✅ 계약완료 오버레이 -->
+            {% if property.contract == '계약완료' %}
+            <div class="absolute inset-0 z-[50] pointer-events-none">
+                <img src="/static/images/end_big.png" alt="계약완료" class="w-full h-full object-cover">
+            </div>
+            {% endif %}
+            <!-- 유튜브 섹션 -->
+            {% if property.youtube_url and property.contract != '계약완료' %}
+            <div id="yt-video" class="absolute inset-0 z-[100] w-full h-full hidden bg-black overflow-hidden">
+                <div id="video-player-root" class="w-full h-full"></div>
+
+                <div id="yt-poster" class="absolute inset-0 w-full h-full cursor-pointer group bg-cover bg-center"
+                    style="background-image: url('https://i.ytimg.com/vi/{{ property.video_id }}/hqdefault.jpg');"
+                    onclick="startRealVideo()">
+
+                    <div
+                        class="absolute top-0 left-0 w-full h-[99px] bg-gradient-to-b from-black/70 via-black/40 to-transparent z-10">
+                    </div>
+
+                    <div class="absolute inset-0 flex items-center justify-center z-20">
+                        <div class="w-[68px] h-[48px] transition-transform duration-300 group-hover:scale-110">
+                            <svg viewBox="0 0 68 48" class="w-full h-full drop-shadow-2xl">
+                                <path
+                                    class="fill-[#FF0000]/80 group-hover:fill-[#555555] transition-colors duration-200"
+                                    d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.63 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" />
+                                <path fill="white" d="M45 24 27 14v20" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            <!-- ✅ 계약완료가 아닐 때만 슬라이드 카운터 표시 -->
+            {% if property.contract != '계약완료' %}
+            <div id="slide-counter"
+                class="absolute bottom-[10px] right-[14px] bg-[#555] rounded-[2px] px-[8px] py-[5px] text-white tracking-[1px] opacity-70 z-10 text-[14px] leading-none whitespace-nowrap inline-block"
+                style="transform: translateY(6px);">
+                <span id="current-slide">1</span>/<span id="total-slides">0</span>
+            </div>
+            {% endif %}
+            <div class="swiper mySwiper">
+                <div class="swiper-wrapper">
+                    {% for i in range(1, 21) %}
+                    {% set picname = 'picname' ~ i %}
+                    {% if property[picname] %}
+                    <!-- ✅ 계약완료면 첫 번째 이미지만 표시 -->
+                    {% if property.contract != '계약완료' or i == 1 %}
+                    <div class="swiper-slide">
+                        <img src="/images/maemul/big/{{ property[picname] }}" class="w-full h-full object-cover"
+                            alt="매물 이미지 {{ i }}" loading="lazy">
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <!-- 전체화면 사진 뷰어 -->
+        <div id="photoViewerOverlay" class="photo-viewer-overlay" aria-hidden="true">
+            <button id="photoViewerCloseBtn" class="photo-viewer-close-btn" aria-label="사진 닫기">×</button>
+            <div class="photo-viewer-counter">
+                <span id="photoViewerCurrent">1</span>/<span id="photoViewerTotal">0</span>
+            </div>
+            <div class="swiper photo-viewer-swiper">
+                <div class="swiper-wrapper">
+                    {% for i in range(1, 21) %}
+                    {% set picname = 'picname' ~ i %}
+                    {% if property[picname] %}
+                    {% if property.contract != '계약완료' or i == 1 %}
+                    <div class="swiper-slide">
+                        <div class="swiper-zoom-container">
+                            <img src="/images/maemul/big/{{ property[picname] }}" alt="전체화면 매물 이미지 {{ i }}"
+                                loading="lazy">
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 제목 섹션 -->
+        <section class="py-3 px-4 bg-white">
+            <div class="mb-1">
+                <div class="flex items-center justify-between text-gray-600 font-medium mb-3 text-sm">
+                    <div class="flex items-center gap-2">
+                        <p class="h-7 flex items-center bg-[rgb(240,240,240)] py-1 px-2.5 rounded-sm text-sm">
+                            매물번호 {{ property.code }}
+                        </p>
+
+                        {% if property.youtube_url and property.contract != '계약완료' %}
+                        <button id="video-btn" onclick="toggleVideo()"
+                            class="h-7 flex items-center justify-center gap-2 px-2.5 py-1 rounded-sm border border-gray-200 text-gray-600 bg-white cursor-pointer text-sm font-medium">
+                            <div class="w-5 h-5 flex items-center shrink-0">
+                                <img class="w-full" src="/static/images/movie_icon.png" alt="영상 있음">
+                            </div>
+                            영상 보기
+                        </button>
+                        {% endif %}
+                    </div>
+                    <!-- ✅ 계약완료면 수정일 숨김 -->
+                    {% if property.contract != '계약완료' %}
+                    <div class="flex items-center gap-1 relative">
+                        <!-- 설명 아이콘 -->
+                        <span id="last-edit-info-icon" onclick="toggleLastEditTooltip(event)"
+                            style="cursor: pointer; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: #f0f0f0; color: #888; font-size: 10px; font-weight: bold;">?</span>
+                        <p>{{ property.last_edit }}</p>
+                        <!-- 툴팁 팝업 (말풍선 스타일) -->
+                        <div id="last-edit-tooltip"
+                            class="hidden absolute top-full right-0 mt-3 text-gray-700 p-2 rounded-lg shadow-lg border border-gray-200 z-50 text-xs leading-tight"
+                            style="width: 180px; background: #f9f9f9;">
+                            <!-- 말풍선 꼬리 (위쪽 화살표) -->
+                            <div
+                                style="position: absolute; top: -7px; right: 24px; width: 12px; height: 12px; background: #f9f9f9; border-left: 1px solid #e5e7eb; border-top: 1px solid #e5e7eb; transform: rotate(45deg);">
+                            </div>
+                            <p class="font-semibold mb-0.5">매물 최종 확인일</p>
+                            <p class="text-gray-500" style="line-height: 1.3;">*확인필요: 매물 확인한지 오래되어 재확인이 필요한 매물</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <!-- ✅ 계약완료면 가격 대신 "계약완료" 표시 -->
+                {% if property.contract == '계약완료' %}
+                <h2 class="text-xl font-bold text-[#e53935] mb-4 flex items-center gap-2">
+                    계약완료
+                </h2>
+                {% else %}
+                <h2 class="text-xl font-bold text-[rgb(50,50,50)] mb-4 flex items-center gap-2">
+                    {{ property.price_text }} <span class="text-sm font-normal text-[rgb(120,120,120)]">(관리비 {{
+                        property.public_money
+                        }}만원)</span>
+                </h2>
+                {% endif %}
+                <!-- 매물종류 및 층 정보 -->
+                <div class="flex items-center gap-4 mb-4 text-[15px] text-gray-700">
+                    <!-- 지역명 -->
+                    <div class="flex items-center gap-1">
+                        <img src="{{ url_for('static', filename='images/icon-area.png') }}" alt="지역" class="w-6 h-6">
+                        <span>{% if property.ri %}{{ property.dong }} {{ property.ri }}{% else %}{{ property.dong }}{%
+                            endif
+                            %}</span>
+                    </div>
+                    <!-- 매물종류 -->
+                    <div class="flex items-center gap-1">
+                        <img src="{{ url_for('static', filename='images/icon-1,2,3.png') }}" alt="매물종류" class="w-5 h-5">
+                        <span>{% if property.category == '90' %}원룸{% elif property.category == '91' %}투베이{% elif
+                            property.category == '92' %}무보증/단기{% elif property.category == '93' %}투룸{% elif
+                            property.category == '94' %}쓰리룸{% else %}{{ property.category }}{% endif %}</span>
+                    </div>
+                    <!-- ✅ 계약완료가 아닐 때만 층 정보 표시 -->
+                    {% if property.contract != '계약완료' %}
+                    <div class="flex items-center gap-1">
+                        <img src="{{ url_for('static', filename='images/icon-fllor.png') }}" alt="층정보" class="w-5 h-5">
+                        <span>총 {{ property.total_floor }}층 중 {{ property.now_floor }}층</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <!-- ✅ 계약완료가 아닐 때만 제목 표시 -->
+            {% if property.contract != '계약완료' %}
+            <h2 class="text-sm font-normal text-[rgb(100,100,100)] mb-1">{{ property.title }}</h2>
+            {% endif %}
+
+        </section>
+        <!-- 기본정보 섹션 -->
+        <section class="py-[2px] px-[15px] mt-2 bg-white">
+            <ul class="text-base font-light divide-y divide-gray-100">
+
+                <!-- 지역구분 -->
+                <li class="flex items-center py-3">
+                    <div class="w-[6em] shrink-0 font-semibold text-[14px]">지역구분</div>
+                    <div class="flex-1 text-[14px]">{{ property.si + " " + property.gu + " " + property.dong }}</div>
+                </li>
+
+                <!-- 형태 -->
+                <li class="flex items-center py-3">
+                    <div class="w-[6em] shrink-0 font-semibold text-[14px]">형태</div>
+                    <div class="flex-1 text-[14px]">
+                        {% if property.gudxo -%}방 {{ property.gudxo }}{%- endif -%}
+                        {% if property.gudxo1 -%}, 거실 {{ property.gudxo1 }}{%- endif -%}
+                        {% if property.gudxo2 -%}, 욕실 {{ property.gudxo2 }}{%- endif -%}
+                    </div>
+                </li>
+
+                <!-- ✅ 계약완료가 아닐 때만 아래 항목들 표시 -->
+                {% if property.contract != '계약완료' %}
+
+                <!-- 구조 -->
+                <li class="flex items-center py-3">
+                    <div class="w-[6em] shrink-0 font-semibold text-[14px]">구조</div>
+                    <div class="flex-1 text-[14px]">주방 : {{ property.room1 }} / 베란다 : {{ property.room2 }}</div>
+                </li>
+
+                <!-- 전용면적 + 주차 (2항목 1행 — 각 항목 내부도 동일 w-[6em] 레이블 기준) -->
+                <li class="flex items-center py-3 text-[14px]">
+                    <!-- 전용면적 -->
+                    <div class="flex flex-1 items-center min-w-0">
+                        <span class="w-[6em] shrink-0 font-semibold">전용면적</span>
+                        <div class="flex flex-1 items-center gap-1.5 min-w-0">
+                            <span id="area-display" class="whitespace-nowrap">{{ property.size | int }}m²</span>
+                            <button
+                                class="font-medium text-[10px] text-gray-500 border border-gray-300 rounded px-1 py-0.5 flex items-center gap-0.5 cursor-pointer hover:bg-gray-50 shrink-0"
+                                id="area-convert-btn">
+                                <i data-lucide="arrow-left-right" class="w-3 h-3"></i>
+                                <span>평</span>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- 구분선: margin-left로 주차 영역 오른쪽 이동 -->
+                    <span class="text-gray-200 px-2 shrink-0" style="margin-left: 2em;">|</span>
+                    <!-- 주차 -->
+                    <div class="flex flex-1 items-center min-w-0">
+                        <span class="w-[3em] shrink-0 font-semibold">주차</span>
+                        <span class="flex-1 whitespace-nowrap text-gray-700">총 {{ property.parking }}대</span>
+                    </div>
+                </li>
+
+                <!-- 관리비 -->
+                <li class="flex items-start py-3">
+                    <div class="w-[6em] shrink-0 font-semibold text-[14px]">관리비</div>
+                    <div class="flex-1 text-[14px]">
+                        <div class="flex items-center gap-2">
+                            <span>{{ property.public_money }}만원</span>
+                            {% if property.public_money_detail == True %}
+                            <button
+                                class="text-xs text-gray-500 border border-gray-300 rounded px-1 py-0.5 cursor-pointer"
+                                id="public-money-btn">상세 내역</button>
+                            {% endif %}
+                        </div>
+                        <div class="text-sm text-gray-500">({{ property.public_money1 }}) ({{ property.public_money_opt
+                            }} 별도)</div>
+                    </div>
+                </li>
+
+                <!-- 관리비 상세 모달 (위치 유지) -->
+                <div id="public-money-modal"
+                    class="fixed inset-0 items-center justify-center bg-black/50 hidden z-[200]">
+                    <div class="bg-white p-5 rounded-lg shadow-lg w-72 font-light" onclick="event.stopPropagation()">
+                        <h2 class="text-base font-semibold mb-3">관리비 상세</h2>
+                        <div class="text-sm">
+                            <ul class="list-disc pl-4">
+                                <li>일반(공용)관리비 : {{ property.public_money_main }}</li>
+                                <li>
+                                    사용료
+                                    <ul class="list-disc pl-4 mt-1">
+                                        <li>전기료 : {{ property.public_money_electric }}</li>
+                                        <li>가스비 : {{ property.public_money_gas }}</li>
+                                        <li>난방비 : {{ property.public_money_heat }}</li>
+                                        <li>수도세 : {{ property.public_money_water }}</li>
+                                        <li>TV방송료 : {{ property.public_money_tv }}</li>
+                                        <li>인터넷비 : {{ property.public_money_internet }}</li>
+                                    </ul>
+                                </li>
+                                <li>기타관리비(건물 유지보수외) : {{ property.public_money_etc }}</li>
+                            </ul>
+                        </div>
+                        <button id="close-modal"
+                            class="mt-3 px-3 py-1 text-sm border-gray-300 rounded border cursor-pointer">닫기</button>
+                    </div>
+                </div>
+
+                <!-- 입주가능일 -->
+                <li class="flex items-center py-3">
+                    <div class="w-[6em] shrink-0 font-semibold text-[14px]">입주가능일</div>
+                    <div class="flex-1 text-[14px]">{{ property.movein_day }}</div>
+                </li>
+
+                <!-- 건축물종류 -->
+                <li class="flex items-center py-3">
+                    <div class="w-[6em] shrink-0 font-semibold text-[14px]">건축물종류</div>
+                    <div class="flex-1 text-[14px]">{{ property.build_use_type }}</div>
+                </li>
+
+                <!-- 사용승인일 -->
+                <li class="flex items-center py-3">
+                    <div class="w-[6em] shrink-0 font-semibold text-[14px]">사용승인일</div>
+                    <div class="flex-1 text-[14px]">{{ property.build_access_date }}</div>
+                </li>
+
+                <!-- 방향 -->
+                <li class="flex items-center py-3">
+                    <div class="w-[6em] shrink-0 font-semibold text-[14px]">방향</div>
+                    <div class="flex-1 text-[14px]">
+                        {% if property.aspect %}{{ property.aspect }} (주실/베란다 창문){% endif %}
+                    </div>
+                </li>
+
+                {% endif %}
+            </ul>
+        </section>
+        <!-- ✅ 계약완료가 아닐 때만 옵션정보와 위치정보 표시 -->
+        {% if property.contract != '계약완료' %}
+        <!-- 옵션정보 -->
+        {% set labels = {
+        "household1": "붙박이장",
+        "household2": "옷장",
+        "household3": "책상",
+        "household4": "화장대",
+        "household5": "침대",
+        "household6": "식탁",
+        "electron1": "냉장고",
+        "electron2": "에어컨",
+        "electron3": "LCD-TV",
+        "electron4": "드럼세탁기",
+        "electron5": "일반세탁기",
+        "electron6": "일반TV",
+        "bathroom1": "전자레인지",
+        "bathroom2": "가스레인지",
+        "bathroom3": "인덕션",
+        "bathroom4": "씽크대",
+        "bathroom5": "샤워부스",
+        "bathroom6": "비데",
+        "security1": "방법창",
+        "security2": "CCTV",
+        "security3": "비디오폰",
+        "security4": "인터폰",
+        "security5": "1층 번호키",
+        "security6": "디지털도어락",
+        "etc1": "엘리베이터",
+        "etc2": "도시가스",
+        "etc3": "심야전기",
+        "etc4": "주차차단기",
+        "etc5": "컴퓨터",
+        "etc6": "전실",
+        "around1": "스포츠센터",
+        "around2": "할인마트",
+        "around3": "편의점",
+        "around4": "은행",
+        "around5": "공원",
+        "around6": "학교"
+        } %}
+        <section class="py-[10px] px-[20px] mt-2 bg-white">
+            <h3 class="font-semibold text-xl mb-3 pb-3">옵션 및 시설 정보</h3>
+            <div id="optionWrapper" class="relative max-h-[130px] overflow-hidden">
+                <div class="grid grid-cols-3 gap-3 text-xs">
+                    {% for group in ['household','electron','bathroom','security','etc','around'] %}
+                    {% for i in range(1, 7) %}
+                    {% set key = group ~ i %}
+                    {% if property[key] %}<span class="px-3 py-2 bg-gray-100 rounded text-center">{{ labels[key]
+                        }}</span>
+                    {% endif %}
+                    {% endfor %}
+                    {% endfor %}
+                </div>
+                <div id="fadeCover"
+                    class="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-white to-transparent pointer-events-none">
+                </div>
+            </div>
+            <div class="flex justify-center">
+                <button id="toggleBtn"
+                    class="text-sm text-blue-500 mt-2 border border-gray-300 rounded w-full px-1 py-2">더보기 ▾</button>
+            </div>
+        </section>
+        <!-- 지도 -->
+        <section class="mt-2 bg-white py-[10px] px-[20px]">
+            <!-- ✅ 헤더 우측에 지도 상세 모달 열기 버튼 추가 -->
+            <div class="flex items-center justify-between mb-1 pb-1">
+                <h3 class="font-semibold text-xl">위치 및 주변시설</h3>
+                <button onclick="openMapDetailModal()" class="text-gray-500 text-xl px-1 cursor-pointer"
+                    aria-label="지도 크게 보기">></button>
+            </div>
+            <div class="relative">
+                <div id="map" class="w-full h-60 bg-gray-200 flex items-center justify-center text-gray-500">지도
+                    영역</div>
+                <!-- ✅ 터치 스크롤용 투명 오버레이 (클릭은 통과, 드래그는 스크롤) -->
+                <div id="map-touch-overlay" class="absolute inset-0 z-10"></div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- 지도 상세 모달 (스케일+페이드 애니메이션: view.css 참조) -->
+        <div id="map-detail-modal" class="fixed inset-0 bg-black/50 z-[300] hidden">
+            <div class="bg-white w-full h-full flex flex-col">
+                <!-- 모달 헤더 -->
+                <div class="flex items-center justify-between px-4 py-3 bg-white shadow-sm">
+                    <button class="text-gray-600 text-xl py-1 px-2 cursor-pointer"
+                        onclick="closeMapDetailModal()">←</button>
+                    <h2 class="text-sm font-medium flex-1 text-center">{{ property.si }} {{ property.gu }} {{
+                        property.dong }} {{ property.traffice }}</h2>
+                    <button class="text-gray-400 text-2xl py-1 px-2 cursor-pointer hover:text-gray-600"
+                        onclick="closeMapDetailModal()" aria-label="닫기">×</button>
+                </div>
+                <!-- 주변 시설 카테고리 버튼 -->
+                <div id="poi-category-buttons"
+                    class="flex flex-wrap justify-center gap-2 px-3 py-2 bg-gray-50 border-b border-gray-200">
+                    <button
+                        class="poi-btn px-3 py-1.5 rounded-full text-xs font-medium bg-white border border-gray-300 text-gray-600 transition-all"
+                        data-category="bus" onclick="togglePOICategory('bus')">
+                        🚌 버스
+                    </button>
+                    <button
+                        class="poi-btn px-3 py-1.5 rounded-full text-xs font-medium bg-white border border-gray-300 text-gray-600 transition-all"
+                        data-category="convenience" onclick="togglePOICategory('convenience')">
+                        🏪 편의점
+                    </button>
+                    <button
+                        class="poi-btn px-3 py-1.5 rounded-full text-xs font-medium bg-white border border-gray-300 text-gray-600 transition-all"
+                        data-category="laundry" onclick="togglePOICategory('laundry')">
+                        👔 세탁소
+                    </button>
+                    <button
+                        class="poi-btn px-3 py-1.5 rounded-full text-xs font-medium bg-white border border-gray-300 text-gray-600 transition-all"
+                        data-category="bank" onclick="togglePOICategory('bank')">
+                        🏦 은행
+                    </button>
+                    <button
+                        class="poi-btn px-3 py-1.5 rounded-full text-xs font-medium bg-white border border-gray-300 text-gray-600 transition-all"
+                        data-category="mart" onclick="togglePOICategory('mart')">
+                        🛒 마트
+                    </button>
+                    <button
+                        class="poi-btn px-3 py-1.5 rounded-full text-xs font-medium bg-white border border-gray-300 text-gray-600 transition-all"
+                        data-category="cafe" onclick="togglePOICategory('cafe')">
+                        ☕ 카페
+                    </button>
+                    <button
+                        class="poi-btn px-3 py-1.5 rounded-full text-xs font-medium bg-white border border-gray-300 text-gray-600 transition-all"
+                        data-category="gym" onclick="togglePOICategory('gym')">
+                        🏋️ 헬스장
+                    </button>
+                    <!-- ✅ 초기화 버튼 -->
+                    <button
+                        class="px-3 py-1.5 rounded-full text-xs font-medium bg-gray-200 border border-gray-400 text-gray-700 transition-all hover:bg-gray-300"
+                        onclick="clearAllPOIMarkers()">
+                        🔄 초기화
+                    </button>
+                </div>
+                <!-- 안내 문구 -->
+                <div class="text-center py-1.5 px-3 bg-gray-50 border-b border-gray-200">
+                    <p class="text-[11px] text-gray-500">※매물 위치 기준 반경 500m 내(도보10분 내)의 정보만 표시됩니다.</p>
+                </div>
+                <!-- 모달 지도 (커스텀 줌 버튼 포함) -->
+                <div class="flex-1 w-full bg-gray-200 relative">
+                    <div id="modal-map" class="w-full h-full"></div>
+                    <!-- 커스텀 줌 +/- 버튼 -->
+                    <div
+                        style="position:absolute; right:12px; bottom:24px; display:flex; flex-direction:column; gap:4px; z-index:100;">
+                        <button onclick="modalZoomIn()" style="width:34px; height:34px; background:white; border:1px solid #ccc; border-radius:6px;
+                               font-size:20px; line-height:1; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,0.2);
+                               display:flex; align-items:center; justify-content:center;">
+                            +
+                        </button>
+                        <button onclick="modalZoomOut()" style="width:34px; height:34px; background:white; border:1px solid #ccc; border-radius:6px;
+                               font-size:20px; line-height:1; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,0.2);
+                               display:flex; align-items:center; justify-content:center;">
+                            &minus;
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 중개사 정보 (home.html 푸터 스타일 적용) -->
+        <section class="vaf-wrap">
+            <div class="vaf-title">
+                <span>공인중개사 정보</span>
+                <!-- 회사소개 / 오시는 길 버튼 -->
+                <div style="display:flex; gap:6px; flex-shrink:0;">
+                    <a href="/about" class="vaf-directions-btn">회사소개</a>
+                    <a href="#" class="vaf-directions-btn" onclick="showMapPopup(); return false;">오시는 길</a>
+                </div>
+            </div>
+            <div class="vaf-desc">
+                <b>프렌즈부동산공인중개사사무소</b> | <b><a href="tel:010-6560-1250" style="color:#333; text-decoration:none;">전화:
+                        010-6560-1250</a></b><br>
+                대표: 방현진 | 이메일: bhj0525@naver.com<br>
+                주소: 충남 천안시 서북구 두정고2길 8, 101호(두정동 1966)<br>
+                사업자번호: 326-07-02326 | 중개업번호: 44133-2021-05490 <br>
+                Copyright © 2010-
+                <script>document.write(new Date().getFullYear())</script> 천안하우스 All rights reserved.<br>
+            </div>
+            {% include 'components/map_popup.html' %}
+        </section>
+
+    </div><!-- /#view-slide-wrapper 끝 -->
+
+    <!-- ✅ 하단 문의 버튼: view-slide-wrapper 밖에 독립 요소로 배치 → VT 별도 레이어로 root와 동기화 슬라이드 -->
+    <footer class="detail-contact-bar w-full bg-[rgb(255,97,96)] text-white">
+        <div class="flex border-b border-white/20">
+            <button class="flex-1 py-3 border-r border-white/20 flex items-center justify-center gap-4"
+                onclick="window.location.href='tel:010-6560-1250'">
+                <!-- 녹색 전화 아이콘 (원형) -->
+
+                <svg class="w-5 h-5" viewBox="0 0 512 512" fill="#ffffff">
+                    <path
+                        d="M164.9 24.6c-7.7-18.6-28-28.5-47.4-23.2l-88 24C12.1 30.2 0 46 0 64C0 311.4 200.6 512 448 512c18 0 33.8-12.1 38.6-29.5l24-88c5.3-19.4-4.6-39.7-23.2-47.4l-96-40c-16.3-6.8-35.2-2.1-46.3 11.6L304.7 368C234.3 334.7 177.3 277.7 144 207.3L193.3 167c13.7-11.2 18.4-30 11.6-46.3l-40-96z" />
+                </svg>
+
+                전화 문의
+            </button>
+
+            <button class="flex-1 py-3 flex items-center justify-center gap-4" onclick="openChatModal()">
+                <!-- 파란색 채팅 아이콘 (원형) -->
+
+                <svg class="w-5.5 h-5.5" viewBox="0 0 640 512" fill="#ffffff">
+                    <path
+                        d="M208 352c114.9 0 208-78.8 208-176S322.9 0 208 0S0 78.8 0 176c0 38.6 14.7 74.3 39.6 103.4c-3.5 9.4-8.7 17.7-14.2 24.7c-4.8 6.2-9.7 11-13.3 14.3c-1.8 1.6-3.3 2.9-4.3 3.7c-.5 .4-.9 .7-1.1 .8l-.2 .2s0 0 0 0s0 0 0 0C1 327.2-1.4 334.4 .8 340.9S9.1 352 16 352c21.8 0 43.8-5.6 62.1-12.5c9.2-3.5 17.8-7.4 25.2-11.4C134.1 343.3 169.8 352 208 352zM448 176c0 112.3-99.1 196.9-216.5 207C255.8 457.4 336.4 512 432 512c38.2 0 73.9-8.7 104.7-23.9c7.5 4 16 7.9 25.2 11.4c18.3 6.9 40.3 12.5 62.1 12.5c6.9 0 13.1-4.5 15.2-11.1c2.1-6.6-.2-13.8-5.8-17.9c0 0 0 0 0 0s0 0 0 0l-.2-.2c-.2-.2-.6-.4-1.1-.8c-1-.8-2.5-2-4.3-3.7c-3.6-3.3-8.5-8.1-13.3-14.3c-5.5-7-10.7-15.4-14.2-24.7c24.9-29 39.6-64.7 39.6-103.4c0-92.8-84.9-168.9-192.6-175.5c.4 5.1 .6 10.3 .6 15.5z" />
+                </svg>
+
+                채팅 문의
+            </button>
+        </div>
+
+    </footer>
+
+    <!-- 🔹 채팅 모달 -->
+    <div id="chatModal" class="hidden fixed inset-0 bg-black/40 items-end justify-center" style="z-index: 9100;"
+        onclick="overlayClick(event)">
+        <div class="bg-white w-full rounded-t-2xl p-5 shadow-lg animate-slide-up" onclick="event.stopPropagation()">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4 text-center">상담 방법 선택</h2>
+            <div class="flex flex-col gap-3">
+                <button onclick="window.open('http://goto.kakao.com/@천안하우스')"
+                    class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-yellow-300 text-gray-900 font-semibold hover:bg-yellow-300 transition-all">
+                    <i data-lucide="message-circle" class="w-5 h-5"></i>
+                    카카오톡 상담
+                </button>
+                <button
+                    onclick="window.open('https://talk.naver.com/wcbq1g?ref='+encodeURIComponent(location.href)+'#nafullscreen')"
+                    class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-green-500 text-white font-semibold hover:bg-green-600 transition-all">
+                    <i data-lucide="message-square" class="w-5 h-5"></i>
+                    네이버 톡톡 상담
+                </button>
+                <button
+                    onclick="window.location.href='sms:010-6560-1250?body=[천안하우스] 매물번호 : {{ property.code }}, {{ property.dong }} {{ property.price_text }} 상담 요청드립니다.'"
+                    class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all">
+                    <i data-lucide="phone" class="w-5 h-5"></i>
+                    문자 상담
+                </button>
+                <button onclick="closeChatModal()" class="mt-2 w-full py-2 text-gray-500 hover:text-gray-700 text-sm">
+                    닫기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔹 공유 모달 -->
+    <div id="shareModal" class="hidden fixed inset-0 bg-black/40 items-end justify-center" style="z-index: 9100;"
+        onclick="shareOverlayClick(event)">
+        <div class="bg-white w-full rounded-t-2xl p-5 shadow-lg animate-slide-up" onclick="event.stopPropagation()">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4 text-center">공유하기</h2>
+            <div class="flex flex-col gap-3">
+                <!-- 카카오톡 공유 -->
+                <button onclick="shareToKakao()"
+                    class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-yellow-300 text-gray-900 font-semibold hover:bg-yellow-400 transition-all">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M12 3C6.48 3 2 6.58 2 11c0 2.84 1.89 5.33 4.7 6.72l-.96 3.57c-.09.33.27.59.55.41l4.23-2.77c.48.05.97.07 1.48.07 5.52 0 10-3.58 10-8S17.52 3 12 3z" />
+                    </svg>
+                    카카오톡으로 공유
+                </button>
+                <!-- 링크 복사 -->
+                <button onclick="copyShareLink()"
+                    class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-600 text-white font-semibold hover:bg-gray-700 transition-all">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                    </svg>
+                    링크 복사
+                </button>
+                <!-- 문자로 공유 -->
+                <button onclick="shareViaSMS()"
+                    class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z" />
+                    </svg>
+                    문자로 공유
+                </button>
+                <button onclick="closeShareModal()" class="mt-2 w-full py-2 text-gray-500 hover:text-gray-700 text-sm">
+                    닫기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 복사 완료 토스트 메시지 -->
+    <div id="copyToast"
+        class="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg z-[300] opacity-0 transition-opacity duration-300 pointer-events-none">
+        링크가 복사되었습니다!
+    </div>
+
+    {# 오시는 길 팝업 JS는 components/map_popup.html 에 포함되어 있음 #}
+    {# ── 하단 내비게이션 바 제거 (view 페이지는 탭바 미표시) ── #}
+
+    <!-- ── Jinja2 변수 → JavaScript 전달 (window.viewData) ── -->
+    <script>
+        window.viewData = {
+            lat: {{ property.lat | default (0) }},
+            lng: {{ property.lng | default (0) }},
+            videoId: {{ property.video_id | default ('') | tojson }},
+            code: {{ property.code | default ('') | tojson }},
+            dong: {{ property.dong | default ('') | tojson }},
+            priceText: {{ property.price_text | default ('') | tojson }},
+            picname1: {{ property.picname1 | default ('') | tojson }},
+            kakaoKey: {{ kakao_js_api_key | default ('') | tojson }}
+        };
+    </script>
+    <script src="{{ url_for('static', filename='js/liked.js') }}?v=9"></script>
+    <script src="{{ url_for('static', filename='js/view.js') }}?v=1"></script>
+    <script type="module" src="{{ url_for('static', filename='js/view-swiper.js') }}?v=1"></script>
+</body>
+
+</html>

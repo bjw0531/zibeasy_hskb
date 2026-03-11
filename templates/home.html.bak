@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>천안하우스 - 천안 원룸 전문 플랫폼</title>
+    <meta name="description" content="공인중개사가 직접 개발 및 운영하는 중복 매물 없는 천안 원룸 전문 플랫폼">
+
+    <!-- Open Graph 메타 태그 (링크 공유 시 미리보기) -->
+    <meta property="og:title" content="천안하우스 - 천안 원룸 전문 플랫폼">
+    <meta property="og:description" content="공인중개사가 직접 개발 및 운영하는 중복 매물 없는 천안 원룸 전문 플랫폼">
+    <meta property="og:image" content="https://house.zibeasy.com/static/images/icon.png">
+    <meta property="og:url" content="https://house.zibeasy.com">
+    <meta property="og:type" content="website">
+
+    <!-- 필요한 리소스만 직접 로드 (TailwindCSS/Lucide CDN 불필요) -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tilt+Warp&display=swap" rel="stylesheet">
+    <link rel="icon" href="/static/images/icon.png" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bottom-nav.css') }}?v=7">
+
+    <style>
+        /* 홈 페이지 전용 스타일 */
+        body {
+            background-color: #f5f5f5;
+            height: 100dvh;
+            /* ✅ dvh: iOS 동적 뷰포트 높이 (safe area 포함) */
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            /* body 자체는 스크롤 방지 (컨테이너에서 처리) */
+            display: flex;
+            justify-content: center;
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+
+        /* 메인 컨테이너 - 모바일 최우선 */
+        .home-container {
+            width: 100%;
+            max-width: 644px;
+            height: 100%;
+            /* 부모(body) 높이에 맞춤 */
+            /* ✅ 하단 padding: 하단 탭바 높이 + safe area 포함 */
+            padding: 10px 16px calc(40px + env(safe-area-inset-bottom, 0px) + 12px);
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            /* ✅ 작은 화면에서 요소 잘림 방지 — 필요 시 스크롤 허용 */
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            /* 스크롤바 시각적으로 숨김 */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE/Edge */
+        }
+
+        .home-container::-webkit-scrollbar {
+            display: none; /* Chrome/Safari */
+        }
+
+        /* 상단 헤더 영역 */
+        .home-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            /* 간격 축소 */
+            margin-top: 5px;
+            margin-bottom: 30px;
+            flex-shrink: 0;
+            /* 크기 줄어들지 않게 고정 */
+        }
+
+        /* 검색창 */
+        .home-search {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            background: #ffffff;
+            border: 1px solid #b4b4b4;
+            border-radius: 24px;
+            padding: 8px 10px;
+            gap: 8px;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .home-search:hover {
+            border-color: #ccc;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+        }
+
+        .home-search input {
+            border: none;
+            outline: none;
+            background: transparent;
+            font-size: 14px;
+            width: 100%;
+            font-family: inherit;
+            cursor: pointer;
+            color: #aaa !important;
+            /* 원하는 색상 입력 */
+            -webkit-text-fill-color: #aaa;
+            /* iOS/사파리에서 readonly 색상 고정 */
+            opacity: 1;
+            /* 투명도 때문에 흐리게 보이는 현상 방지 */
+        }
+
+        .home-search .search-icon {
+            color: #888;
+            flex-shrink: 0;
+        }
+
+        /* 로고 영역 */
+        .home-logo {
+            text-align: right;
+            flex-shrink: 0;
+            line-height: 1.2;
+        }
+
+        .home-logo .logo-main {
+            font-family: "Tilt Warp", "Noto Sans KR", sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: #ff5055;
+            letter-spacing: -0.5px;
+        }
+
+        .home-logo .logo-sub {
+            font-size: 12px;
+            color: #999;
+            font-weight: 400;
+        }
+
+        /* ✅ 롤링 텍스트 영역 — Vertical Clip Slide */
+        .rolling-text {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+            height: 24px;
+            overflow: hidden;
+            flex-shrink: 0;
+            /* clip-path로 깔끔한 마스킹 */
+            -webkit-clip-path: inset(0 0 0 0);
+            clip-path: inset(0 0 0 0);
+        }
+
+        .rolling-text-track {
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1);
+        }
+
+        .rolling-text-item {
+            height: 24px;
+            line-height: 24px;
+            font-size: 15px;
+            font-weight: 450;
+            color: #666;
+            letter-spacing: -0.3px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        /* ✅ 롤링 텍스트 강조 색상 — 빨간 로고(#e74c3c)와 대비되는 딥 블루 */
+        .rolling-highlight {
+            color: #1d6fdb;
+            font-weight: 700;
+        }
+
+        /* 버튼 그리드 영역 */
+        .home-buttons {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            /* 가용 공간의 대부분을 차지하게 설정 */
+            justify-content: flex-start;
+            /* 버튼들이 위쪽에 붙도록 설정 */
+            gap: 12px;
+            /* 버튼 행 간격 */
+        }
+
+        /* 큰 버튼 행 */
+        .home-buttons-row-big {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        /* 큰 버튼 */
+        .home-btn-big {
+            background: #ffffff;
+            border: 1px solid #f0d0cc;
+            border-radius: 14px;
+            padding: 25px 12px;
+            /* 패딩 약간 축소 */
+            display: flex;
+            align-items: center;
+            justify-content: space-evenly;
+            gap: 8px;
+            /* box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); */
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .home-btn-big:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+        }
+
+        .home-btn-big:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        /* ✅ Primary CTA — 브랜드 컬러 배경으로 시선 유도 */
+        .home-btn-big.btn-primary {
+            background: #ff5055;
+            border-color: #ff5055;
+        }
+
+        .home-btn-big.btn-primary .btn-text {
+            color: #fff;
+        }
+
+        .home-btn-big.btn-primary .btn-icon svg {
+            fill: #fff;
+        }
+
+        .home-btn-big.btn-primary:hover {
+            box-shadow: 0 4px 14px rgba(255, 80, 85, 0.3);
+        }
+
+        /* ✅ 전체 너비 CTA 버튼 (집 구하기/내놓기) */
+        .home-btn-big.btn-full {
+            background: #fff;
+            border: 1.5px solid #ff5055;
+        }
+
+        .home-btn-big.btn-full .btn-text {
+            color: #ff5055;
+            font-weight: 600;
+        }
+
+        .home-btn-big .btn-text {
+            font-size: 16px;
+            font-weight: 500;
+            line-height: 1.4;
+            color: #333;
+            text-align: left;
+        }
+
+        .home-btn-big .btn-icon {
+            flex-shrink: 0;
+        }
+
+        /* 리스트 아이콘 (빨간 줄무늬) */
+        .icon-list-lines {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 4px 0;
+        }
+
+        .icon-list-lines span {
+            display: block;
+            height: 5px;
+            border-radius: 2px;
+            background-color: #e74c3c;
+        }
+
+        .icon-list-lines span:nth-child(1) {
+            width: 28px;
+        }
+
+        .icon-list-lines span:nth-child(2) {
+            width: 22px;
+        }
+
+        .icon-list-lines span:nth-child(3) {
+            width: 28px;
+        }
+
+        /* 지도 핀 아이콘 */
+        .icon-map-pin {
+            position: relative;
+            width: 36px;
+            height: 44px;
+        }
+
+        .icon-map-pin .pin-body {
+            width: 28px;
+            height: 28px;
+            background: #e74c3c;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            position: absolute;
+            top: -20px;
+            left: -16px;
+        }
+
+        .icon-map-pin .pin-body::after {
+            content: '';
+            width: 14px;
+            height: 14px;
+            background: #fff;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .icon-map-pin .pin-wave {
+            position: absolute;
+            bottom: -18px;
+            left: 50%;
+            transform: translateX(-56%);
+            width: 26px;
+            height: 6px;
+            background: rgba(231, 76, 60, 0.2);
+            border-radius: 50%;
+        }
+
+        /* 하단 메뉴 카드 - 항상 푸터 바로 위에 배치 */
+        .home-menu-card {
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 12px 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            display: block;
+            margin-bottom: 8px;
+            /* 푸터와의 간격 */
+            flex-shrink: 0;
+        }
+
+        .home-menu-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px 6px;
+            /* ✅ 3개 메뉴 1행으로 정리 — 세로 gap 축소 */
+        }
+
+        /* 메뉴 아이템 (아이콘 + 텍스트) */
+        .home-menu-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .home-menu-item .menu-icon {
+            color: #888;
+        }
+
+        .home-menu-item .menu-text {
+            font-size: 12px;
+            font-weight: 500;
+            color: #555;
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        /* 하단 설명 영역 */
+        .home-footer {
+            padding: 6px 4px;
+            flex-shrink: 0;
+            /* 내용이 늘어나도 영역 유지 */
+            border-top: 1px solid #eee;
+            /* 구분선 추가로 안정감 부여 */
+        }
+
+        .home-footer .footer-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #222;
+            margin-bottom: 0px;
+            /* 오시는 길 버튼을 우측에 배치하기 위한 flex 레이아웃 */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* 오시는 길 버튼 스타일 */
+        .footer-directions-btn {
+            font-size: 12px;
+            font-weight: 500;
+            color: #888;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 3px 7px;
+            text-decoration: none;
+            background: transparent;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: border-color 0.2s, color 0.2s;
+        }
+
+        .footer-directions-btn:active {
+            border-color: #aaa;
+            color: #555;
+        }
+
+        .home-footer .footer-desc {
+            font-size: 12px;
+            /* 폰트 크기 조절로 공간 확보 */
+            color: #777;
+            line-height: 1.5;
+            position: relative;
+        }
+
+
+
+        /* 데스크탑 대응 */
+        @media (min-width: 481px) {
+            .home-container {
+                padding: 32px 24px calc(52px + env(safe-area-inset-bottom, 0px) + 24px);
+            }
+
+            .home-btn-big .btn-text {
+                font-size: 16px;
+            }
+        }
+
+        /* ─────────────────────────────────────────────
+           중개보수 계산기 오버레이
+        ───────────────────────────────────────────── */
+        #feeCalcOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            background: #fff;
+            display: none;
+            /* JS가 제어 */
+            flex-direction: column;
+            /* 초기: 버튼 위치를 원점으로 잡는 transform-origin은 JS에서 설정 */
+            transform-origin: center center;
+        }
+
+        /* 열리는 애니메이션 */
+        #feeCalcOverlay.fee-opening {
+            display: flex;
+            animation: feeSlideOpen 0.38s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+        }
+
+        /* 닫히는 애니메이션 */
+        #feeCalcOverlay.fee-closing {
+            display: flex;
+            animation: feeSlideClose 0.32s cubic-bezier(0.55, 0, 1, 0.45) forwards;
+        }
+
+        @keyframes feeSlideOpen {
+            from {
+                transform: scale(0.05);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes feeSlideClose {
+            from {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            to {
+                transform: scale(0.05);
+                opacity: 0;
+            }
+        }
+
+        /* 오버레이 상단 닫기 바 */
+        #feeCalcBar {
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            height: 52px;
+            min-height: 52px;
+            background: #fff;
+            border-bottom: 1px solid #eee;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        #feeCalcBar .fc-close-btn {
+            background: none;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            color: #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #feeCalcBar .fc-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #222;
+            flex: 1;
+        }
+
+        /* iframe */
+        #feeCalcFrame {
+            flex: 1;
+            border: none;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 메인 컨테이너 -->
+    <div class="home-container">
+
+        <!-- 상단 헤더: 검색창 + 로고 -->
+        <div class="home-header">
+            <!-- 검색창: 클릭 시 지도 화면 검색창으로 이동 (동일한 동작 보장) -->
+            <div class="home-search" onclick="location.href='/map?search=open'">
+                <input type="text" placeholder="어느 지역 방을 찾으세요?" readonly>
+                <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                </svg>
+            </div>
+
+            <!-- 로고 -->
+            <div class="home-logo">
+                <div class="logo-main">천안하우스</div>
+                <div class="logo-sub">by bangteam</div>
+            </div>
+        </div>
+
+        <!-- ✅ 롤링 텍스트: 3개 문구가 세로 클립 슬라이드로 순환 -->
+        <div class="rolling-text">
+            <div class="rolling-text-track" id="rollingTrack">
+                <div class="rolling-text-item"><span class="rolling-highlight">공인중개사가 직접 만든</span> 원룸 플랫폼</div>
+                <div class="rolling-text-item"><span class="rolling-highlight">중복/허위 매물 없이</span> 실시간 업데이트</div>
+                <div class="rolling-text-item"><span class="rolling-highlight">사진+영상 제공</span>으로 공간 구조를 한눈에</div>
+                <!-- 무한 루프를 위한 첫 번째 문구 복제 -->
+                <div class="rolling-text-item"><span class="rolling-highlight">공인중개사가 직접 만든</span> 원룸 플랫폼</div>
+            </div>
+        </div>
+
+        <!-- 버튼 영역 -->
+        <div class="home-buttons">
+            <!-- 1번째 줄: 큰 버튼 2개 -->
+            <div class="home-buttons-row-big">
+                <!-- 리스트로 매물 보기 (/list 로 이동) -->
+                <a href="/list" class="home-btn-big" id="btnListView">
+                    <span class="btn-text">리스트로<br>매물 보기</span>
+                    <span class="btn-icon">
+                        <!-- 구글 머티리얼 심볼즈: format_list_bulleted (filled) -->
+                        <svg width="40" height="40" viewBox="0 -960 960 960" fill="#ff5055">
+                            <path
+                                d="M360-200v-80h480v80H360Zm0-240v-80h480v80H360Zm0-240v-80h480v80H360ZM200-160q-33 0-56.5-23.5T120-240q0-33 23.5-56.5T200-320q33 0 56.5 23.5T280-240q0 33-23.5 56.5T200-160Zm0-240q-33 0-56.5-23.5T120-480q0-33 23.5-56.5T200-560q33 0 56.5 23.5T280-480q0 33-23.5 56.5T200-400Zm0-240q-33 0-56.5-23.5T120-720q0-33 23.5-56.5T200-800q33 0 56.5 23.5T280-720q0 33-23.5 56.5T200-640Z" />
+                        </svg>
+                    </span>
+                </a>
+
+                <!-- 지도에서 매물 찾기 — ✅ Primary CTA -->
+                <a href="/map" class="home-btn-big btn-primary" id="btnMapView">
+                    <span class="btn-text">지도에서<br>매물 찾기</span>
+                    <span class="btn-icon">
+                        <!-- 구글 머티리얼 심볼즈: distance (filled) -->
+                        <svg width="40" height="40" viewBox="0 -960 960 960" fill="#ff5055">
+                            <path
+                                d="M480-80q-106 0-173-33.5T240-200q0-35 29-61t80-41l23 76q-17 5-31 12.5T322-200q13 16 60 28t98 12q51 0 98.5-12t60.5-28q-5-6-19-13.5T589-226l23-76q51 15 79.5 41t28.5 61q0 53-67 86.5T480-80Zm0-120q-11 0-20-6.5T447-224q-23-71-58-119t-68-92q-32-44-55.5-91T242-642q0-100 69-169t169-69q100 0 169 69t69 169q0 69-23 116t-56 91q-32 44-67.5 92T513-224q-4 11-13 17.5t-20 6.5Zm0-357q35 0 60-25t25-60q0-35-25-60t-60-25q-35 0-60 25t-25 60q0 35 25 60t60 25Z" />
+                        </svg>
+                    </span>
+                </a>
+            </div>
+
+            <!-- ✅ "집 구하기/내놓기" 큰 버튼 승격 — 전체 너비 -->
+            <a href="/request" class="home-btn-big btn-full" id="btnFindHome">
+                <span class="btn-text">집 구하기 / 내놓기</span>
+                <span class="btn-icon">
+                    <!-- 구글 머티리얼 심볼즈: home (filled) -->
+                    <svg width="36" height="36" viewBox="0 -960 960 960" fill="#ff5055">
+                        <path d="M160-120v-480l320-240 320 240v480H560v-280H400v280H160Z" />
+                    </svg>
+                </span>
+            </a>
+
+        </div>
+
+        <!-- ✅ 하단 메뉴 카드 — 3개로 정리 (이용약관 삭제, 오류제보 푸터로 이동) -->
+        <div class="home-menu-card">
+            <div class="home-menu-grid">
+            <a href="javascript:void(0)" class="home-menu-item" id="btnAppDownload" onclick="goToAppStore()">
+                <!-- 구글 머티리얼 심볼즈: download (filled) -->
+                <svg class="menu-icon" width="22" height="22" viewBox="0 -960 960 960" fill="currentColor">
+                    <path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z" />
+                </svg>
+                <span class="menu-text">앱 다운로드</span>
+            </a>
+
+            <a href="javascript:void(0)" class="home-menu-item" id="btnCalculator" onclick="openFeeCalc(event)">
+                <!-- 구글 머티리얼 심볼즈: calculate (filled) -->
+                <svg class="menu-icon" width="22" height="22" viewBox="0 -960 960 960" fill="currentColor">
+                    <path
+                        d="M320-240h60v-80h80v-60h-80v-80h-60v80h-80v60h80v80Zm200-30h200v-60H520v60Zm0-100h200v-60H520v60Zm44-152 56-56 56 56 42-42-56-58 56-56-42-42-56 56-56-56-42 42 56 56-56 58 42 42Zm-314-70h200v-60H250v60Zm-50 472q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Z" />
+                </svg>
+                <span class="menu-text">중개보수 계산기</span>
+            </a>
+            <a href="/compass" class="home-menu-item" id="btnCompassPage">
+                <svg class="menu-icon" width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"></circle>
+                    <path d="M12 4L15.2 12L12 20L8.8 12L12 4Z" fill="currentColor"></path>
+                </svg>
+                <span class="menu-text">나침반</span>
+            </a>
+            </div>
+        </div>
+
+
+        <!-- ─ 중개보수 계산기 오버레이 ─ -->
+        <div id="feeCalcOverlay">
+            <div id="feeCalcBar">
+                <button class="fc-close-btn" onclick="closeFeeCalc()" aria-label="닫기">
+                    <!-- X 아이콘 -->
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+                <span class="fc-title">중개보수 계산기</span>
+            </div>
+            <iframe id="feeCalcFrame" src="" title="중개보수 계산기" loading="lazy"></iframe>
+        </div>
+
+        <!-- 하단 설명 텍스트 (2줄만 표시) -->
+        <div class="home-footer">
+            <div class="footer-title">
+                <span>천안하우스 <span style="font-size:12px; font-weight:400; color:#999;">by bangteam</span></span>
+                <!-- 회사소개 / 오시는 길 버튼 -->
+                <div style="display:flex; gap:6px; flex-shrink:0;">
+                    <a href="/about" class="footer-directions-btn">회사소개</a>
+                    <a href="#" class="footer-directions-btn" onclick="showMapPopup(); return false;">오시는 길</a>
+                </div>
+            </div>
+            <div class="footer-desc">
+                <span><b>프렌즈부동산공인중개사사무소</b> | <b><a href="tel:010-6560-1250" style="color:#333; text-decoration:none;">전화: 010-6560-1250</a></b></span>
+            </div>
+        </div>
+    </div>
+
+    {% set active_nav = 'home' %}
+    {% include 'components/bottom-nav.html' %}
+
+    <script>
+        /* ───────────────────────────────────────────────────
+           중개보수 계산기 오버레이 열기/닫기
+        ___________________________________________________ */
+        function openFeeCalc(event) {
+            var overlay = document.getElementById('feeCalcOverlay');
+            var frame = document.getElementById('feeCalcFrame');
+
+            // 버튼(또는 클릭된 요소)의 화면 중앙 좌표 계산
+            var btn = document.getElementById('btnCalculator');
+            var rect = btn.getBoundingClientRect();
+            var originX = Math.round(rect.left + rect.width / 2);
+            var originY = Math.round(rect.top + rect.height / 2);
+
+            // transform-origin을 버튼 중심으로 설정
+            overlay.style.transformOrigin = originX + 'px ' + originY + 'px';
+
+            // 열 때마다 항상 새로 로드 (닫기 시 about:blank로 초기화했으므로)
+            frame.src = '/fee-calc/';
+
+            // 혹시 닫힘 애니메이션 중이면 제거
+            overlay.classList.remove('fee-closing');
+            overlay.style.display = 'flex';
+
+            // 한 프레임 후 애니메이션 클래스 추가 (display flex 반영 후)
+            requestAnimationFrame(function () {
+                requestAnimationFrame(function () {
+                    overlay.classList.add('fee-opening');
+                });
+            });
+
+            // 애니메이션 끝나면 클래스 정리
+            overlay.addEventListener('animationend', function onOpen() {
+                overlay.removeEventListener('animationend', onOpen);
+                overlay.classList.remove('fee-opening');
+            });
+
+            // 뒤로가기 지원
+            history.pushState({ modal: 'feeCalc' }, '', '');
+            window._feeCalcHistoryPushed = true;
+        }
+
+        function closeFeeCalc() {
+            var overlay = document.getElementById('feeCalcOverlay');
+            var btn = document.getElementById('btnCalculator');
+            var rect = btn.getBoundingClientRect();
+            var originX = Math.round(rect.left + rect.width / 2);
+            var originY = Math.round(rect.top + rect.height / 2);
+
+            /* 닫기 즉시 iframe 초기화 — animationend 콜백 의존 제거
+               애니메이션이 오버레이를 가리는 동안 리셋되므로 사용자에게 보이지 않음 */
+            var frame = document.getElementById('feeCalcFrame');
+            if (frame) frame.src = 'about:blank';
+
+            overlay.style.transformOrigin = originX + 'px ' + originY + 'px';
+            overlay.classList.remove('fee-opening');
+            overlay.classList.add('fee-closing');
+
+            overlay.addEventListener('animationend', function onClose() {
+                overlay.removeEventListener('animationend', onClose);
+                overlay.classList.remove('fee-closing');
+                overlay.style.display = 'none';
+            });
+
+            if (window._feeCalcHistoryPushed) {
+                window._feeCalcHistoryPushed = false;
+                history.back();
+            }
+        }
+
+        // 뒤로가기로 닫기
+        window.addEventListener('popstate', function (e) {
+            var overlay = document.getElementById('feeCalcOverlay');
+            if (overlay && overlay.style.display === 'flex') {
+                /* 뒤로가기로 닫힐 때도 즉시 iframe 초기화 */
+                var frame = document.getElementById('feeCalcFrame');
+                if (frame) frame.src = 'about:blank';
+
+                var btn = document.getElementById('btnCalculator');
+                var rect = btn.getBoundingClientRect();
+                overlay.style.transformOrigin =
+                    Math.round(rect.left + rect.width / 2) + 'px ' +
+                    Math.round(rect.top + rect.height / 2) + 'px';
+                overlay.classList.add('fee-closing');
+                overlay.addEventListener('animationend', function onClose() {
+                    overlay.removeEventListener('animationend', onClose);
+                    overlay.classList.remove('fee-closing');
+                    overlay.style.display = 'none';
+                });
+                window._feeCalcHistoryPushed = false;
+            }
+        });
+
+        /* 지도에서 매물 찾기 버튼 클릭 시 즉시 페이지 이동
+           - 스피너는 /map 페이지 HTML에 하드코딩되어 즉시 표시됨 (이중 스피너 방지)
+           - 클릭 순간 SDK preload 시작 (방법 B) + 즉시 이동 */
+        document.getElementById('btnMapView').addEventListener('click', function (e) {
+            e.preventDefault();
+
+            /* ✅ 클릭 즉시 네이버 지도 SDK preload 시작
+               - /map 페이지 로드 시 이미 캐시된 파일을 즉시 사용 → SDK 블로킹 지연 단축 */
+            var preloadLink = document.createElement('link');
+            preloadLink.rel = 'preload';
+            preloadLink.href = 'https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=zjivkpcd8a';
+            preloadLink.as = 'script';
+            document.head.appendChild(preloadLink);
+
+            /* 즉시 이동 — /map 페이지의 스피너가 로딩을 처리 */
+            window.location.href = '/map';
+        });
+
+        /* ───────────────────────────────────────────────────
+           앱 다운로드 — OS별 스토어 자동 분기
+           Android → Google Play / iOS → App Store / 기타 → 토스트 안내
+        ___________________________________________________ */
+        function goToAppStore() {
+            var ua = navigator.userAgent || navigator.vendor || window.opera;
+            if (/android/i.test(ua)) {
+                /* Android: 구글 플레이 */
+                window.location.href = 'https://play.google.com/store/apps/details?id=com.housekb.v2';
+            } else if (/iPad|iPhone|iPod/i.test(ua) && !window.MSStream) {
+                /* iOS: 앱 스토어 */
+                window.location.href = 'https://itunes.apple.com/app/id6475390756';
+            } else {
+                /* PC 등 기타: 안내 토스트 */
+                showPwaToast('모바일 기기에서 이용해 주세요 📱');
+            }
+        }
+
+
+        /**
+         * 롤링 텍스트 — 세로 클립 슬라이드 순환
+         * 3개 문구 + 복제된 첫 문구(4번째)로 끊김 없는 무한 루프 구현
+         */
+        (function initRollingText() {
+            var track = document.getElementById('rollingTrack');
+            if (!track) return;
+
+            var totalItems = 3;      // 실제 문구 수
+            var currentIndex = 0;    // 현재 표시 중인 인덱스
+            var itemHeight = 24;     // 각 문구 높이(px)
+            var interval = 3000;     // 문구 전환 간격(ms)
+            var isTransitioning = false;
+
+            setInterval(function () {
+                if (isTransitioning) return;
+                isTransitioning = true;
+                currentIndex++;
+
+                // 다음 문구로 슬라이드
+                track.style.transform = 'translateY(-' + (currentIndex * itemHeight) + 'px)';
+
+                // 마지막(복제) 문구까지 도달하면 → 첫 문구로 즉시 리셋
+                if (currentIndex >= totalItems) {
+                    track.addEventListener('transitionend', function reset() {
+                        track.removeEventListener('transitionend', reset);
+                        // 트랜지션 없이 즉시 처음으로 이동
+                        track.style.transition = 'none';
+                        track.style.transform = 'translateY(0)';
+                        currentIndex = 0;
+
+                        // 다음 프레임에서 트랜지션 복원
+                        requestAnimationFrame(function () {
+                            requestAnimationFrame(function () {
+                                track.style.transition = 'transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1)';
+                                isTransitioning = false;
+                            });
+                        });
+                    });
+                } else {
+                    // 트랜지션 완료 후 플래그 리셋
+                    setTimeout(function () {
+                        isTransitioning = false;
+                    }, 850);
+                }
+            }, interval);
+        })();
+
+    </script>
+
+    <!-- 오시는 길 지도 팝업 컴포넌트 -->
+    {% include 'components/map_popup.html' %}
+</body>
+
+</html>

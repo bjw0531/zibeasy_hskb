@@ -1,0 +1,615 @@
+/**
+ * 전체 필터 페이지 스타일
+ * - 모바일 최우선 설계
+ * - 듀얼 레인지 슬라이더
+ * - 필터 버튼 UI
+ */
+
+/* ============ 전체 필터 페이지 컨테이너 ============ */
+.full-filter-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #fff;
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    overflow: hidden;
+    visibility: hidden;
+    /* ✅ 숨김 상태에서는 보이지 않음 (리사이즈 시 깜빡임 방지) */
+}
+
+.full-filter-page.active {
+    transform: translateX(0);
+    transition: transform 0.3s ease-in-out, visibility 0s;
+    /* ✅ 활성화 시에만 트랜지션 */
+    visibility: visible;
+}
+
+/* ============ 헤더 ============ */
+.full-filter-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #fff;
+    min-height: 56px;
+    flex-shrink: 0;
+}
+
+/* 뒤로가기 버튼 — view.html 상단 버튼과 동일한 스타일 */
+.full-filter-header .back-btn {
+    border: none;
+    background: none;
+    font-size: 20px;
+    color: #4B5563;
+    cursor: pointer;
+    padding: 4px 8px;
+    line-height: 1;
+}
+
+.full-filter-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+    text-align: center;
+    flex: 1;
+}
+
+.header-spacer {
+    width: 40px;
+}
+
+/* ✅ 닫기 버튼 (우측 상단) */
+.full-filter-header .close-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: none;
+    font-size: 28px;
+    color: #999;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.full-filter-header .close-btn:active {
+    color: #333;
+    transform: scale(0.95);
+}
+
+/* ============ 콘텐츠 영역 (스크롤) ============ */
+.full-filter-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 16px 140px 16px;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ============ 필터 섹션 ============ */
+.filter-section {
+    padding: 14px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.filter-section:last-child {
+    border-bottom: none;
+}
+
+.filter-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.filter-section-title {
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 10px 0;
+}
+
+.filter-section-header .filter-section-title {
+    margin-bottom: 0;
+}
+
+.filter-section-subtitle {
+    font-size: 13px;
+    color: #888;
+    margin: -8px 0 12px 0;
+}
+
+/* ✅ 테마 카테고리 제목 스타일 */
+.filter-section-subtitle.theme-category-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #3d9edb;
+    margin: 16px 0 8px 0;
+}
+
+.filter-section-subtitle.theme-category-title:first-of-type {
+    margin-top: 0;
+}
+
+/* ============ 서브섹션 가로 배열 (구조 - 주방/베란다) ============ */
+.filter-subsection-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 0;
+}
+
+.filter-subsection-row .filter-subsection {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+/* ✅ 주방/베란다 사이 구분선 */
+.filter-subsection-row .filter-subsection:first-child {
+    padding-right: 16px;
+    border-right: 1px solid #e5e7eb;
+}
+
+/* ============ 서브섹션 (가격 내 보증금/월세) ============ */
+.filter-subsection {
+    margin-bottom: 24px;
+}
+
+.filter-subsection:last-child {
+    margin-bottom: 0;
+}
+
+.filter-subsection-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2px;
+    margin-top: 40px;
+}
+
+.filter-subsection-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #555;
+    margin-bottom: 2px;
+    display: block;
+}
+
+.filter-subsection-header .filter-subsection-label {
+    margin-bottom: 0;
+}
+
+/* ============ 필터 버튼 ============ */
+.filter-buttons-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    flex: 0 0 auto;
+    min-width: auto;
+    padding: 8px 14px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    text-align: center;
+}
+
+.filter-btn:active {
+    transform: scale(0.98);
+}
+
+.filter-btn.selected {
+    background: #3d9edb;
+    border-color: #3d9edb;
+    color: #fff;
+}
+
+/* ============ 듀얼 레인지 슬라이더 ============ */
+.slider-value-display {
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    color: #3d9edb;
+    margin-bottom: 12px;
+    min-height: 22px;
+}
+
+.dual-range-slider {
+    position: relative;
+    width: 100%;
+    height: 24px;
+    margin-bottom: 28px;
+}
+
+.slider-track {
+    position: absolute;
+    top: 10px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: #e5e7eb;
+    border-radius: 2px;
+}
+
+.slider-range {
+    position: absolute;
+    height: 100%;
+    background: #3d9edb;
+    border-radius: 2px;
+}
+
+.slider-thumb {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 22px;
+    background: transparent;
+    pointer-events: none;
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
+    padding: 0;
+}
+
+.slider-thumb::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    background: #fff;
+    border: 2px solid #3d9edb;
+    border-radius: 50%;
+    cursor: pointer;
+    pointer-events: auto;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    transition: transform 0.1s ease;
+}
+
+.slider-thumb::-webkit-slider-thumb:active {
+    transform: scale(1.1);
+}
+
+.slider-thumb::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    background: #fff;
+    border: 2px solid #3d9edb;
+    border-radius: 50%;
+    cursor: pointer;
+    pointer-events: auto;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.slider-labels {
+    position: absolute;
+    bottom: -18px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #999;
+}
+
+/* ✅ 슬라이더 눈금 세로 바 */
+.slider-ticks {
+    position: absolute;
+    top: 4px;
+    left: 0;
+    right: 0;
+    height: 15px;
+    pointer-events: none;
+}
+
+.slider-tick {
+    position: absolute;
+    width: 1px;
+    height: 100%;
+    background: #ccc;
+}
+
+.slider-tick.tick-min {
+    left: 0;
+}
+
+.slider-tick.tick-center {
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.slider-tick.tick-max {
+    right: 0;
+}
+
+/* ============ 체크박스 (관리비 포함) ============ */
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #3d9edb;
+    cursor: pointer;
+}
+
+.checkbox-text {
+    font-size: 13px;
+    color: #666;
+}
+
+/* ============ 단위 전환 버튼 (평/㎡) ============ */
+.unit-toggle {
+    display: flex;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.unit-btn {
+    padding: 6px 12px;
+    border: none;
+    background: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.unit-btn.active {
+    background: #3d9edb;
+    color: #fff;
+}
+
+/* ============ 하단 버튼 영역 ============ */
+.full-filter-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    gap: 10px;
+    padding: 12px 16px;
+    background: #fff;
+    border-top: 1px solid #e5e7eb;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* 안전 영역 (노치 대응) */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .full-filter-footer {
+        padding-bottom: calc(64px + env(safe-area-inset-bottom));
+    }
+}
+
+.filter-reset-btn {
+    flex: 4;
+    padding: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-reset-btn:active {
+    background: #f5f5f5;
+}
+
+.filter-apply-btn {
+    flex: 6;
+    padding: 10px 0;
+    border: none;
+    border-radius: 8px;
+    background: #3d9edb;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-apply-btn:active {
+    background: #2d8ecb;
+}
+
+/* ============ 초기화 확인 팝업 ============ */
+.reset-confirm-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 4000;
+}
+
+.reset-confirm-modal.active {
+    display: flex;
+}
+
+.reset-confirm-content {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    width: 280px;
+    max-width: 90vw;
+    text-align: center;
+    animation: modalFadeIn 0.2s ease;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.reset-confirm-text {
+    font-size: 16px;
+    color: #333;
+    margin: 0 0 20px 0;
+}
+
+.reset-confirm-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.reset-cancel-btn,
+.reset-ok-btn {
+    flex: 1;
+    padding: 12px 0;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.reset-cancel-btn {
+    background: #f5f5f5;
+    color: #666;
+}
+
+.reset-cancel-btn:active {
+    background: #e5e5e5;
+}
+
+.reset-ok-btn {
+    background: #3d9edb;
+    color: #fff;
+}
+
+.reset-ok-btn:active {
+    background: #2d8ecb;
+}
+
+/* ============ 필터 아이콘 활성화 상태 ============ */
+.filter-icon-btn {
+    position: relative;
+}
+
+.filter-icon-btn.active {
+    background: #3d9edb !important;
+    border-color: #3d9edb !important;
+}
+
+.filter-icon-btn.active img {
+    filter: brightness(0) invert(1);
+}
+
+/* ✅ 필터 활성화 시 노란색 점 표시 */
+.filter-icon-btn.active::after {
+    content: '';
+    position: absolute;
+    top: 8px;      /* 아래로 5px 추가 이동 */
+    right: 6px;    /* 왼쪽으로 3px 추가 이동 */
+    width: 5px;    /* 크기 축소 (6px → 5px) */
+    height: 5px;   /* 크기 축소 (6px → 5px) */
+    background: #FFD700;
+    border-radius: 50%;
+    border: 1px solid #fff;
+}
+
+/* ============ 모바일 최적화 ============ */
+@media (max-width: 480px) {
+    .filter-btn {
+        padding: 7px 12px;
+        font-size: 12px;
+    }
+
+    .filter-section-title {
+        font-size: 15px;
+    }
+
+    .slider-value-display {
+        font-size: 14px;
+    }
+
+    .slider-labels {
+        font-size: 10px;
+    }
+}
+
+/* ============ 데스크탑 최적화 ============ */
+@media (min-width: 768px) {
+
+    /* ✅ 전체 필터 페이지 - 전체 화면 흰색 배경 */
+    .full-filter-page {
+        max-width: none;
+        /* 전체 너비 */
+        left: 0;
+        right: 0;
+        transform: translateX(100%);
+        /* 오른쪽 밖으로 숨김 */
+        border: none;
+    }
+
+    .full-filter-page.active {
+        right: 0;
+        transform: translateX(0);
+        /* 전체 화면 표시 */
+    }
+
+    /* ✅ 헤더 - 전체 너비, 버튼은 양쪽 끝에 유지 */
+    .full-filter-header {
+        max-width: 100%;
+        /* 전체 너비 */
+        margin: 0;
+        border-bottom: 1px solid #e5e7eb;
+        padding-left: calc(50% - 250px + 16px);
+        /* 콘텐츠 영역에 맞춤 */
+        padding-right: calc(50% - 250px + 16px);
+    }
+
+    /* ✅ 콘텐츠 영역 - 중앙 정렬 */
+    .full-filter-content {
+        max-width: 500px;
+        margin: 0 auto;
+        padding: 0 24px 140px 24px;
+    }
+
+    /* ✅ 하단 버튼 영역 - 중앙 정렬 */
+    .full-filter-footer {
+        max-width: 100%;
+        left: 0;
+        right: 0;
+        transform: none;
+    }
+
+    .full-filter-footer>* {
+        max-width: 500px;
+        margin: 0 auto;
+    }
+}

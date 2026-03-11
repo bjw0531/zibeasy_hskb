@@ -1,0 +1,53 @@
+{# ============================================================
+   플로팅 버튼 컴포넌트 (지도 우하단 버튼 그룹)
+   사용법: {% include 'components/floating_buttons.html' %}
+   포함 요소: 새로고침 버튼, 크로스헤어 토글, GPS 버튼
+   사용 페이지: index.html
+   ============================================================ #}
+
+<!-- ✅ 새로고침 버튼 (GPS 버튼 위) — Google Material: refresh -->
+<button class="refresh-floating-btn" onclick="resetAllFilters()" aria-label="새로고침">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+    </svg>
+</button>
+
+<!-- ✅ 크로스헤어 토글 버튼 (GPS 버튼 아래) — Google Material: filter_center_focus -->
+<!-- ✅ 기본 상태: crosshair-toggle-off (꺼짐) -->
+<button class="crosshair-toggle-btn crosshair-toggle-off" id="crosshairToggleBtn" onclick="toggleCrosshair()" aria-label="거리기준 표시/숨김">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M5 15H3v4c0 1.1.9 2 2 2h4v-2H5v-4zM5 5h4V3H5C3.9 3 3 3.9 3 5v4h2V5zm14-2h-4v2h4v4h2V5c0-1.1-.9-2-2-2zm0 16h-4v2h4c1.1 0 2-.9 2-2v-4h-2v4zM12 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+    </svg>
+</button>
+
+<!-- GPS 버튼 (우하단) — Google Material: my_location -->
+<button class="gps-floating-btn" onclick="getCurrentLocation()" aria-label="내 위치">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/>
+    </svg>
+</button>
+
+<script>
+    /* ✅ 크로스헤어 토글: 켜기/끄기 */
+    function toggleCrosshair() {
+        const crosshair = document.getElementById('mapCrosshair');
+        const btn = document.getElementById('crosshairToggleBtn');
+        if (!crosshair || !btn) return;
+
+        /* crosshair-user-hidden 클래스로 사용자 의도 구분 */
+        const isHidden = crosshair.classList.contains('crosshair-user-hidden');
+
+        if (isHidden) {
+            /* 켜기: 사용자 숨김 해제 */
+            crosshair.classList.remove('crosshair-user-hidden');
+            crosshair.classList.remove('crosshair-hidden');
+            btn.classList.remove('crosshair-toggle-off');
+        } else {
+            /* 끄기: 사용자가 직접 숨김 */
+            crosshair.classList.add('crosshair-user-hidden');
+            crosshair.classList.add('crosshair-hidden');
+            btn.classList.add('crosshair-toggle-off');
+        }
+    }
+
+</script>

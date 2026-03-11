@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>최근 본 매물 — 천안하우스</title>
+  {% include 'include.html' %}
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/bottom-nav.css') }}?v=7">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/list-view.css') }}?v=4">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/liked.css') }}?v=4">
+
+  <!-- ✅ View Transitions 핸들러 -->
+  <script>
+  if ('onpagereveal' in window) {
+    document.documentElement.classList.add('vt-supported');
+
+    window.addEventListener('pagereveal', function(e) {
+      var dir = sessionStorage.getItem('navDirection');
+      if (dir && e.viewTransition) {
+        /* 상세 페이지 뒤로가기(slide-left) 시 bottom-nav를 root에 병합 */
+        if (dir === 'slide-left') {
+          var bn = document.querySelector('.bottom-nav');
+          if (bn) bn.style.viewTransitionName = 'none';
+        }
+        document.documentElement.classList.add('vt-' + dir);
+        e.viewTransition.finished.then(function() {
+          document.documentElement.classList.remove('vt-' + dir);
+        });
+      }
+      sessionStorage.removeItem('navDirection');
+    });
+
+    window.addEventListener('pageswap', function(e) {
+      if (!e.viewTransition || !e.activation) return;
+      if (sessionStorage.getItem('navDirection')) return;
+      if (e.activation.navigationType !== 'traverse') return;
+      try {
+        var toUrl = (e.activation.to && e.activation.to.url) || '';
+        /* /liked 로 돌아가면 slide-left, 그 외(지도/홈 등)는 slide-down */
+        sessionStorage.setItem('navDirection',
+          toUrl.includes('/liked') ? 'slide-left' : 'slide-down');
+      } catch(err) {
+        sessionStorage.setItem('navDirection', 'slide-down');
+      }
+    });
+  }
+  </script>
+</head>
+<body>
+
+  {# ── 페이지 헤더 ── #}
+  <header class="page-header">
+    <div class="page-header-title">관심목록</div>
+  </header>
+
+  {# ── 탭 바: 관심목록(/liked 이동) / 최근 본 매물(현재) ── #}
+  <div class="tab-bar-wrap">
+    <div class="tab-bar" role="tablist" aria-label="관심목록 탭">
+      <div class="tab-indicator" id="tab-indicator" aria-hidden="true"></div>
+
+      <button class="tab-btn" id="tab-liked" role="tab" aria-selected="false"
+              onclick="tabNav('/liked', 'slide-left')">
+        <svg class="tab-btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+        </svg>
+        관심목록
+      </button>
+
+      <button class="tab-btn active" id="tab-recent" role="tab" aria-selected="true">
+        <svg class="tab-btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+        </svg>
+        최근 본 매물
+        <span class="tab-badge active">{{ recent|length }}</span>
+      </button>
+    </div>
+  </div>
+
+  {# ── 최근 본 매물 카드 ── #}
+  {% if recent %}
+    <div>
+      <div class="list-header">
+        <span class="list-count">{{ recent|length }}개 기록됨</span>
+        <button class="btn-clear-all" id="btn-clear-recent">전체 삭제</button>
+      </div>
+      <div id="recent-list" class="lv-grid">
+        {% for p in recent %}
+        <a href="/view/{{ p.code }}" class="lv-card {{ 'recent-card--contracted' if p.is_contracted else '' }}" style="animation-delay: {{ loop.index0 * 0.04 }}s">
+          <div class="lv-card-thumb">
+            {% if p.picname1 %}
+              <img src="/images/maemul/big/{{ p.picname1 }}"
+                   alt="{{ p.title or '매물 사진' }}"
+                   loading="lazy"
+                   onerror="this.style.display='none'">
+            {% else %}
+              <div class="lv-thumb-placeholder">📷</div>
+            {% endif %}
+
+            {% if p.is_contracted %}
+              <div class="card-contracted-overlay" aria-hidden="true"><span>계약완료</span></div>
+            {% endif %}
+
+            {% if (not p.is_contracted) and p.movie %}
+              <div class="lv-movie-icon">
+                <img src="/static/images/movie_icon.png" alt="영상 있음">
+              </div>
+            {% endif %}
+
+            {# 개별 삭제 버튼 #}
+            <button class="recent-delete-btn"
+                    onclick="event.preventDefault(); deleteRecent('{{ p.code }}')"
+                    aria-label="삭제">
+              <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+            </button>
+          </div>
+          <div class="lv-card-info">
+            <span class="lv-card-num">매물번호 {{ p.code }}</span>
+            <div class="lv-card-price {{ 'contract-done' if p.is_contracted else '' }}">
+              {{ '계약완료' if p.is_contracted else p.price_text }}
+              {% if (not p.is_contracted) and p.mgmt_text %}
+                <span class="lv-price-mgmt"> {{ p.mgmt_text }}</span>
+              {% endif %}
+            </div>
+            <div class="lv-card-addr">
+              {{ p.address_text }}
+              {% if p.category_quoted %}<span class="lv-card-cat"> {{ p.category_quoted }}</span>{% endif %}
+              {% if (not p.is_contracted) and p.floor_text %} {{ p.floor_text }}{% endif %}
+            </div>
+            {% if not p.is_contracted %}
+              <div class="lv-card-time js-relative-ldate" data-ldate="{{ p.ldate or '' }}">-</div>
+            {% endif %}
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-icon-wrap empty-icon-wrap--recent">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M13 3a9 9 0 1 0 0 18A9 9 0 0 0 13 3zm0 16a7 7 0 1 1 0-14A7 7 0 0 1 13 19zm.5-11H12v6l5.25 3.15.75-1.23-4.5-2.67V8z"/>
+        </svg>
+      </div>
+      <div class="empty-title">아직 본 매물이 없어요</div>
+      <div class="empty-desc">매물을 클릭하면<br>자동으로 여기에 기록돼요</div>
+      <a href="/map" class="empty-cta">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+        매물 찾아보기
+      </a>
+    </div>
+  {% endif %}
+
+  {% set active_nav = 'recent' %}
+  {% include 'components/bottom-nav.html' %}
+
+  <script src="{{ url_for('static', filename='js/liked.js') }}?v=9"></script>
+  <script src="{{ url_for('static', filename='js/recent-page.js') }}?v=1"></script>
+
+</body>
+</html>

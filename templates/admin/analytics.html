@@ -1,0 +1,513 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}접속 통계 — HouseKB Admin{% endblock %}
+
+{% block header_right %}
+  <a href="{{ url_for('admin.index') }}" class="btn-sm btn-back">← 대시보드</a>
+  <a href="{{ url_for('admin.logout') }}" class="btn-sm btn-logout">로그아웃</a>
+{% endblock %}
+
+{% block head %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!-- Flatpickr 날짜 선택기 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
+
+<!-- 접속 통계 페이지 전용 CSS -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_analytics.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="page-wrap">
+
+  <!-- 페이지 헤더 -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="page-header-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+        </svg>
+      </div>
+      <div class="page-header-text">
+        <h1>접속 통계</h1>
+        <p id="header-period-label">오늘 기준</p>
+      </div>
+    </div>
+
+    <!-- 기간 탭 + 날짜 선택기 -->
+    <div class="page-header-controls">
+      <div class="period-tabs">
+        <button class="period-tab active" data-mode="daily">오늘</button>
+        <button class="period-tab"        data-mode="weekly">주간</button>
+        <button class="period-tab"        data-mode="monthly">월간</button>
+        <button class="period-tab"        data-mode="all">전체</button>
+      </div>
+      <!-- daily 모드에서만 표시 -->
+      <div class="fp-input-wrap" id="date-picker-wrap">
+        <svg viewBox="0 0 24 24">
+          <path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/>
+        </svg>
+        <input type="text" id="date-select" readonly placeholder="날짜 선택">
+      </div>
+    </div>
+  </div>
+
+  <!-- ① 요약 카드 -->
+  <div class="summary-grid" id="summary-grid">
+    <div class="summary-card"><div class="loading">로딩 중…</div></div>
+    <div class="summary-card" style="display:none"></div>
+    <div class="summary-card" style="display:none"></div>
+    <div class="summary-card" style="display:none"></div>
+  </div>
+
+  <!-- ② 일별 추이 라인 차트 -->
+  <div class="section-card">
+    <div class="section-title" id="daily-chart-title">일별 방문자 추이 (최근 30일)</div>
+    <canvas id="chart-daily" style="max-height:240px;"></canvas>
+  </div>
+
+  <!-- ③ 시간대별 분포 (daily 전용) -->
+  <div class="chart-grid-2 hourly-section" id="hourly-section">
+    <div class="chart-wrap">
+      <div class="section-title">시간대별 접속 분포</div>
+      <canvas id="chart-hourly"></canvas>
+    </div>
+    <div class="chart-wrap">
+      <div class="section-title">기기별 분포</div>
+      <canvas id="chart-device"></canvas>
+    </div>
+  </div>
+
+  <!-- ④ 기기 분포 (non-daily 전용) -->
+  <div class="chart-grid-3" id="breakdown-section" style="display:none;">
+    <div class="chart-wrap">
+      <div class="section-title">기기별 분포</div>
+      <canvas id="chart-device2"></canvas>
+    </div>
+    <div class="chart-wrap">
+      <div class="section-title">브라우저 분포</div>
+      <canvas id="chart-browser2"></canvas>
+    </div>
+    <div class="chart-wrap">
+      <div class="section-title">OS 분포</div>
+      <canvas id="chart-os2"></canvas>
+    </div>
+  </div>
+
+  <!-- ⑤ 브라우저 + OS (daily 전용) -->
+  <div class="chart-grid-2 hourly-section" id="browser-os-section">
+    <div class="chart-wrap">
+      <div class="section-title">브라우저 분포</div>
+      <canvas id="chart-browser"></canvas>
+    </div>
+    <div class="chart-wrap">
+      <div class="section-title">OS 분포</div>
+      <canvas id="chart-os"></canvas>
+    </div>
+  </div>
+
+  <!-- ⑥ TOP 10 -->
+  <div class="top-grid">
+    <div class="top-card">
+      <div class="section-title">인기 매물 TOP 10</div>
+      <div id="top-properties"><div class="loading">로딩 중…</div></div>
+    </div>
+    <div class="top-card">
+      <div class="section-title">IP별 방문 횟수</div>
+      <div id="top-ips"><div class="loading">로딩 중…</div></div>
+    </div>
+  </div>
+
+  <!-- ⑦ 상세 로그 -->
+  <div class="section-card">
+    <div class="section-title">상세 로그</div>
+    <div class="log-filter">
+      <input class="filter-input" type="text" id="filter-ip"
+             placeholder="IP 검색" style="width:130px;">
+      <select class="filter-select" id="filter-device">
+        <option value="">기기 전체</option>
+        <option value="mobile">모바일</option>
+        <option value="desktop">데스크톱</option>
+        <option value="tablet">태블릿</option>
+      </select>
+      <select class="filter-select" id="filter-browser">
+        <option value="">브라우저 전체</option>
+        <option value="Chrome">Chrome</option>
+        <option value="Samsung Browser">Samsung Browser</option>
+        <option value="Safari">Safari</option>
+        <option value="Edge">Edge</option>
+        <option value="Firefox">Firefox</option>
+        <option value="Opera">Opera</option>
+        <option value="unknown">기타</option>
+      </select>
+      <select class="filter-select" id="filter-sort">
+        <option value="wdate_desc">최신순</option>
+        <option value="wdate_asc">오래된순</option>
+        <option value="ip">IP순</option>
+        <option value="browser">브라우저순</option>
+        <option value="device">기기순</option>
+      </select>
+      <span id="log-total-count"
+            style="font-size:.73rem; color:rgba(255,255,255,.3); margin-left:.2rem;"></span>
+    </div>
+
+    <div class="log-table-wrap">
+      <table class="log-table">
+        <thead>
+          <tr>
+            <th>시각</th><th>IP</th><th>visitor_id</th>
+            <th>브라우저</th><th>OS</th><th>기기</th><th>페이지</th><th>매물</th>
+          </tr>
+        </thead>
+        <tbody id="log-tbody">
+          <tr><td colspan="8"><div class="loading">로딩 중…</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+</div><!-- /page-wrap -->
+
+<script>
+// ── 전역 상태 ──────────────────────────────────────────────────────
+let currentMode = 'daily';   // daily / weekly / monthly / all
+let currentDate = '';         // YYYY-MM-DD (daily 모드에서만 사용)
+let currentPage = 1;
+let charts      = {};         // Chart.js 인스턴스 저장
+
+// ── Chart.js 기본 설정 ────────────────────────────────────────────
+Chart.defaults.color       = 'rgba(255,255,255,0.45)';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.08)';
+Chart.defaults.font.family = "'Apple SD Gothic Neo','Noto Sans KR',sans-serif";
+
+const PALETTE = ['#60a5fa','#34d399','#fbbf24','#f87171','#a78bfa','#fb923c','#38bdf8','#4ade80'];
+
+// ── Flatpickr 초기화 ──────────────────────────────────────────────
+const fp = flatpickr('#date-select', {
+  locale:      'ko',
+  dateFormat:  'Y-m-d',
+  maxDate:     'today',
+  defaultDate: 'today',
+  disableMobile: true,  // 네이티브 datepicker 대신 flatpickr 강제
+  onChange(selectedDates, dateStr) {
+    currentDate = dateStr;
+    currentPage = 1;
+    updatePeriodLabel();
+    loadAll();
+  },
+});
+
+// 초기 날짜 설정
+currentDate = fp.selectedDates[0]
+  ? fp.formatDate(fp.selectedDates[0], 'Y-m-d')
+  : new Date().toISOString().slice(0, 10);
+
+// ── 기간 탭 클릭 ─────────────────────────────────────────────────
+document.querySelectorAll('.period-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.period-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMode = btn.dataset.mode;
+    currentPage = 1;
+
+    // 날짜 선택기: daily 모드에서만 표시
+    const pickerWrap = document.getElementById('date-picker-wrap');
+    pickerWrap.style.display = currentMode === 'daily' ? '' : 'none';
+
+    // 시간대 차트 & browser/OS 레이아웃 전환
+    const isDaily = currentMode === 'daily';
+    document.getElementById('hourly-section').classList.toggle('hidden', !isDaily);
+    document.getElementById('browser-os-section').classList.toggle('hidden', !isDaily);
+    document.getElementById('breakdown-section').style.display = isDaily ? 'none' : '';
+
+    updatePeriodLabel();
+    loadAll();
+  });
+});
+
+// ── 로그 필터 이벤트 ─────────────────────────────────────────────
+let filterTimer = null;
+['filter-device','filter-browser','filter-sort'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    clearTimeout(filterTimer);
+    filterTimer = setTimeout(() => { currentPage = 1; loadLogs(); }, 200);
+  });
+});
+document.getElementById('filter-ip').addEventListener('input', () => {
+  clearTimeout(filterTimer);
+  filterTimer = setTimeout(() => { currentPage = 1; loadLogs(); }, 500);
+});
+
+// ── 기간 레이블 업데이트 ─────────────────────────────────────────
+function updatePeriodLabel() {
+  const labels = {
+    daily:   currentDate ? `${currentDate} 기준` : '오늘 기준',
+    weekly:  '최근 7일',
+    monthly: '최근 30일',
+    all:     '전체 기간',
+  };
+  document.getElementById('header-period-label').textContent = labels[currentMode];
+  const titleMap = { daily: '일별 방문자 추이 (최근 30일)', weekly: '일별 방문자 추이 (최근 7일)', monthly: '일별 방문자 추이 (최근 30일)', all: '일별 방문자 추이 (전체)' };
+  document.getElementById('daily-chart-title').textContent = titleMap[currentMode];
+}
+
+// ── 유틸 ─────────────────────────────────────────────────────────
+function fmt(n) { return n == null ? '—' : n.toLocaleString('ko-KR'); }
+
+function makeOrUpdate(id, config) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  charts[id] = new Chart(canvas.getContext('2d'), config);
+}
+
+function buildParams(extra = {}) {
+  const p = { mode: currentMode, ...extra };
+  if (currentMode === 'daily' && currentDate) p.date = currentDate;
+  return new URLSearchParams(p).toString();
+}
+
+// ── ① 요약 카드 ──────────────────────────────────────────────────
+async function loadSummary() {
+  const res  = await fetch(`/admin/analytics/api/summary?${buildParams()}`);
+  const data = await res.json();
+
+  const cards = [
+    { label:'총 접속 수',  value:data.total,      diff:data.total_diff,
+      icon:'<path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>',
+      color:'linear-gradient(135deg,#3b82f6,#06b6d4)' },
+    { label:'순 방문자',   value:data.visitors,   diff:data.visitors_diff,
+      icon:'<path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>',
+      color:'linear-gradient(135deg,#10b981,#34d399)' },
+    { label:'순 IP',       value:data.ips,         diff:null,
+      icon:'<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>',
+      color:'linear-gradient(135deg,#f59e0b,#f97316)' },
+    { label:'조회 매물',   value:data.properties, diff:null,
+      icon:'<path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>',
+      color:'linear-gradient(135deg,#ec4899,#f43f5e)' },
+  ];
+
+  document.getElementById('summary-grid').innerHTML = cards.map(c => {
+    let diffHtml = '';
+    if (c.diff !== null) {
+      const cls  = c.diff > 0 ? 'up' : c.diff < 0 ? 'down' : 'flat';
+      const sign = c.diff > 0 ? '▲' : c.diff < 0 ? '▼' : '─';
+      diffHtml = `<div class="sc-diff ${cls}">${sign} ${Math.abs(c.diff)}% 전일 대비</div>`;
+    }
+    return `<div class="summary-card">
+      <div class="sc-icon" style="background:${c.color}"><svg viewBox="0 0 24 24">${c.icon}</svg></div>
+      <div class="sc-label">${c.label}</div>
+      <div class="sc-value">${fmt(c.value)}</div>
+      ${diffHtml}
+    </div>`;
+  }).join('');
+}
+
+// ── ② 일별 추이 라인 차트 ────────────────────────────────────────
+async function loadDaily() {
+  const res  = await fetch(`/admin/analytics/api/daily?${buildParams()}`);
+  const rows = await res.json();
+
+  makeOrUpdate('chart-daily', {
+    type: 'line',
+    data: {
+      labels: rows.map(r => r.day.slice(5)),
+      datasets: [
+        { label:'총 접속', data:rows.map(r=>r.total),
+          borderColor:'#60a5fa', backgroundColor:'rgba(96,165,250,.1)',
+          fill:true, tension:.35, pointRadius:3, pointHoverRadius:5 },
+        { label:'순방문자', data:rows.map(r=>r.visitors),
+          borderColor:'#34d399', backgroundColor:'rgba(52,211,153,.08)',
+          fill:true, tension:.35, pointRadius:3, pointHoverRadius:5 },
+      ],
+    },
+    options: {
+      responsive:true,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{ position:'top', labels:{ boxWidth:12, padding:14 } },
+                tooltip:{ callbacks:{ label:ctx=>`${ctx.dataset.label}: ${fmt(ctx.raw)}` } } },
+      scales:{
+        x:{ grid:{ color:'rgba(255,255,255,.05)' } },
+        y:{ grid:{ color:'rgba(255,255,255,.05)' }, ticks:{ precision:0 } },
+      },
+    },
+  });
+}
+
+// ── ③ 시간대별 바 차트 ───────────────────────────────────────────
+async function loadHourly() {
+  const res  = await fetch(`/admin/analytics/api/hourly?${buildParams()}`);
+  const rows = await res.json();
+
+  makeOrUpdate('chart-hourly', {
+    type: 'bar',
+    data: {
+      labels: rows.map(r => `${r.hour}시`),
+      datasets:[{ label:'접속 수', data:rows.map(r=>r.cnt),
+        backgroundColor:'rgba(96,165,250,.55)', borderRadius:4 }],
+    },
+    options: {
+      responsive:true,
+      plugins:{ legend:{ display:false } },
+      scales:{
+        x:{ grid:{ display:false } },
+        y:{ grid:{ color:'rgba(255,255,255,.05)' }, ticks:{ precision:0 } },
+      },
+    },
+  });
+}
+
+// ── ④ 도넛 차트 + TOP 10 ─────────────────────────────────────────
+async function loadBreakdown() {
+  const res  = await fetch(`/admin/analytics/api/breakdown?${buildParams()}`);
+  const data = await res.json();
+
+  const dOpts = {
+    responsive:true,
+    plugins:{ legend:{ position:'bottom', labels:{ boxWidth:11, padding:9, font:{ size:11 } } } },
+    cutout:'62%',
+  };
+
+  function makeDoughnut(id, items) {
+    makeOrUpdate(id, {
+      type:'doughnut',
+      data:{
+        labels: items.map(d=>d.label),
+        datasets:[{ data:items.map(d=>d.cnt), backgroundColor:PALETTE, borderWidth:0 }],
+      },
+      options: dOpts,
+    });
+  }
+
+  const isDaily = currentMode === 'daily';
+
+  // daily: 시간대/기기 그리드(왼쪽) + 브라우저/OS 그리드(아래)
+  if (isDaily) {
+    makeDoughnut('chart-device',  data.device);
+    makeDoughnut('chart-browser', data.browser);
+    makeDoughnut('chart-os',      data.os);
+  } else {
+    // 주간/월간/전체: 3열 그리드
+    makeDoughnut('chart-device2',  data.device);
+    makeDoughnut('chart-browser2', data.browser);
+    makeDoughnut('chart-os2',      data.os);
+  }
+
+  // TOP 10 목록
+  renderTopList('top-properties', data.properties, item =>
+    `<a href="/view/${item.code}" target="_blank" style="color:inherit; text-decoration:none;">매물 #${item.code}</a>`,
+    item => item.cnt
+  );
+
+  // IP별 방문 횟수 — visit_cnt(총 방문) + prop_cnt(고유 매물 수) 함께 표시
+  renderTopList('top-ips', data.top_ips,
+    item => `<span style="font-family:monospace;font-size:0.8rem;">${item.ip}</span>
+             <span style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-left:0.4rem;">(${item.prop_cnt}종 매물)</span>`,
+    item => item.visit_cnt
+  );
+}
+
+function renderTopList(id, items, labelFn, cntFn) {
+  const el = document.getElementById(id);
+  if (!items || !items.length) { el.innerHTML = '<div class="empty-state">데이터 없음</div>'; return; }
+  const max = cntFn(items[0]) || 1;
+  const rankCls = ['gold','silver','bronze'];
+  el.innerHTML = items.map((item, i) => {
+    const cnt = cntFn(item);
+    const pct = Math.round(cnt / max * 100);
+    return `<div class="top-item">
+      <div class="top-rank ${rankCls[i]||''}">${i+1}</div>
+      <div class="top-bar-wrap">
+        <div class="top-label">${labelFn(item)}</div>
+        <div class="top-bar" style="width:${pct}%"></div>
+      </div>
+      <div class="top-cnt">${fmt(cnt)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── ⑤ 로그 목록 ──────────────────────────────────────────────────
+async function loadLogs() {
+  const ip      = document.getElementById('filter-ip').value;
+  const device  = document.getElementById('filter-device').value;
+  const browser = document.getElementById('filter-browser').value;
+  const sort    = document.getElementById('filter-sort').value;
+
+  const params = new URLSearchParams({
+    mode:currentMode, date:currentDate, ip, device, browser, sort, page:currentPage,
+  });
+  const res  = await fetch(`/admin/analytics/api/logs?${params}`);
+  const data = await res.json();
+
+  document.getElementById('log-total-count').textContent = `총 ${fmt(data.total)}건`;
+
+  const tbody = document.getElementById('log-tbody');
+  if (!data.logs.length) {
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">로그 없음</div></td></tr>';
+  } else {
+    const badge = d => {
+      const cls = {mobile:'device-mobile',desktop:'device-desktop',tablet:'device-tablet'}[d]||'';
+      return `<span class="device-badge ${cls}">${d||'—'}</span>`;
+    };
+    tbody.innerHTML = data.logs.map(r => `<tr>
+      <td style="color:rgba(255,255,255,.4);font-size:.72rem;">${r.wdate}</td>
+      <td class="code-mono">${r.ip||'—'}</td>
+      <td class="code-mono" title="${r.visitor_id}">${(r.visitor_id||'').slice(0,8)}…</td>
+      <td>${r.browser||'—'}</td>
+      <td style="color:rgba(255,255,255,.5);">${r.os||'—'}</td>
+      <td>${badge(r.device)}</td>
+      <td style="max-width:170px;overflow:hidden;text-overflow:ellipsis;color:rgba(255,255,255,.5);"
+          title="${r.page}">${r.page||'—'}</td>
+      <td>${r.code?`<a href="/view/${r.code}" target="_blank" class="code-mono">${r.code}</a>`:'—'}</td>
+    </tr>`).join('');
+  }
+  renderPagination(data.page, data.pages);
+}
+
+function renderPagination(current, total) {
+  const el = document.getElementById('pagination');
+  if (total <= 1) { el.innerHTML = ''; return; }
+  let pages = new Set([1, total, current-1, current, current+1, current-2, current+2]);
+  pages = [...pages].filter(p => p >= 1 && p <= total).sort((a,b)=>a-b);
+  let html = `<button class="page-btn" ${current===1?'disabled':''} onclick="goPage(${current-1})">‹</button>`;
+  let prev = null;
+  for (const p of pages) {
+    if (prev !== null && p - prev > 1) html += `<span style="color:rgba(255,255,255,.2);">…</span>`;
+    html += `<button class="page-btn ${p===current?'active':''}" onclick="goPage(${p})">${p}</button>`;
+    prev = p;
+  }
+  html += `<button class="page-btn" ${current===total?'disabled':''} onclick="goPage(${current+1})">›</button>`;
+  el.innerHTML = html;
+}
+
+function goPage(p) {
+  currentPage = p;
+  loadLogs();
+  document.querySelector('.log-filter').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+// ── 전체 로드 ─────────────────────────────────────────────────────
+function loadAll() {
+  const isDaily = currentMode === 'daily';
+  // 시간대 차트는 daily 전용
+  document.getElementById('hourly-section').classList.toggle('hidden', !isDaily);
+  document.getElementById('browser-os-section').classList.toggle('hidden', !isDaily);
+  document.getElementById('breakdown-section').style.display = isDaily ? 'none' : '';
+
+  Promise.all([
+    loadSummary(),
+    loadDaily(),
+    isDaily ? loadHourly() : Promise.resolve(),
+    loadBreakdown(),
+    loadLogs(),
+  ]);
+}
+
+// 초기 로드
+updatePeriodLabel();
+loadAll();
+</script>
+{% endblock %}

@@ -1,0 +1,67 @@
+/* ============================================================
+   재사용 가능한 전역 로딩 스피너 컴포넌트
+   ============================================================
+   사용법:
+     1. <link rel="stylesheet" href="/static/css/loading-spinner.css">
+     2. <script src="/static/js/loading-spinner.js"></script>
+     3. LoadingSpinner.show() / LoadingSpinner.hide() 호출
+
+   또는 HTML에 직접 삽입 (JS 없이 CSS만으로 즉시 표시):
+     <div id="global-loading-overlay">
+       <div class="gls-ring"></div>
+       <div class="gls-text">잠시만 기다려주세요</div>
+     </div>
+   ============================================================ */
+
+/* ── 전체화면 오버레이 ── */
+#global-loading-overlay {
+    position: fixed;
+    inset: 0;
+    /* ✅ 흰색 복원: VT 슬라이딩 중 그림자 문제는 VT 방식으로 해결됨
+       베이지(#f0ede8)는 오히려 지도 로드 전 잠깐 눈에 띄는 색상으로 보이므로 원래대로 복원 */
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    opacity: 1;
+    /* 숨길 때 부드럽게 페이드 아웃 */
+    transition: opacity 0.45s ease;
+    pointer-events: all;
+}
+
+/* ── 페이드 아웃 진행 중 상태 ── */
+#global-loading-overlay.is-hiding {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* ── 스피너 링 ── */
+#global-loading-overlay .gls-ring {
+    width: 32px;
+    height: 32px;
+    /* 사이트 메인 컬러(#e74c3c) 기반 링 */
+    border: 3px solid #fde8e8;
+    border-top-color: #e74c3c;
+    border-radius: 50%;
+    animation: gls-spin 0.85s linear infinite;
+    flex-shrink: 0;
+}
+
+/* ── 링 회전 애니메이션 ── */
+@keyframes gls-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── 서브 텍스트 ── */
+#global-loading-overlay .gls-text {
+    margin-top: 16px;
+    font-size: 13px;
+    color: #bbb;
+    font-family: "Pretendard Variable", -apple-system, BlinkMacSystemFont,
+                 "Segoe UI", Roboto, sans-serif;
+    letter-spacing: -0.2px;
+    text-align: center;
+    line-height: 1.5;
+}

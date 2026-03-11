@@ -1,0 +1,31 @@
+/* 모바일 환경을 위한 추가 스타일 */
+@media screen and (max-width: 768px) {
+  .calculation-line {
+    font-size: 15px !important;
+    line-height: 1.4 !important;
+    margin-bottom: 3px !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+  
+  .calculation-display {
+    min-height: 150px !important;
+    padding: 8px !important;
+    font-size: 15px !important;
+  }
+  
+  .typing-line {
+    font-size: 15px !important;
+    line-height: 1.4 !important;
+    margin-bottom: 3px !important;
+  }
+  
+  .cursor {
+    height: 0.9em !important;
+  }
+  
+  .process-container {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+}

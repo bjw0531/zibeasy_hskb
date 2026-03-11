@@ -1,0 +1,109 @@
+{# ============================================================
+   오시는 길 - 지도 앱 선택 팝업 컴포넌트
+   사용법: {% include 'components/map_popup.html' %}
+   트리거: <a href="#" onclick="showMapPopup(); return false;">오시는 길</a>
+   사용 페이지: view.html, home.html (공통)
+   ※ Tailwind 미사용 페이지에서도 동작하도록 인라인 스타일 사용
+   ============================================================ #}
+
+<!-- 팝업 배경 (반투명 오버레이, 초기: 숨김) -->
+<div id="map-popup-bg"
+    style="display:none; position:fixed; top:0; left:0; right:0; bottom:0;
+           background:rgba(0,0,0,0.5); z-index:999;"></div>
+
+<!-- 지도 앱 선택 팝업창 (초기: 숨김) -->
+<div id="map-popup"
+    style="display:none; position:fixed; top:0; left:0; right:0; bottom:0;
+           align-items:center; justify-content:center; z-index:1000;">
+    <div style="background:#fff; border-radius:16px;
+                box-shadow:0 10px 40px rgba(0,0,0,0.25);
+                padding:24px; position:relative;
+                width:90%; max-width:260px; box-sizing:border-box;">
+
+        <!-- 닫기 버튼 -->
+        <button onclick="hideMapPopup()"
+            style="position:absolute; top:6px; right:10px;
+                   background:none; border:none; font-size:34px;
+                   color:#666; cursor:pointer; line-height:1; padding:0;">
+            &times;
+        </button>
+
+        <!-- 팝업 제목 -->
+        <p style="font-size:17px; font-weight:400; margin:0 0 16px; color:#222;">
+            지도를 선택하세요
+        </p>
+
+        <!-- 네이버 지도 버튼 -->
+        <button onclick="openNaverMap()"
+            style="width:100%; background:#f3f4f6; border:none; border-radius:8px;
+                   padding:10px; margin-bottom:8px; display:flex;
+                   align-items:center; justify-content:center;
+                   gap:12px; cursor:pointer; font-size:14px; font-family:inherit;">
+            <img src="https://www.housekb.com/m/img/naver-map-logo.svg"
+                style="width:32px; height:32px;" alt="네이버 지도" />
+            네이버 지도
+        </button>
+
+        <!-- 카카오맵 버튼 -->
+        <button onclick="openKakaoMap()"
+            style="width:100%; background:#f3f4f6; border:none; border-radius:8px;
+                   padding:10px; margin-bottom:8px; display:flex;
+                   align-items:center; justify-content:center;
+                   gap:12px; cursor:pointer; font-size:14px; font-family:inherit;">
+            <img src="https://www.housekb.com/m/img/kakao_map-logo.png"
+                style="width:32px; height:32px;" alt="카카오맵" />
+            카카오맵
+        </button>
+
+        <!-- T맵 버튼 -->
+        <button onclick="openTMap()"
+            style="width:100%; background:#f3f4f6; border:none; border-radius:8px;
+                   padding:10px; display:flex; align-items:center;
+                   justify-content:center; gap:12px;
+                   cursor:pointer; font-size:14px; font-family:inherit;">
+            <img src="https://www.housekb.com/m/img/Tmap-logo.svg"
+                style="width:32px; height:32px;" alt="T맵" />
+            T맵
+        </button>
+    </div>
+</div>
+
+<!-- 오시는 길 팝업 관련 JavaScript -->
+<script>
+    /* 팝업 열기: 오버레이 표시 + 스크롤 잠금 */
+    function showMapPopup() {
+        document.getElementById("map-popup").style.display = "flex";
+        document.getElementById("map-popup-bg").style.display = "block";
+        document.body.style.overflow = "hidden";
+    }
+
+    /* 팝업 닫기: 오버레이 숨김 + 스크롤 해제 */
+    function hideMapPopup() {
+        document.getElementById("map-popup").style.display = "none";
+        document.getElementById("map-popup-bg").style.display = "none";
+        document.body.style.overflow = "";
+    }
+
+    /* 네이버 지도로 이동 */
+    function openNaverMap() {
+        var isAndroid = /android/i.test(navigator.userAgent);
+        if (isAndroid) {
+            // Android WebView: m.map.naver.com/appLink.naver는 ERR_BLOCKED_BY_RESPONSE 발생
+            // → intent:// URL로 네이버 지도 앱 직접 실행 (미설치 시 Play Store 이동)
+            window.location.href = 'intent://place?id=1284449451#Intent;scheme=nmap;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;package=com.nhn.android.nmap;end';
+        } else {
+            // iOS / 모바일 브라우저: 기존 단축 URL 사용
+            window.location.href = "https://naver.me/5eUjyago";
+        }
+    }
+
+    /* 카카오맵으로 이동 */
+    function openKakaoMap() {
+        window.location.href = "https://kko.kakao.com/kzIwMvgSrr";
+    }
+
+    /* T맵으로 이동 */
+    function openTMap() {
+        window.location.href = "https://tmap.life/21a030ad";
+    }
+</script>

@@ -1,0 +1,548 @@
+/* ============================================
+   LIST PANEL - Mobile First + 자동 반응형
+   ============================================ */
+
+/* ============ 모바일 기본 (가장 작은 화면) ============ */
+
+.list-panel {
+    position: fixed;
+    /* ✅ iOS safe area 대응 - 홈 인디케이터(iPhone 15 등) 위로 패널 올림 */
+    bottom: env(safe-area-inset-bottom, 0px);
+    left: 0;
+    right: 0;
+    /* ✅ 자동 반응형: 화면에 따라 80vh~85vh */
+    height: clamp(70vh, 83vh, 90vh);
+    background: white;
+    /* ✅ 자동 반응형: 화면에 따라 16px~24px */
+    border-top-right-radius: 10px;
+    border-top-left-radius: 10px;
+    border: 0.5px solid #bbbbbb;
+    box-shadow: 0 0px 10px rgba(0, 0, 0, 0.3);
+    z-index: 1500;
+    /* ✅ 초기 위치: 59px만 보임 */
+    transform: translateY(calc(100% - 59px));
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    visibility: visible;
+    pointer-events: auto;
+    /* ✅ 모바일 크롬/삼성인터넷 pull-to-refresh 방지 */
+    overscroll-behavior: contain;
+}
+
+/* 활성화 상태 - JavaScript에서 동적으로 transform 설정 */
+.list-panel.active {
+    /* transform은 JS에서 window.innerHeight 기반으로 설정됨 */
+    visibility: visible;
+}
+
+/* 목록 헤더 */
+.list-header {
+    padding: 8px;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+    /* ✅ 헤더 하단에 고정 구분선 추가 */
+    position: relative;
+    /* ✅ 흰색 배경 */
+    background: white;
+    border-top-right-radius: 10px;
+    border-top-left-radius: 10px;
+    /* ✅ 매물 리스트 바운스 시 헤더 위로 가리기 */
+    z-index: 10;
+    /* ✅ 모바일 크롬 Touch to Search 방지 */
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    user-select: none;
+    touch-action: manipulation;
+}
+
+/* 헤더 하단 구분선 (스크롤해도 고정) */
+.list-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: clamp(8px, 2vw, 20px);
+    right: clamp(8px, 2vw, 20px);
+    height: 2px;
+    /* ✅ 회색 구분선으로 변경 */
+    background: rgb(230, 230, 230);
+}
+
+/* 드래그 핸들 */
+.panel-drag-handle {
+    /* ✅ 자동 반응형: 36px~44px */
+    width: 40px;
+    height: 4px;
+    /* ✅ 흰색 반투명으로 변경 */
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 2px;
+    margin: 2px auto 4px auto;
+    cursor: grab;
+    transition: background-color 0.2s ease;
+    /* ✅ 모바일 크롬 Touch to Search 방지 */
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    user-select: none;
+    touch-action: manipulation;
+}
+
+.panel-drag-handle:hover {
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.panel-drag-handle:active {
+    cursor: grabbing;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+/* 헤더 상단 - ✅ 배경색 및 라운드 추가 */
+.list-header-top {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    /* ✅ 배경색 및 라운드 */
+    background: rgba(255, 112, 117);
+    padding: 4px 50px 8px 50px;
+    border-radius: 8px;
+    margin: 0 0px;
+    /* ✅ 모바일 크롬 Touch to Search 방지 */
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    user-select: none;
+    touch-action: manipulation;
+}
+
+/* 타이틀 */
+.list-title {
+    font-size: 16px;
+    font-weight: 600;
+    /* ✅ 흰색 텍스트 */
+    color: rgba(255, 255, 255);
+    display: flex;
+    align-items: center;
+    /* gap 제거: 숫자와 "개" 사이 자연스럽게 붙음 */
+    /* ✅ 모바일 크롬 Touch to Search 방지 */
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    user-select: none;
+}
+
+/* ✅ 지역명/역명 - 숫자와 여백 추가 */
+.list-location {
+    margin-right: 6px;
+    /* ✅ 모바일 크롬 Touch to Search 방지 */
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    user-select: none;
+}
+
+/* ✅ 패널 상단 레이블 (지역/테마/매물종류) */
+.list-label {
+    margin-right: 4px;
+    /* ✅ 모바일 크롬 Touch to Search 방지 */
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    user-select: none;
+}
+
+.list-count {
+    /* ✅ 흰색으로 변경 */
+    color: rgba(255, 255, 255);
+    /* ✅ 자동 반응형: 14px~18px */
+    font-size: 16px;
+    font-weight: 600;
+    /* ✅ 모바일 크롬 Touch to Search 방지 */
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    user-select: none;
+}
+
+/* ✅ 패널 열린 상태 스타일 */
+.list-panel.active .panel-drag-handle {
+    background: rgba(180, 180, 180, 0.8);
+}
+
+.list-panel.active .list-header-top {
+    background: white;
+}
+
+.list-panel.active .list-title {
+    color: rgb(50, 50, 50);
+}
+
+.list-panel.active .list-count {
+    color: rgb(50, 50, 50);
+}
+
+/* ✅ 패널 열린 상태에서 정렬 버튼 색상 */
+.list-panel.active .sort-btn {
+    color: rgb(80, 80, 80);
+}
+
+.list-panel.active .sort-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+/* 닫기 버튼 */
+.list-close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: var(--radius-round);
+    transition: all var(--transition-fast);
+    /* ✅ 자동 반응형: 28px~36px */
+    width: clamp(28px, 8vw, 36px);
+    height: clamp(28px, 8vw, 36px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.list-close-btn:hover {
+    background: var(--background-gray);
+    color: var(--text-primary);
+}
+
+/* 검색/필터 */
+.list-filters {
+    display: flex;
+    gap: var(--spacing-xs);
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.list-search {
+    flex: 1;
+    min-width: 200px;
+    /* ✅ 자동 반응형: 8px~12px */
+    padding: clamp(8px, 2.5vw, 12px) clamp(10px, 3vw, 14px);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    /* ✅ 자동 반응형: 13px~15px */
+    font-size: clamp(13px, 3.5vw, 15px);
+    background: var(--background-white);
+}
+
+.list-sort {
+    padding: clamp(8px, 2.5vw, 12px) var(--spacing-sm);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: clamp(13px, 3.5vw, 15px);
+    background: var(--background-white);
+    cursor: pointer;
+}
+
+/* 목록 내용 */
+.list-content {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 clamp(8px, 2vw, 20px) clamp(8px, 2vw, 20px);
+    /* ✅ 아이폰 safe area 대응 - 하단 패딩 추가 */
+    padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+    scrollbar-width: none;
+    /* Firefox 기본 숨김 */
+    /* ✅ 모바일 크롬/삼성인터넷 pull-to-refresh 방지 */
+    overscroll-behavior: contain;
+    overscroll-behavior-y: contain;
+}
+
+/* 매물 카드 */
+.property-card {
+    background: transparent;
+    /* ✅ 배경 투명 */
+    border: none;
+    /* ✅ 테두리 제거 */
+    overflow: visible;
+    /* ✅ overflow visible */
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    /* ✅ 가로 배치 */
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    padding: 20px 0;
+    /* ✅ 좌우 패딩 제거 */
+}
+
+.property-card.active {
+    background: rgba(76, 175, 80, 0.05);
+    /* ✅ 선택시만 배경색 */
+}
+
+/* ✅ 매물 카드 사이 구분선 (원래대로 복원) */
+.property-card+.property-card {
+    border-top: 1px solid rgb(240, 240, 240);
+    padding-top: 20px;
+}
+
+/* ✅ 매물 이미지 - 고정 크기 */
+.property-image {
+    width: 47%;
+    aspect-ratio: 770 / 513; /* 원본 사진 비율 770×513 */
+    max-width: 770px;
+    flex-shrink: 0;
+    align-self: center;
+    /* 추가: 높이가 텍스트에 맞춰 늘어나지 않도록 */
+    background: var(--background-gray);
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+}
+
+.property-image::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.15);
+    pointer-events: none;
+}
+
+.property-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: clamp(12px, 3.5vw, 14px);
+    background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+}
+
+/* ✅ 매물 이미지 — lazy 로드 후 팝인 깜빡임 방지
+   - 컨테이너 크기에 꽉 맞게 채우기 (object-fit: cover)
+   - 로드 완료 시 opacity 0→1 페이드인으로 자연스러운 등장
+   - gray 배경이 loading placeholder 역할 → 이미지가 뜨기 전까지 유지 */
+.property-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    animation: imgFadeIn 0.3s ease;
+}
+
+@keyframes imgFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+
+/* ✅ 매물 카드 내용 */
+.property-card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-width: 0;
+}
+
+.property-card-number {
+    font-size: clamp(12px, 3vw, 13px);
+    font-weight: 550;
+    color: rgb(140, 140, 140);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    /* background-color: #ececec; */
+    /* padding: 1px 8px; */
+    /* border-radius: 4px; */
+}
+
+.property-card-title {
+    font-size: clamp(12px, 3vw, 12px);
+    font-weight: 400;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-word;
+}
+
+.property-card-address {
+    font-size: clamp(12px, 3vw, 13px);
+    font-weight: 600;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.property-card-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 4px;
+    font-size: clamp(11px, 3vw, 12px);
+    color: var(--text-secondary);
+    gap: 8px;
+}
+
+.property-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex-wrap: wrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.property-card-info span {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.property-card-price {
+    font-size: clamp(15px, 4vw, 17px);
+    font-weight: 700;
+    color: var(--danger-color);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+}
+
+.property-card-price .price-main {
+    white-space: nowrap;
+}
+
+.property-card-price .price-management {
+    font-size: clamp(11px, 2.8vw, 12px);
+    color: rgb(140, 140, 140);
+    font-weight: 450;
+    white-space: nowrap;
+}
+
+.property-card-price .deposit {
+    font-size: clamp(12px, 3.2vw, 13px);
+    color: var(--text-secondary);
+    font-weight: 500;
+    display: block;
+}
+
+/* 매물 태그 */
+.property-tags {
+    display: flex;
+    gap: clamp(4px, 1.5vw, 6px);
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.property-tag {
+    background: var(--primary-color);
+    color: white;
+    padding: clamp(2px, 0.5vw, 3px) clamp(6px, 2vw, 8px);
+    border-radius: clamp(8px, 2.5vw, 10px);
+    font-size: clamp(9px, 2.5vw, 10px);
+    font-weight: 500;
+}
+
+.property-tag.secondary {
+    background: var(--secondary-color);
+}
+
+.property-tag.warning {
+    background: var(--warning-color);
+}
+
+/* 로딩/빈 상태/에러 */
+.list-loading,
+.list-empty,
+.list-error {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: clamp(30px, 10vw, 60px);
+    color: var(--text-muted);
+}
+
+.list-empty-icon {
+    font-size: clamp(36px, 12vw, 56px);
+    margin-bottom: var(--spacing-md);
+    opacity: 0.5;
+}
+
+.list-empty-title {
+    font-size: clamp(16px, 4.5vw, 20px);
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-secondary);
+}
+
+.list-empty-message {
+    font-size: clamp(13px, 3.5vw, 15px);
+    line-height: 1.5;
+    text-align: center;
+}
+
+.list-error-icon {
+    font-size: clamp(30px, 9vw, 42px);
+    margin-bottom: var(--spacing-sm);
+}
+
+.list-error-message {
+    font-size: clamp(13px, 3.5vw, 15px);
+    margin-bottom: var(--spacing-md);
+    text-align: center;
+}
+
+.list-error-retry {
+    background: var(--danger-color);
+    color: white;
+    border: none;
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: clamp(13px, 3.5vw, 15px);
+}
+
+/* 하단 여백 - ✅ 아이폰 safe area 대응 */
+.list-content::after {
+    content: '';
+    display: block;
+    /* ✅ safe-area-inset-bottom + 충분한 추가 여백 */
+    height: calc(var(--spacing-lg) + env(safe-area-inset-bottom, 0px) + 40px);
+}
+
+/* ✅ 동/역 선택 시 배경색 채워지는 효과 */
+@keyframes fillBackground {
+    0% {
+        background: white;
+    }
+
+    100% {
+        background: rgba(255, 112, 117);
+    }
+}
+
+.list-header-top.ripple {
+    animation: fillBackground 0.7s ease-out forwards;
+}
+
+.list-header-top.ripple .list-title,
+.list-header-top.ripple .list-count {
+    animation: textColorChange 0.7s ease-out forwards;
+}
+
+@keyframes textColorChange {
+    0% {
+        color: rgba(255, 112, 117);
+    }
+
+    100% {
+        color: white;
+    }
+}

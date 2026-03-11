@@ -1,0 +1,490 @@
+/* ============================================
+   property-list-page.css
+   매물 목록 별도 페이지 전용 스타일
+   기존 list.css의 카드 스타일을 재사용하면서
+   페이지 레이아웃과 애니메이션을 추가
+   ============================================ */
+
+/* ✅ CSS 변수 정의 (list.css에서 참조하는 변수들) */
+:root {
+    --primary-color: #4CAF50;
+    --danger-color: #333;
+    --secondary-color: #6c757d;
+    --warning-color: #ff9800;
+    --text-primary: #333;
+    --text-secondary: #666;
+    --text-muted: #999;
+    --border-color: #e0e0e0;
+    --background-white: #fff;
+    --background-gray: #f5f5f5;
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 12px;
+    --spacing-lg: 16px;
+    --spacing-xl: 24px;
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-round: 50%;
+    --shadow-medium: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.3s ease;
+}
+
+/* ✅ 전체 페이지 레이아웃 */
+body.list-page-body {
+    margin: 0;
+    padding: 0;
+    /* ✅ 슬라이드 아웃 시 래퍼 뒤에 드러나는 배경색 — 흰색 대신 맵 배경과 어울리는 색상 사용
+       (흰색이면 닫기 애니메이션 중 흰 그림자처럼 보이는 현상 발생) */
+    background: #f0ede8;
+    overflow: hidden;
+    height: 100vh;
+    height: 100dvh;
+}
+
+/* ✅ 페이지 래퍼 - 슬라이드 인 애니메이션 */
+.list-page-wrapper {
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* ✅ 래퍼 자체는 흰색 — body 배경(#f0ede8)이 래퍼 뒤에서만 드러나도록 */
+    background: #fff;
+    animation: slideInFromBottom 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* ✅ 슬라이드 아웃 클래스 (뒤로가기 시) */
+.list-page-wrapper.slide-out {
+    animation: slideOutToBottom 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* ✅ 애니메이션 제거 (상세→목록 뒤로가기 복원 시 즉시 표시) */
+.list-page-wrapper.no-animation {
+    animation: none;
+}
+
+/* ✅ 크로스 문서 VT 지원 시 자체 슬라이드 비활성화 (VT가 대신 처리)
+   JS에서 pagereveal 지원 확인 후 html.vt-supported 클래스 부여
+   @supports 대신 사용하여 WebView 호환성 확보 */
+html.vt-supported .list-page-wrapper {
+    animation: none;
+}
+
+html.vt-supported .list-page-wrapper.slide-out {
+    animation: none;
+}
+
+/* ✅ 슬라이드 인 애니메이션 (아래 → 위) */
+@keyframes slideInFromBottom {
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+/* ✅ 슬라이드 아웃 애니메이션 (위 → 아래) */
+@keyframes slideOutToBottom {
+    from {
+        transform: translateY(0);
+    }
+    to {
+        transform: translateY(100%);
+    }
+}
+
+/* ✅ 페이지 헤더 */
+.list-page-header {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    background: #fff;
+    border-bottom: 1px solid #e8e8e8;
+    flex-shrink: 0;
+    gap: 12px;
+    /* 아이폰 safe area 상단 대응 */
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+    z-index: 10;
+}
+
+/* ✅ 뒤로가기 버튼 — view.html 상단 버튼과 동일한 스타일 */
+.list-page-back-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    color: #4B5563;
+    font-size: 20px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.list-page-back-btn:active {
+    opacity: 0.6;
+}
+
+/* ✅ 닫기 버튼 (우측) — 뒤로가기 버튼과 동일한 스타일 */
+.list-page-close-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    color: #4B5563;
+    font-size: 18px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.list-page-close-btn:active {
+    opacity: 0.6;
+}
+
+/* ✅ 헤더 타이틀 영역 */
+.list-page-header-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.list-page-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 0px;
+}
+
+.list-page-label {
+    color: #333;
+    margin-right: 4px;
+}
+
+.list-page-count {
+    color: #333;
+    font-weight: 700;
+}
+
+/* ✅ 정렬 탭바 — 가운데 정렬, 넉넉한 간격 */
+.sort-tab-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 10px 16px;
+    background: #fff;
+    border-bottom: 1px solid #f0f0f0;
+    flex-shrink: 0;
+}
+
+/* ✅ 탭 + 인포 아이콘을 묶는 래퍼 (팝오버 기준점) */
+.sort-tab-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* ✅ 정렬 탭 버튼 (기본 — 비선택)
+   배경·테두리·텍스트 모두 뮤트하여 "비선택" 상태를 명확하게 표현 */
+.sort-tab {
+    width: 106px;
+    text-align: center;
+    padding: 6px 12px;
+    border: 1px solid #eaeaea;
+    border-radius: 20px;
+    background: #f6f6f6;
+    color: #b2b2b2;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.18s ease, border-color 0.18s ease,
+                color 0.18s ease, box-shadow 0.18s ease;
+    white-space: nowrap;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+}
+
+.sort-tab:active {
+    transform: scale(0.96);
+}
+
+/* ✅ 정렬 탭 버튼 (선택/활성)
+   배경: 연한 코럴 틴트 / 테두리: 코럴 레드 / 텍스트: 진한 코럴
+   → 사이트 하단 CTA 버튼(rgb(255,112,117))과 같은 계열로 자연스럽게 어울림 */
+.sort-tab--active {
+    background: #ffffff;
+    border-color: #666;
+    border-width: 1px;
+    color: #666;
+    font-weight: 650;
+    box-shadow: 0 1px 4px rgba(255, 100, 100, 0.10);
+}
+
+/* ✅ 정렬 탭 버튼 (비활성화 — 중심 좌표 없을 때) 
+.sort-tab:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+}  */
+
+/* ✅ 인포 아이콘 버튼 (기본 — 비선택 탭 옆) */
+.sort-info-btn {
+    width: 17px;
+    height: 17px;
+    border: none;
+    background: none;
+    color: #c8c8c8;
+    font-size: 15px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    flex-shrink: 0;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
+    line-height: 1;
+    transition: color 0.18s ease;
+}
+
+/* ✅ 선택된 탭 옆의 인포 아이콘 — 코럴 계열로 동기화 */
+.sort-tab-wrapper:has(.sort-tab--active) .sort-info-btn {
+    color: #666;
+}
+
+.sort-info-btn:active {
+    color: #aaa;
+}
+
+/* .sort-info-btn:disabled {
+    opacity: 0.3;
+    pointer-events: none;
+}  */
+
+/* ✅ 말풍선 팝오버 — 연한 크림 배경으로 배경과 구분감 확보 */
+.sort-info-popover {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    bottom: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fdf8f0;
+    color: #444;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.65;
+    padding: 8px 10px;
+    border-radius: 9px;
+    border: 1px solid #e8ddd0;
+    z-index: 300;
+    pointer-events: none;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* ✅ 말풍선 위쪽 꼬리 — 크림 배경색과 동일하게 맞춤 */
+.sort-info-popover::after {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    top: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: -1px;
+    border: 6px solid transparent;
+    border-bottom-color: #fdf8f0;
+}
+
+/* ✅ 팝오버 표시 상태 — drop-shadow로 꼬리까지 그림자 적용 */
+.sort-info-popover.visible {
+    display: block;
+    animation: popoverFadeIn 0.14s ease;
+    filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.10));
+}
+
+@keyframes popoverFadeIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(-5px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ✅ 거리 배지 (거리순 정렬 시 카드에 표시) — 채도 낮춘 절제된 색상 */
+.distance-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    color: #aa7878;
+    font-weight: 500;
+    background: rgba(148, 108, 108, 0.06);
+    border: 1px solid rgba(148, 108, 108, 0.18);
+    border-radius: 10px;
+    padding: 1px 7px;
+    margin-left: 4px;
+    vertical-align: middle;
+}
+
+/* ✅ 매물 목록 콘텐츠 영역 */
+.list-page-content {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 clamp(8px, 2vw, 20px) clamp(8px, 2vw, 20px);
+    /* 아이폰 safe area 하단 대응 */
+    padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+    max-width: 644px;
+    margin: 0 auto;
+    width: 100%;
+    /* 모바일 pull-to-refresh 방지 */
+    overscroll-behavior: contain;
+    overscroll-behavior-y: contain;
+    /* 스크롤바 숨김 */
+    scrollbar-width: none;
+}
+
+.list-page-content::-webkit-scrollbar {
+    display: none;
+}
+
+/* ✅ 하단 여백 (safe area 대응) */
+.list-page-content::after {
+    content: '';
+    display: block;
+    height: calc(20px + env(safe-area-inset-bottom, 0px) + 40px);
+}
+
+/* ✅ 로딩 상태 */
+.list-page-loading {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 20px;
+    color: #999;
+    gap: 12px;
+}
+
+.list-page-loading .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #e0e0e0;
+    border-top: 3px solid #e74c3c;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ✅ 빈 상태 */
+.list-page-empty {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 80px 20px;
+    color: #999;
+    text-align: center;
+}
+
+.list-page-empty-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.list-page-empty-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.list-page-empty-message {
+    font-size: 13px;
+    color: #999;
+    line-height: 1.6;
+}
+
+/* ============================================
+   지도 페이지 하단 버튼 스타일
+   (.list-page-btn - index.html에서 사용)
+   ============================================ */
+
+/* ✅ 하단 고정 버튼 — 하단 내비게이션 바(52px) 위에 위치 */
+.list-page-btn {
+    position: fixed;
+    bottom: calc(52px + env(safe-area-inset-bottom)); /* 새 내비 높이(52px) 기준 */
+    left: 0;
+    right: 0;
+    z-index: 1500;
+    background: white;
+    border-top-right-radius: 10px;
+    border-top-left-radius: 10px;
+    border: 0.5px solid #bbbbbb;
+    box-shadow: 0 0px 10px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: transform 0.15s ease;
+    /* 터치 최적화 */
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
+}
+
+.list-page-btn:active {
+    transform: translateY(2px);
+}
+
+/* ✅ 드래그 핸들 (시각적 일관성) */
+.list-page-btn-handle {
+    width: 40px;
+    height: 4px;
+    background: rgba(180, 180, 180, 0.8);
+    border-radius: 2px;
+    margin: 6px auto 4px auto;
+}
+
+/* ✅ 버튼 타이틀 영역 */
+.list-page-btn-inner {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: #ff6469;
+    padding: 8px 50px 8px 50px;
+    border-radius: 8px;
+    margin: 8px 8px 8px 8px;
+}
+
+.list-page-btn-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: rgba(255, 255, 255);
+    display: flex;
+    align-items: center;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.list-page-btn-label {
+    margin-right: 4px;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.list-page-btn-count {
+    color: rgba(255, 255, 255);
+    font-size: 16px;
+    font-weight: 600;
+    -webkit-user-select: none;
+    user-select: none;
+}

@@ -1,0 +1,430 @@
+/**
+ * 퀵 필터 스타일 (지도 상단 필터 버튼 영역)
+ * - 역 주변 필터 컨테이너 및 버튼
+ * - 테마별 검색 모달
+ * - 모달 공통 스타일 (애니메이션, 닫기 버튼, 제목)
+ * - 모바일 최우선 설계
+ */
+
+/* ============ 역 주변 필터 컨테이너 ============ */
+.station-filter-container {
+    position: fixed;
+    top: 64px;
+    left: 10px;
+    z-index: 999;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+/* ✅ 필터 아이콘 버튼 */
+.filter-icon-btn {
+    width: auto;
+    height: 32px;
+    padding: 0 14px;
+    background: white;
+    border: 0.7px solid #707070;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+    color: #555;
+    position: relative;
+}
+
+.filter-icon-btn:hover {
+    background: #f5f5f5;
+}
+
+.filter-icon-btn:active {
+    transform: scale(0.95);
+}
+
+/* ============ 역 주변 버튼 ============ */
+.station-floating-btn {
+    width: auto;
+    height: 32px;
+    background: white;
+    border: 0.7px solid #707070;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 0 14px;
+    transition: all 0.2s ease;
+}
+
+/* 파란색 원형 배경 (작은 원) */
+.station-icon-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    background: #3D9EDB;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.station-icon-img {
+    width: 12px;
+    height: 12px;
+    object-fit: contain;
+}
+
+.station-floating-btn.active {
+    background: #3D9EDB;
+    border-color: #3D9EDB;
+}
+
+.station-floating-btn.active .station-btn-text {
+    color: white;
+}
+
+.station-btn-text {
+    font-size: 12px;
+    font-weight: 500;
+    color: #333;
+    white-space: nowrap;
+}
+
+/* ✅ 아래 화살표 스타일 */
+.station-arrow {
+    font-size: 8px;
+    color: #666;
+    margin-left: 2px;
+}
+
+.station-floating-btn.active .station-arrow {
+    color: white;
+}
+
+/* ============ 역 선택 모달 ============ */
+.station-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.station-modal.active {
+    display: flex;
+}
+
+.station-modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    min-width: 240px;
+    max-width: 90vw;
+    position: relative;
+    animation: modalSlideIn 0.3s ease;
+}
+
+.station-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.station-option {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: #f8f9fa;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.station-option:hover {
+    background: #fff0f0;
+    border-color: #FF7075;
+}
+
+.station-option .station-icon {
+    font-size: 20px;
+}
+
+.station-option .station-name {
+    font-size: 15px;
+    font-weight: 500;
+    color: #333;
+}
+
+/* ============ 역 필터 배너 ============ */
+.station-filter-banner {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: linear-gradient(135deg, #fff0f0, #ffe8e8);
+    border-bottom: 1px solid #ffcdd2;
+    margin-bottom: 8px;
+}
+
+.station-filter-banner .station-icon {
+    font-size: 18px;
+}
+
+.station-filter-banner .station-name {
+    font-weight: 600;
+    color: #333;
+}
+
+.station-filter-banner .station-radius {
+    font-size: 12px;
+    color: #888;
+}
+
+.station-filter-banner .station-clear-btn {
+    margin-left: auto;
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #999;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+
+.station-filter-banner .station-clear-btn:hover {
+    color: #FF7075;
+}
+
+/* ============ 버튼 활성화 상태 - 역 주변 ============ */
+#stationFilterBtn.active {
+    background: #3d9edb;
+    border-color: #3d9edb;
+}
+
+#stationFilterBtn.active .station-btn-text {
+    color: white;
+}
+
+#stationFilterBtn.active .station-arrow {
+    color: white;
+}
+
+/* 테마별 검색 버튼 활성화 상태 */
+#recommendFilterBtn.active {
+    background: #3d9edb;
+    border-color: #3d9edb;
+}
+
+#recommendFilterBtn.active .station-btn-text {
+    color: white;
+}
+
+#recommendFilterBtn.active .station-arrow {
+    color: white;
+}
+
+/* ============ 테마별 검색 모달 스타일 ============ */
+.theme-modal-content {
+    min-width: 260px;
+    max-width: 320px;
+    padding: 12px !important;
+    padding-bottom: 12px !important;
+}
+
+.theme-modal-content .modal-title {
+    font-size: 17px;
+    margin-bottom: 2px;
+    text-align: center;
+}
+
+.theme-modal-content .modal-subtitle {
+    font-size: 12px;
+    margin-bottom: 10px;
+    text-align: center;
+    color: #888;
+}
+
+.theme-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* ✅ 테마 카테고리 그룹 - 카드 스타일 */
+.theme-category {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 4px 6px 4px;
+    border: 1px solid #eaeaea;
+}
+
+.theme-category-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #3d9edb;
+    text-align: center;
+    margin-bottom: 6px;
+    letter-spacing: 0.3px;
+}
+
+/* ✅ 카테고리 내 버튼 컨테이너 */
+.theme-category-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+/* ✅ 테마 가로 배치용 스타일 */
+.theme-row {
+    display: flex;
+    gap: 5px;
+    width: 100%;
+}
+
+/* ✅ 테마 버튼 스타일 */
+.theme-btn {
+    flex: 1;
+    padding: 6px 6px;
+    background: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #444;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: center;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.theme-btn:hover {
+    background: #f0f0f0;
+    border-color: #ccc;
+}
+
+.theme-btn:active {
+    transform: scale(0.98);
+}
+
+/* ✅ 테마 버튼 포커스 상태 (클릭 후 배경색 유지) */
+.theme-btn:focus {
+    outline: none;
+    background: #ffffff;
+    border-color: #ddd;
+}
+
+/* ✅ 테마 버튼 선택됨 상태 */
+.theme-btn.selected {
+    background: #3d9edb;
+    border-color: #3d9edb;
+    color: white;
+}
+
+/* ✅ 선택된 버튼 포커스 시에도 파란색 유지 */
+.theme-btn.selected:focus {
+    background: #3d9edb;
+    border-color: #3d9edb;
+}
+
+/* ✅ 하단 버튼 영역 */
+.theme-modal-footer {
+    display: flex;
+    gap: 8px;
+    padding-top: 12px;
+}
+
+.theme-reset-btn {
+    flex: 4;
+    padding: 10px;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.theme-reset-btn:hover {
+    background: #e8e8e8;
+}
+
+.theme-apply-btn {
+    flex: 6;
+    padding: 10px;
+    background: #3d9edb;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.theme-apply-btn:hover {
+    background: #2d8ecb;
+}
+
+.theme-apply-btn:active {
+    transform: scale(0.98);
+}
+
+/* ============ 모달 공통 스타일 ============ */
+
+/* 슬라이드인 애니메이션 */
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 모달 닫기 버튼 */
+.modal-close-btn {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #999;
+    cursor: pointer;
+    padding: 4px 8px;
+    line-height: 1;
+}
+
+.modal-close-btn:hover {
+    color: #333;
+}
+
+.modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.modal-subtitle {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 10px;
+}

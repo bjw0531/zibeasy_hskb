@@ -1,0 +1,100 @@
+{# ──────────────────────────────────────────────────────
+   하단 내비게이션 바 컴포넌트
+   사용법: {% set active_nav = 'home' %} 선언 후 {% include 'components/bottom-nav.html' %}
+   active_nav 값: 'home' | 'browse' | 'map' | 'liked' | 'recent' | 'profile'
+   아이콘: 인라인 SVG (웹폰트 의존 제거)
+────────────────────────────────────────────────────── #}
+<nav class="bottom-nav" role="navigation" aria-label="하단 메뉴">
+
+  {# ── 홈 탭 — 홈 화면(/) 이동 ── #}
+  <a href="/" class="bottom-nav__item {% if active_nav == 'home' %}active{% endif %}"
+     aria-label="홈">
+    <div class="bottom-nav__icon">
+      <svg class="bottom-nav__icon-svg bottom-nav__icon-svg--home" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4.8 11.3l5.9-5.3a1.9 1.9 0 0 1 2.6 0l5.9 5.3a2.1 2.1 0 0 1 .7 1.6v5.4a2.4 2.4 0 0 1 -2.4 2.4h-11a2.4 2.4 0 0 1 -2.4 -2.4v-5.4a2.1 2.1 0 0 1 .7 -1.6z"></path>
+        <path d="M9.2 20.2v-2.7a2.8 2.8 0 0 1 5.6 0v2.7"></path>
+      </svg>
+    </div>
+    <span class="bottom-nav__label">홈</span>
+  </a>
+
+  {# ── 리스트 탭 — 리스트형 매물보기(/list) 이동 ── #}
+  <a href="/list" class="bottom-nav__item {% if active_nav == 'browse' %}active{% endif %}"
+     aria-label="리스트">
+    <div class="bottom-nav__icon">
+      <svg class="bottom-nav__icon-svg bottom-nav__icon-svg--list" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="6.2" cy="7" r="1.25" fill="currentColor" stroke="none"></circle>
+        <circle cx="6.2" cy="12" r="1.25" fill="currentColor" stroke="none"></circle>
+        <circle cx="6.2" cy="17" r="1.25" fill="currentColor" stroke="none"></circle>
+        <path d="M10.2 7h8"></path>
+        <path d="M10.2 12h8"></path>
+        <path d="M10.2 17h8"></path>
+      </svg>
+    </div>
+    <span class="bottom-nav__label">리스트</span>
+  </a>
+
+  {# ── 지도 탭 — 지도 검색(/map) 이동 ── #}
+  <a href="/map" class="bottom-nav__item {% if active_nav == 'map' %}active{% endif %}"
+     aria-label="지도">
+    <div class="bottom-nav__icon">
+      <svg class="bottom-nav__icon-svg bottom-nav__icon-svg--map" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 21.5s-6.9-5.4-6.9-10.4a6.9 6.9 0 1 1 13.8 0c0 5-6.9 10.4-6.9 10.4z"></path>
+        <circle cx="12" cy="11.1" r="2.6"></circle>
+      </svg>
+    </div>
+    <span class="bottom-nav__label">지도</span>
+  </a>
+
+  {# ── 관심목록 탭 (찜+최근 통합) — favorite 아이콘 ── #}
+  <a href="/liked" class="bottom-nav__item {% if active_nav == 'liked' or active_nav == 'recent' %}active{% endif %}"
+     aria-label="관심목록">
+    <div class="bottom-nav__icon">
+      {# 찜 개수 뱃지 (JS에서 liked-badge로 제어) #}
+      <span class="bottom-nav__badge" id="liked-badge"></span>
+      <svg class="bottom-nav__icon-svg bottom-nav__icon-svg--filled" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 21.2l-1.1-1c-4.3-3.8-7-6.3-7-9.8a4.7 4.7 0 0 1 8.1-3.2a4.7 4.7 0 0 1 8.1 3.2c0 3.5-2.7 6-7 9.8z"></path>
+      </svg>
+    </div>
+    <span class="bottom-nav__label">관심목록</span>
+  </a>
+
+  {# ── 더보기 탭 ── #}
+  <a href="/profile" class="bottom-nav__item {% if active_nav == 'profile' %}active{% endif %}"
+     aria-label="더보기">
+    <div class="bottom-nav__icon">
+      <svg class="bottom-nav__icon-svg bottom-nav__icon-svg--more" viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="4.6" y="4.8" width="6.2" height="6.2" rx="1.8"></rect>
+        <rect x="13.2" y="4.8" width="6.2" height="6.2" rx="1.8"></rect>
+        <rect x="4.6" y="13.4" width="6.2" height="6.2" rx="1.8"></rect>
+        <path d="M14.6 16.5h4.8"></path>
+        <path d="M17 14.1v4.8"></path>
+      </svg>
+    </div>
+    <span class="bottom-nav__label">더보기</span>
+  </a>
+
+</nav>
+
+{# 찜 뱃지 카운트 업데이트 + 아이콘 폰트 동기화 스크립트 #}
+<script>
+(function() {
+  /* ── 1. 찜 뱃지 카운트 ── */
+  function updateLikedBadge() {
+    try {
+      var liked = JSON.parse(localStorage.getItem('liked') || '[]');
+      var badge = document.getElementById('liked-badge');
+      if (!badge) return;
+      if (liked.length > 0) {
+        badge.textContent = liked.length > 99 ? '99+' : liked.length;
+        badge.classList.add('visible');
+      } else {
+        badge.classList.remove('visible');
+      }
+    } catch(e) {}
+  }
+  updateLikedBadge();
+  window.addEventListener('storage', updateLikedBadge);
+  window.addEventListener('likedUpdated', updateLikedBadge);
+})();
+</script>

@@ -1,0 +1,360 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}회원 관리 · HouseKB Admin{% endblock %}
+
+{% block head %}
+<style>
+  /* ── 본문 ── */
+  .main {
+    padding: 1.25rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* ── 상단 타이틀 바 ── */
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  .page-title { font-size: 1.15rem; font-weight: 700; color: #fff; }
+  .total-badge { font-size: .78rem; color: rgba(255,255,255,.45); margin-left: .4rem; }
+
+  /* ── 가입유형 탭 ── */
+  .type-tabs {
+    display: flex;
+    gap: .45rem;
+    margin: -.35rem 0 .9rem;
+  }
+
+  .type-tab {
+    padding: .42rem .75rem;
+    border-radius: .55rem;
+    border: 1px solid rgba(255,255,255,.13);
+    background: rgba(255,255,255,.06);
+    color: rgba(255,255,255,.55);
+    text-decoration: none;
+    font-size: .82rem;
+    font-weight: 700;
+    transition: background .15s;
+  }
+  .type-tab:active { background: rgba(255,255,255,.12); }
+  .type-tab.active {
+    border-color: rgba(255,112,117,.4);
+    background: rgba(255,112,117,.2);
+    color: #FFB3B5;
+  }
+
+  /* ── 검색 필터 ── */
+  .search-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .6rem;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: .85rem;
+    padding: .9rem 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .search-bar input,
+  .search-bar select {
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: .5rem;
+    color: #e8e6e3;
+    font-size: .85rem;
+    padding: .45rem .75rem;
+    outline: none;
+    transition: border-color .2s, background .2s;
+  }
+  .search-bar input:focus,
+  .search-bar select:focus {
+    border-color: #FF7075;
+    background: rgba(255,112,117,.1);
+  }
+  .search-bar input { flex: 1; min-width: 160px; }
+  .search-bar select option { background: #27243a; }
+
+  .btn-search {
+    padding: .45rem 1rem;
+    background: rgba(112,255,167,.25);
+    border: 1px solid rgba(112,255,167,.4);
+    border-radius: .5rem;
+    color: #b7ffb3;
+    font-size: .85rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-search:active { background: rgba(112,255,167,.4); }
+
+  .btn-reset {
+    padding: .45rem 1rem;
+    background: rgba(255,112,117,.25);
+    border: 1px solid rgba(255,112,117,.4);
+    border-radius: .5rem;
+    color: #FFB3B5;
+    font-size: .85rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-reset:active { background: rgba(255,112,117,.4); }
+
+  /* ── 테이블 카드 ── */
+  .table-wrap {
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: .85rem;
+    overflow: hidden;
+  }
+
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  thead tr { background: rgba(255,255,255,.09); }
+  thead th {
+    padding: .65rem .55rem;
+    font-size: .78rem;
+    font-weight: 700;
+    color: rgba(255,255,255,.45);
+    text-align: center;
+    white-space: nowrap;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+
+  tbody tr {
+    border-bottom: 1px solid rgba(255,255,255,.09);
+    transition: background .1s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,.08); }
+
+  tbody td {
+    padding: .65rem .55rem;
+    font-size: .9rem;
+    color: #c8c5c0;
+    vertical-align: middle;
+    text-align: center;
+  }
+
+  /* 프로필 이미지 */
+  .profile-img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #27243a;
+  }
+  .profile-empty {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .profile-empty svg { width: 18px; height: 18px; fill: rgba(255,255,255,.25); }
+
+  /* 가입유형 뱃지 */
+  .badge {
+    display: inline-block;
+    padding: .22rem .55rem;
+    border-radius: 9999px;
+    font-size: .76rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .badge-kakao { background: rgba(254,229,0,.15); color: #fcd34d; }
+  .badge-naver { background: rgba(3,199,90,.15);   color: #34d399; }
+  .badge-email { background: rgba(59,130,246,.15);  color: #93c5fd; }
+
+  /* 닉네임 셀 */
+  .nick-cell {
+    text-align: left !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+    color: #e8e6e3;
+  }
+
+  /* 빈 결과 */
+  .empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: rgba(255,255,255,.3);
+    font-size: .9rem;
+  }
+
+  /* ── 페이지네이션 ── */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: .3rem;
+    margin-top: 1.25rem;
+    flex-wrap: wrap;
+  }
+  .pagination a,
+  .pagination span {
+    padding: .4rem .65rem;
+    border-radius: .45rem;
+    font-size: .8rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid rgba(255,255,255,.1);
+    color: rgba(255,255,255,.5);
+    transition: background .15s, color .15s;
+  }
+  .pagination a:hover { background: rgba(255,255,255,.07); color: #e8e6e3; }
+  .pagination span.current { background: rgba(255,112,117,.25); border-color: rgba(255,112,117,.4); color: #FFB3B5; }
+  .pagination span.dots { border: none; }
+
+  /* 모바일 대응 */
+  @media (max-width: 760px) {
+    .col-hide { display: none; }
+    .main { padding: .9rem; }
+    .profile-img, .profile-empty { width: 30px; height: 30px; }
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<main class="main">
+
+  <!-- 페이지 타이틀 -->
+  <div class="page-header">
+    <div>
+      <span class="page-title">회원 관리</span>
+      <span class="total-badge">전체 {{ total }}명</span>
+    </div>
+  </div>
+
+  <!-- 가입유형 탭 -->
+  <div class="type-tabs">
+    <a href="{{ url_for('admin.members') }}"
+       class="type-tab {% if not login_type %}active{% endif %}">전체</a>
+    <a href="{{ url_for('admin.members', login_type='email') }}"
+       class="type-tab {% if login_type == 'email' %}active{% endif %}">일반가입</a>
+    <a href="{{ url_for('admin.members', login_type='kakao') }}"
+       class="type-tab {% if login_type == 'kakao' %}active{% endif %}">카카오</a>
+    <a href="{{ url_for('admin.members', login_type='naver') }}"
+       class="type-tab {% if login_type == 'naver' %}active{% endif %}">네이버</a>
+  </div>
+
+  <!-- 검색 필터 -->
+  <form class="search-bar" method="get">
+    {% if login_type %}
+    <input type="hidden" name="login_type" value="{{ login_type }}" />
+    {% endif %}
+    <input type="text" name="keyword" placeholder="닉네임·이메일·아이디 검색" value="{{ keyword }}" />
+    <button type="submit" class="btn-search">검색</button>
+    <a href="{{ url_for('admin.members', login_type=login_type) }}" class="btn-reset" style="text-decoration:none">초기화</a>
+  </form>
+
+  <!-- 테이블 -->
+  <div class="table-wrap">
+    {% if rows %}
+    <table>
+      <thead>
+        <tr>
+          <th style="width:50px;"></th><!-- 프로필 -->
+          <th style="width:56px;">번호</th>
+          <th>닉네임</th>
+          <th class="col-hide" style="width:180px;">이메일</th>
+          <th style="width:72px;">가입유형</th>
+          <th class="col-hide" style="width:50px;">찜</th>
+          <th style="width:92px;">가입일</th>
+          <th style="width:100px;">최근 로그인</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <!-- 프로필 -->
+          <td>
+            {% if r.profile_img %}
+            <img class="profile-img" src="{{ r.profile_img }}" alt="프로필" loading="lazy"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';">
+            <span class="profile-empty" style="display:none;">
+              <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </span>
+            {% else %}
+            <span class="profile-empty">
+              <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </span>
+            {% endif %}
+          </td>
+          <!-- 번호 -->
+          <td style="font-size:.82rem; color:rgba(255,255,255,.45);">{{ r.idx }}</td>
+          <!-- 닉네임 -->
+          <td class="nick-cell">
+            {{ r.nickname or r.username or '-' }}
+          </td>
+          <!-- 이메일 -->
+          <td class="col-hide" style="font-size:.84rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+            {{ r.email or '-' }}
+          </td>
+          <!-- 가입유형 -->
+          <td>
+            {% if r.kakao_id %}
+            <span class="badge badge-kakao">카카오</span>
+            {% elif r.naver_id %}
+            <span class="badge badge-naver">네이버</span>
+            {% else %}
+            <span class="badge badge-email">일반</span>
+            {% endif %}
+          </td>
+          <!-- 찜 개수 -->
+          <td class="col-hide" style="font-size:.82rem; color:rgba(255,255,255,.45);">
+            {{ r.liked_cnt or 0 }}
+          </td>
+          <!-- 가입일 -->
+          <td style="font-size:.78rem; color:rgba(255,255,255,.4);">
+            {{ r.created_at.strftime('%y/%m/%d') if r.created_at else '-' }}
+          </td>
+          <!-- 최근 로그인 -->
+          <td style="font-size:.78rem; color:rgba(255,255,255,.4);">
+            {{ r.last_login.strftime('%m/%d %H:%M') if r.last_login else '-' }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty">
+      {% if keyword %}
+      검색 결과가 없습니다.
+      {% else %}
+      등록된 회원이 없습니다.
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- 페이지네이션 -->
+  {% if total_pages > 1 %}
+  <nav class="pagination">
+    {% if page > 1 %}
+    <a href="?page={{ page-1 }}&keyword={{ keyword }}&login_type={{ login_type }}">‹</a>
+    {% endif %}
+
+    {% for p in range(1, total_pages+1) %}
+    {% if p == page %}
+    <span class="current">{{ p }}</span>
+    {% elif p == 1 or p == total_pages or (p >= page-2 and p <= page+2) %}
+    <a href="?page={{ p }}&keyword={{ keyword }}&login_type={{ login_type }}">{{ p }}</a>
+    {% elif p == page-3 or p == page+3 %}
+    <span class="dots">…</span>
+    {% endif %}
+    {% endfor %}
+
+    {% if page < total_pages %}
+    <a href="?page={{ page+1 }}&keyword={{ keyword }}&login_type={{ login_type }}">›</a>
+    {% endif %}
+  </nav>
+  {% endif %}
+
+</main>
+{% endblock %}

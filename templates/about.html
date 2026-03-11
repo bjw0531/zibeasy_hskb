@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>회사소개 — 천안하우스</title>
+    {% include 'include.html' %}
+    <style>
+        :root {
+            --rose: #ff6469;
+            --rose-deep: #e65056;
+            --ink: #17181b;
+            --ink-soft: #5a616b;
+            --card: rgba(255, 255, 255, 0.88);
+            --line: rgba(16, 24, 40, 0.08);
+            --shadow: 0 12px 40px rgba(16, 24, 40, 0.12);
+            --r-lg: 20px;
+            --r-md: 14px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100dvh;
+            color: var(--ink);
+            font-family: "Pretendard Variable", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                linear-gradient(180deg, rgba(12, 13, 16, 0.5), rgba(12, 13, 16, 0.68)),
+                url("{{ url_for('static', filename='images/house-bg-img.png') }}") center/cover no-repeat;
+            z-index: -2;
+            transform: scale(1.04);
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at 10% 10%, rgba(255, 100, 105, 0.18), transparent 34%),
+                radial-gradient(circle at 85% 20%, rgba(255, 255, 255, 0.14), transparent 28%),
+                radial-gradient(circle at 50% 100%, rgba(255, 100, 105, 0.12), transparent 38%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .page-header {
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            padding-top: max(12px, env(safe-area-inset-top));
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            background: rgba(15, 16, 20, 0.45);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+        }
+
+        .back-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            text-decoration: none;
+        }
+
+        .page-title {
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+        }
+
+        .about-wrap {
+            max-width: 740px;
+            margin: 0 auto;
+            padding: 18px 16px 56px;
+        }
+
+        .hero {
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .hero-media {
+            min-height: 220px;
+            padding: 28px 22px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            background:
+                linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(7, 9, 12, 0.7) 75%),
+                url("{{ url_for('static', filename='images/house-bg-img.png') }}") center/cover no-repeat;
+        }
+
+        .hero-kicker {
+            color: rgba(255, 255, 255, 0.92);
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .hero-title {
+            color: #fff;
+            font-size: clamp(26px, 6.7vw, 38px);
+            line-height: 1.1;
+            margin: 0 0 10px;
+            font-weight: 800;
+        }
+
+        .hero-sub {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .hero-meta {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .hero-meta > div {
+            padding: 14px 10px;
+            text-align: center;
+            border-right: 1px solid var(--line);
+        }
+
+        .hero-meta > div:last-child { border-right: 0; }
+
+        .meta-label {
+            font-size: 11px;
+            color: #8b9199;
+            margin-bottom: 4px;
+        }
+
+        .meta-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: #14171c;
+        }
+
+        .grid {
+            margin-top: 12px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid rgba(255, 255, 255, 0.55);
+            border-radius: var(--r-lg);
+            padding: 20px 18px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            animation: fadeUp 0.55s ease both;
+        }
+
+        .card h2 {
+            margin: 0 0 10px;
+            font-size: 17px;
+            font-weight: 750;
+            letter-spacing: -0.01em;
+            color: #111217;
+        }
+
+        .card p {
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.78;
+            color: #2f3640;
+        }
+
+        .card p + p { margin-top: 8px; }
+
+        .chips {
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .chip {
+            border-radius: 12px;
+            background: rgba(255, 100, 105, 0.1);
+            border: 1px solid rgba(255, 100, 105, 0.18);
+            padding: 11px 10px;
+            text-align: center;
+            font-size: 12px;
+            color: #3b4048;
+            font-weight: 600;
+        }
+
+        .contact {
+            display: grid;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .row {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 13px;
+            color: #3a404b;
+            line-height: 1.6;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--rose);
+            margin-top: 7px;
+            flex-shrink: 0;
+        }
+
+        .row a {
+            color: var(--rose-deep);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .cta {
+            margin-top: 12px;
+            border-radius: 16px;
+            background: linear-gradient(130deg, #181b22 0%, #262a33 100%);
+            color: #fff;
+            text-align: center;
+            padding: 24px 18px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: var(--shadow);
+        }
+
+        .cta h3 {
+            margin: 0 0 8px;
+            font-size: 18px;
+            font-weight: 750;
+        }
+
+        .cta p {
+            margin: 0;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.75);
+            line-height: 1.65;
+        }
+
+        .cta a {
+            margin-top: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 150px;
+            height: 42px;
+            border-radius: 999px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--rose), #ff7f84);
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (min-width: 768px) {
+            .about-wrap { padding: 24px 20px 70px; }
+            .grid {
+                grid-template-columns: 1fr 1fr;
+                align-items: stretch;
+            }
+            .grid .card:first-child,
+            .grid .card:nth-child(2),
+            .grid .card:last-child { grid-column: 1 / -1; }
+            .hero-media { min-height: 300px; padding: 34px 30px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="page-header">
+        <a href="javascript:history.back()" class="back-btn" aria-label="뒤로가기">
+            <i data-lucide="arrow-left" style="width:18px;height:18px;"></i>
+        </a>
+        <span class="page-title">회사소개</span>
+    </header>
+
+    <main class="about-wrap">
+        <section class="hero">
+            <div class="hero-media">
+                <h1 class="hero-title">천안하우스</h1>
+                <p class="hero-sub">2010년부터 한 길을 걸어온, 천안 지역 원룸·투룸 임대 전문 플랫폼입니다.</p>
+            </div>
+            <div class="hero-meta">
+                <div>
+                    <div class="meta-label">서비스 시작</div>
+                    <div class="meta-value">2010년</div>
+                </div>
+                <div>
+                    <div class="meta-label">운영 지역</div>
+                    <div class="meta-value">천안</div>
+                </div>
+                <div>
+                    <div class="meta-label">운영 주체</div>
+                    <div class="meta-value">프렌즈부동산</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="grid">
+            <article class="card" style="animation-delay:.03s">
+                <h2>천안하우스를 소개합니다</h2>
+                <p><strong>천안하우스</strong>는 2010년부터 천안 지역 원룸·투룸 임대 정보에 집중해온 전문 플랫폼입니다. 오랜 운영 경험을 바탕으로 지역 시장 흐름을 빠르게 반영하며, 실제 집을 구하는 과정에서 필요한 정보를 정확하게 전달하는 데 집중하고 있습니다.</p>
+                <p>무엇보다 플랫폼을 공인중개사가 직접 개발하고 운영한다는 점에서, 현장 감각과 데이터의 신뢰도를 함께 갖춘 서비스로 꾸준히 성장하고 있습니다.</p>
+            </article>
+
+            <article class="card" style="animation-delay:.08s">
+                <h2>천안하우스의 특징과 장점</h2>
+                <p>천안하우스는 공인중개사가 직접 개발하고 직접 운영하고 있으며, 항상 고객의 니즈를 파악해 지속적으로 업데이트하며 성장해 나가고 있습니다.</p>
+                <p>직접 촬영한 실사진과 영상 정보를 함께 제공해, 방문 전에도 공간감과 구조를 보다 구체적으로 파악할 수 있도록 구성했습니다.</p>
+                <p>또한 다수 업체가 함께 쓰는 광고형 플랫폼과 달리, 천안 프렌즈부동산 단독 운영으로 중복된 매물이 등록되지 않으며, 실시간으로 계약 가능 여부를 확인해 업데이트 하고 있습니다. 그 결과 허위·중복 매물로 인한 불필요한 시간 낭비를 줄이고, 실제 거래 가능한 매물 중심으로 탐색할 수 있습니다.</p>
+                <p>지도 기반의 구체적이고도 복합적인 탐색과 다양한 조건 필터를 통해 원하시는 매물을 빠르고 편리하게 찾을 수 있는 점도 천안하우스의 강점입니다.</p>
+                <p>천안하우스는 차별화를 추구하며, 다른 플랫폼에는 없는 필요한 기능 및 정보를 제공하기 위해 지속적으로 노력합니다.</p>
+                <div class="chips">
+                    <div class="chip">현직 공인중개사가<br>직접 개발 및 운영</div>
+                    <div class="chip">실사진+영상 제공으로<br>공간 구조 쉽게 파악</div>
+                    <div class="chip">단독 중개사 운영으로<br>허위/중복매물 없음</div>
+                    <div class="chip">실시간 계약여부 확인<br>헛걸음 방지</div>
+                </div>
+            </article>
+
+            <article class="card" style="animation-delay:.12s">
+                <h2>천안 프렌즈부동산을 소개합니다</h2>
+                <p>천안 프렌즈부동산은 천안 지역에서 약20년간 원룸·투룸 중개를 전문으로 해왔으며, 다양한 거래 경험을 바탕으로 고객의 조건과 예산에 맞는 매물을 현실적으로 제안하고, 계약 과정까지 책임감 있게 안내하고 있습니다.</p>
+                <p>좋은 집을 찾는 일은 결국 신뢰에서 시작된다는 기준으로, 정확하고 성실한 중개 서비스를 이어가고 있습니다.</p>
+            </article>
+
+            <article class="card" style="animation-delay:.16s">
+                <h2>천안 프렌즈부동산 정보</h2>
+                <div class="contact">
+                    <div class="row"><span class="dot"></span><span>상호: 천안프렌즈부동산공인중개사사무소</span></div>
+                    <div class="row"><span class="dot"></span><span>대표: 방현진</span></div>
+                    <div class="row"><span class="dot"></span><span>전화: <a href="tel:041-554-1250">041-554-1250</a>, 모바일: <a href="tel:010-6560-1250">010-6560-1250</a></span></div>
+                    <div class="row"><span class="dot"></span><span>주소: 충남 천안시 서북구 두정고2길 8, 101호<br>
+                                                                    &nbsp;　　(두정동 1966번지)</span></div>
+                    <div class="row"><span class="dot"></span><span>중개업등록번호: 44133-2021-05490</span></div>
+                    <div class="row"><span class="dot"></span><span>사업자등록번호: 326-07-02326</span></div>
+                    <div class="row"><span class="dot"></span><span>이메일: <a href="mailto:bhj0525@naver.com">bhj0525@naver.com</a></span></div>
+                    <div class="row"><span class="dot"></span><span>홈페이지: <a href="https://house.zibeasy.com" target="_blank" rel="noopener noreferrer">https://house.zibeasy.com</a></span></div>
+                </div>
+            </article>
+        </section>
+
+        <section class="cta">
+            <h3>지금 바로 매물을 찾아보세요</h3>
+            <p>천안 지역 최신 매물을 지도에서 한눈에 확인하고, 조건에 맞는 집을 빠르게 찾아보세요.</p>
+            <a href="/">홈으로 이동</a>
+        </section>
+    </main>
+
+    <script>
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
+</body>
+</html>

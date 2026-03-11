@@ -1,0 +1,145 @@
+html {
+    font-family: "Pretendard Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+    -ms-touch-action: manipulation;
+    touch-action: manipulation;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+}
+
+/* ✅ View Transitions API — 페이지 전환 효과
+   지원 브라우저: Chrome 126+, Safari 18.2+, Samsung Internet 최신
+   주의: @view-transition { navigation: auto } 규칙은
+   include.html에서 JS로 동적 추가 (pagereveal 지원 시에만)
+   → WebView에서 VT가 폴백 애니메이션을 방해하는 문제 방지 */
+
+/* ✅ 기본 전환 속도 (방향 미지정 시 크로스페이드) */
+::view-transition-old(root) {
+    animation-duration: 0.25s;
+    animation-timing-function: ease-in-out;
+}
+
+::view-transition-new(root) {
+    animation-duration: 0.25s;
+    animation-timing-function: ease-in-out;
+}
+
+/* ============================================
+   방향별 View Transitions 애니메이션
+   공통 패턴: 아래 페이지는 고정(vt-stay)
+              위 페이지만 슬라이딩
+   ============================================ */
+
+/* ✅ 공통: 페이지 고정 (아래 레이어 역할) */
+@keyframes vt-stay {
+    from { transform: none; }
+    to   { transform: none; }
+}
+
+/* ✅ 세로 슬라이드 키프레임 (지도↔목록) */
+@keyframes vt-slide-from-bottom {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+}
+
+@keyframes vt-slide-to-bottom {
+    from { transform: translateY(0); }
+    to   { transform: translateY(100%); }
+}
+
+/* ✅ 가로 슬라이드 키프레임 (목록↔상세) */
+@keyframes vt-slide-from-right {
+    from { transform: translateX(100%); }
+    to   { transform: translateX(0); }
+}
+
+@keyframes vt-slide-to-right {
+    from { transform: translateX(0); }
+    to   { transform: translateX(100%); }
+}
+
+/* ──────────────────────────────────────────
+   지도 ↔ 목록 (세로 슬라이드)
+   지도는 항상 고정, 목록이 위아래로 슬라이딩
+   ────────────────────────────────────────── */
+
+/* ✅ 지도→목록: 지도 고정 + 목록이 아래에서 올라와 덮음 */
+html.vt-slide-up::view-transition-old(root) {
+    animation: vt-stay 0.3s ease-in-out forwards;
+    z-index: 1;
+}
+
+html.vt-slide-up::view-transition-new(root) {
+    animation: vt-slide-from-bottom 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    z-index: 2;
+}
+
+/* ✅ 목록→지도 (뒤로가기): 목록이 아래로 내려가며 사라짐 + 지도 고정 */
+html.vt-slide-down::view-transition-old(root) {
+    animation: vt-slide-to-bottom 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    z-index: 2;
+}
+
+html.vt-slide-down::view-transition-new(root) {
+    animation: vt-stay 0.3s ease-in-out forwards;
+    z-index: 1;
+}
+
+/* ──────────────────────────────────────────
+   목록 ↔ 상세 (가로 슬라이드)
+   목록은 항상 고정, 상세가 좌우로 슬라이딩
+   ────────────────────────────────────────── */
+
+/* ✅ 목록→상세: 목록 고정 + 상세가 오른쪽에서 덮어 올라옴 */
+html.vt-slide-right::view-transition-old(root) {
+    animation: vt-stay 0.3s ease-in-out forwards;
+    z-index: 1;
+}
+
+html.vt-slide-right::view-transition-new(root) {
+    animation: vt-slide-from-right 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    z-index: 2;
+}
+
+/* ✅ 상세→목록 (뒤로가기): 상세가 오른쪽으로 빠져나감 + 목록 고정 */
+html.vt-slide-left::view-transition-old(root) {
+    animation: vt-slide-to-right 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    z-index: 2;
+}
+
+html.vt-slide-left::view-transition-new(root) {
+    animation: vt-stay 0.3s ease-in-out forwards;
+    z-index: 1;
+}
+
+/* ──────────────────────────────────────────
+   하단 내비게이션 바 — 페이지 전환 중 제자리 고정
+   view-transition-name: bottom-nav 으로 별도 레이어 분리
+   → 페이지 콘텐츠만 슬라이딩, nav는 움직이지 않음
+   ────────────────────────────────────────── */
+::view-transition-group(bottom-nav) {
+    /* 모든 슬라이딩 root 레이어(z-index 최대 2)보다 항상 위에 렌더링 */
+    z-index: 9999;
+    /* 그룹 자체 이동/페이드 완전 차단 */
+    animation: none;
+}
+
+::view-transition-old(bottom-nav) {
+    /* ✅ 기존 탭바 스냅샷 유지 (아이콘 보임 상태 유지) */
+    animation: none;
+    mix-blend-mode: normal;
+    inset: 0;
+    opacity: 1;
+}
+::view-transition-new(bottom-nav) {
+    /* ✅ VT 중 새 스냅샷 숨기기 → 아이콘 깜빡임 방지
+       원인: font-display=block 으로 새 페이지 VT 스냅샷 캡처 시점에
+             아이콘 폰트가 투명 상태 → 새 스냅샷이 구 스냅샷(아이콘 보임)을 덮어
+             아이콘이 순간 사라지는 깜빡임 발생
+       해결: VT 동안 새 스냅샷을 숨겨 구 스냅샷(아이콘 보임)만 노출
+             VT 완료 후 DOM 탭바(폰트 로드 완료)로 교체 */
+    animation: none;
+    opacity: 0;
+}
+
+

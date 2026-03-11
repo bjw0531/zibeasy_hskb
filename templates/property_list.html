@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>천안하우스 - 매물 목록</title>
+    <meta name="description" content="천안 지역 매물 목록">
+
+    <!-- 공통 include (폰트, Tailwind, Lucide 아이콘 등) -->
+    {% include 'include.html' %}
+
+    <!-- 기존 CSS 재사용 (카드 스타일) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}?v=7">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/heart.css') }}?v=7">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/list.css') }}?v=2">
+
+    <!-- 매물 목록 페이지 전용 CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/property-list-page.css') }}?v=7">
+
+    <!-- 하단 내비게이션 바 스타일 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bottom-nav.css') }}?v=7">
+
+    <!-- ✅ VT 방향 핸들러: head 인라인으로 배치하여 pagereveal 전에 반드시 실행 -->
+    <script>
+    if ('onpagereveal' in window) {
+        // ✅ 크로스 문서 VT 지원 표시 (CSS 폴백 제어용)
+        document.documentElement.classList.add('vt-supported');
+
+        // 도착 시: navDirection 읽어서 방향 클래스 부여
+        window.addEventListener('pagereveal', function(e) {
+            var dir = sessionStorage.getItem('navDirection');
+            if (dir && e.viewTransition) {
+                // ✅ 상세→목록 뒤로가기 시 bottom-nav를 root 스냅샷에 포함시킴
+                //    → VT 종료 후 모바일에서 bottom-nav가 아래서 올라오는 현상 방지
+                //    (view 페이지에 bottom-nav 없어서 new 스냅샷만 존재,
+                //     opacity:0으로 숨기면 VT 후 viewport 변화에 따라 튀어 보임)
+                if (dir === 'slide-left') {
+                    var bn = document.querySelector('.bottom-nav');
+                    if (bn) bn.style.viewTransitionName = 'none';
+                }
+                document.documentElement.classList.add('vt-' + dir);
+                e.viewTransition.finished.then(function() {
+                    document.documentElement.classList.remove('vt-' + dir);
+                });
+            }
+            sessionStorage.removeItem('navDirection');
+        });
+
+        // 떠날 때: 브라우저 뒤로가기/스와이프 시 방향 자동 설정
+        window.addEventListener('pageswap', function(e) {
+            if (!e.viewTransition || !e.activation) return;
+            if (sessionStorage.getItem('navDirection')) return;
+            if (e.activation.navigationType === 'traverse') {
+                sessionStorage.setItem('navDirection', 'slide-down');
+            }
+        });
+    }
+    </script>
+</head>
+
+<body class="list-page-body">
+    <!-- ✅ 페이지 래퍼 (슬라이드 애니메이션 적용) -->
+    <div class="list-page-wrapper">
+
+        <!-- ✅ 상단 헤더: 뒤로가기 + 타이틀 + 닫기 -->
+        <div class="list-page-header">
+            <!-- 뒤로가기 버튼 (좌측) -->
+            <button class="list-page-back-btn" id="listPageBackBtn" aria-label="뒤로가기">←</button>
+
+            <!-- 타이틀 (중앙) -->
+            <div class="list-page-header-info">
+                <div class="list-page-title">
+                    <span class="list-page-label" id="listPageLabel">전체</span>
+                    <span class="list-page-count" id="listPageCount">0</span>개 매물
+                </div>
+            </div>
+
+            <!-- 닫기 버튼 (우측) -->
+            <button class="list-page-close-btn" onclick="handleBack()" aria-label="닫기">✕</button>
+        </div>
+
+        <!-- ✅ 정렬 탭바: 최근 수정순 / 거리 가까운순 -->
+        <div class="sort-tab-bar" id="sortTabBar">
+            <!-- 최근 수정순 탭 + 인포 아이콘 -->
+            <div class="sort-tab-wrapper">
+                <button class="sort-tab sort-tab--active" id="sortTabRecent" onclick="changeSortMode('recent')">최근 수정순</button>
+                <button class="sort-info-btn" data-popover="popoverRecent" aria-label="최근 수정순 설명">ⓘ</button>
+                <div class="sort-info-popover" id="popoverRecent">
+                    매물 정보가 수정된 시간 기준<br>가장 최근 순으로 정렬합니다
+                </div>
+            </div>
+            <!-- 거리 가까운순 탭 + 인포 아이콘 -->
+            <div class="sort-tab-wrapper">
+                <button class="sort-tab" id="sortTabDistance" onclick="changeSortMode('distance')">거리 가까운순</button>
+                <button class="sort-info-btn" data-popover="popoverDistance" aria-label="거리 가까운순 설명">ⓘ</button>
+                <div class="sort-info-popover" id="popoverDistance">
+                    현재 지도 화면 중심으로부터<br>가까운 순으로 정렬합니다
+                </div>
+            </div>
+        </div>
+
+        <!-- ✅ 매물 카드 목록 영역 -->
+        <div class="list-page-content" id="listPageContent">
+            <!-- JS에서 동적으로 매물 카드 렌더링 -->
+            <div class="list-page-loading">
+                <div class="spinner"></div>
+                <p>매물을 불러오는 중...</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 찜하기 기능 (기존 liked.js 재사용) -->
+    <script src="{{ url_for('static', filename='js/liked.js') }}?v=9"></script>
+
+    <!-- 매물 목록 페이지 전용 JS -->
+    <script src="{{ url_for('static', filename='js/property-list-page.js') }}?v=9"></script>
+
+    {# ── 하단 내비게이션 바 (지도 탭 활성 — 지도형에서 진입하는 패널 목록) ── #}
+    {% set active_nav = 'map' %}
+    {% include 'components/bottom-nav.html' %}
+</body>
+
+</html>

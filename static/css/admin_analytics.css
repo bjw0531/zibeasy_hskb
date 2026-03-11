@@ -1,0 +1,284 @@
+/* ── Flatpickr 커스텀 스타일 (관리자 UI 색감에 맞춤) ── */
+.flatpickr-calendar {
+  background: #1e1b28 !important;          /* 페이지 배경과 동일 */
+  border: 1px solid rgba(255,255,255,.13) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,.6) !important;
+  border-radius: .75rem !important;
+  font-family: 'Apple SD Gothic Neo','Noto Sans KR',sans-serif !important;
+}
+/* 월/년 헤더 */
+.flatpickr-months          { padding: .4rem .4rem 0; background: transparent !important; }
+.flatpickr-month           { background: transparent !important; color: #e8e6e3 !important; fill: #e8e6e3 !important; }
+.flatpickr-current-month   { font-size: .95rem !important; font-weight: 700 !important; color: #fff !important; }
+.flatpickr-current-month select,
+.flatpickr-current-month input { color: #fff !important; background: transparent !important; }
+.flatpickr-prev-month svg,
+.flatpickr-next-month svg  { fill: rgba(255,255,255,.5) !important; }
+.flatpickr-prev-month:hover svg,
+.flatpickr-next-month:hover svg { fill: #fff !important; }
+/* 요일 행 배경 완전 투명 (dark.css 오버라이드) */
+.flatpickr-weekdays        { background: transparent !important; }
+.flatpickr-weekdaycontainer{ background: transparent !important; }
+.flatpickr-weekday         { background: transparent !important; color: rgba(255,255,255,.38) !important; font-weight: 600 !important; }
+/* 날짜 셀 */
+.flatpickr-day             { color: #c8c5c0 !important; border-radius: .45rem !important; border-color: transparent !important; }
+.flatpickr-day:hover       { background: rgba(255,255,255,.09) !important; border-color: transparent !important; }
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover {
+  background: linear-gradient(135deg,#3b82f6,#06b6d4) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+}
+.flatpickr-day.today               { border-color: rgba(59,130,246,.45) !important; color: #60a5fa !important; }
+.flatpickr-day.today.selected      { border-color: transparent !important; color: #fff !important; }
+.flatpickr-day.flatpickr-disabled  { color: rgba(255,255,255,.18) !important; }
+.flatpickr-innerContainer          { padding: .25rem .4rem .5rem; }
+
+/* ── 날짜 인풋 커스텀 ── */
+.fp-input-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.fp-input-wrap svg {
+  position: absolute;
+  left: .65rem;
+  width: 15px;
+  height: 15px;
+  fill: rgba(255,255,255,.4);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+#date-select {
+  padding: .45rem .75rem .45rem 2.1rem;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: .55rem;
+  color: #e8e6e3;
+  font-size: .83rem;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  min-width: 130px;
+  transition: border-color .15s, background .15s;
+}
+#date-select:focus { border-color: #3b82f6; background: rgba(59,130,246,.08); }
+
+/* ── 기간 탭 ── */
+.period-tabs {
+  display: flex;
+  gap: .35rem;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: .6rem;
+  padding: .25rem;
+}
+.period-tab {
+  padding: .35rem .75rem;
+  border-radius: .45rem;
+  font-size: .78rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: rgba(255,255,255,.45);
+  border: none;
+  background: transparent;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.period-tab:hover { color: rgba(255,255,255,.75); background: rgba(255,255,255,.06); }
+.period-tab.active {
+  background: linear-gradient(135deg,#3b82f6,#06b6d4);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(59,130,246,.35);
+}
+
+/* ── 전체 레이아웃 ── */
+.page-wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 4rem;
+}
+
+/* ── 페이지 헤더 ── */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .75rem;
+  margin-bottom: 1.5rem;
+}
+.page-header-left { display: flex; align-items: center; gap: .75rem; }
+.page-header-controls { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+
+.page-header-icon {
+  width: 40px; height: 40px;
+  border-radius: .6rem;
+  background: linear-gradient(135deg,#3b82f6,#06b6d4);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.page-header-icon svg { width: 20px; height: 20px; fill: white; }
+.page-header-text h1 { font-size: 1.1rem; font-weight: 700; color: #fff; }
+.page-header-text p  { font-size: .75rem; color: rgba(255,255,255,.4); margin-top: .1rem; }
+
+/* ── 요약 카드 ── */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2,1fr);
+  gap: .75rem;
+  margin-bottom: 1.25rem;
+}
+@media (min-width: 640px) { .summary-grid { grid-template-columns: repeat(4,1fr); } }
+
+.summary-card {
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: .8rem;
+  padding: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+.sc-label {
+  font-size: .7rem; font-weight: 700;
+  color: rgba(255,255,255,.4);
+  text-transform: uppercase; letter-spacing: .05em;
+  margin-bottom: .35rem;
+}
+.sc-value { font-size: 1.75rem; font-weight: 800; color: #fff; line-height: 1; }
+.sc-diff  { font-size: .7rem; margin-top: .3rem; font-weight: 600; }
+.sc-diff.up   { color: #6ee7b7; }
+.sc-diff.down { color: #fca5a5; }
+.sc-diff.flat { color: rgba(255,255,255,.3); }
+.sc-icon {
+  position: absolute; right: .85rem; top: .85rem;
+  width: 32px; height: 32px; border-radius: .45rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.sc-icon svg { width: 16px; height: 16px; fill: white; }
+
+/* ── 섹션 카드 ── */
+.section-card {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: .8rem;
+  padding: 1.2rem;
+  margin-bottom: 1.1rem;
+}
+.section-title {
+  font-size: .75rem; font-weight: 700;
+  color: rgba(255,255,255,.5);
+  text-transform: uppercase; letter-spacing: .06em;
+  margin-bottom: 1rem;
+}
+
+/* ── 2열 차트 그리드 ── */
+.chart-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.1rem; margin-bottom: 1.1rem;
+}
+@media (min-width: 700px) { .chart-grid-2 { grid-template-columns: 1fr 1fr; } }
+
+/* ── 3열 차트 그리드 (도넛) ── */
+.chart-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.1rem; margin-bottom: 1.1rem;
+}
+@media (min-width: 700px) { .chart-grid-3 { grid-template-columns: repeat(3,1fr); } }
+
+.chart-wrap {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: .8rem;
+  padding: 1.1rem;
+}
+.chart-wrap canvas { max-height: 220px; }
+
+/* ── TOP 10 ── */
+.top-grid {
+  display: grid; grid-template-columns: 1fr;
+  gap: 1.1rem; margin-bottom: 1.1rem;
+}
+@media (min-width: 700px) { .top-grid { grid-template-columns: 1fr 1fr; } }
+
+.top-card {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: .8rem; padding: 1.1rem;
+}
+.top-item {
+  display: flex; align-items: center; gap: .6rem;
+  padding: .42rem 0;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+.top-item:last-child { border-bottom: none; }
+.top-rank { width: 20px; font-size: .7rem; font-weight: 700; color: rgba(255,255,255,.3); text-align: right; flex-shrink: 0; }
+.top-rank.gold   { color: #fcd34d; }
+.top-rank.silver { color: #cbd5e1; }
+.top-rank.bronze { color: #f59e0b; }
+.top-bar-wrap { flex: 1; min-width: 0; }
+.top-label { font-size: .76rem; color: #d0cdc8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: .18rem; }
+.top-bar { height: 4px; border-radius: 2px; background: linear-gradient(90deg,#3b82f6,#06b6d4); transition: width .6s ease; }
+.top-cnt { font-size: .73rem; font-weight: 700; color: rgba(255,255,255,.45); flex-shrink: 0; }
+
+/* ── 로그 테이블 ── */
+.log-filter {
+  display: flex; flex-wrap: wrap; gap: .45rem;
+  margin-bottom: .85rem; align-items: center;
+}
+.filter-input, .filter-select {
+  padding: .38rem .65rem;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: .45rem; color: #e8e6e3;
+  font-size: .78rem; outline: none;
+}
+.filter-input:focus, .filter-select:focus { border-color: #3b82f6; background: rgba(59,130,246,.08); }
+.filter-input::placeholder { color: rgba(255,255,255,.25); }
+.filter-select { cursor: pointer; }
+.filter-select option { background: #2d2940; }
+
+.log-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.log-table { width: 100%; border-collapse: collapse; font-size: .78rem; white-space: nowrap; }
+.log-table th {
+  padding: .45rem .65rem; text-align: left;
+  color: rgba(255,255,255,.35); font-size: .68rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .04em;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.log-table td {
+  padding: .5rem .65rem;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  color: #bfbbb5; vertical-align: middle;
+}
+.log-table tr:hover td { background: rgba(255,255,255,.03); }
+
+.device-badge { display: inline-block; padding: .15rem .45rem; border-radius: 9999px; font-size: .65rem; font-weight: 700; }
+.device-mobile  { background: rgba(251,191,36,.15);  color: #fcd34d; }
+.device-desktop { background: rgba(59,130,246,.15);  color: #93c5fd; }
+.device-tablet  { background: rgba(167,139,250,.15); color: #c4b5fd; }
+.code-mono { font-family: 'Courier New',monospace; font-size: .72rem; color: #a5b4fc; }
+
+/* ── 페이지네이션 ── */
+.pagination {
+  display: flex; justify-content: center; align-items: center;
+  gap: .35rem; margin-top: 1rem; flex-wrap: wrap;
+}
+.page-btn {
+  padding: .28rem .6rem; border-radius: .4rem; font-size: .73rem; font-weight: 600;
+  cursor: pointer; border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.07); color: rgba(255,255,255,.6); transition: background .15s;
+}
+.page-btn:hover:not(:disabled) { background: rgba(255,255,255,.14); }
+.page-btn.active { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+.page-btn:disabled { opacity: .3; cursor: default; }
+
+/* ── 시간대 차트 숨김 (daily 아닐 때) ── */
+.hourly-section { transition: opacity .25s; }
+.hourly-section.hidden { display: none; }
+
+/* ── 로딩/빈 상태 ── */
+.loading    { text-align: center; padding: 2rem; color: rgba(255,255,255,.3); font-size: .85rem; }
+.empty-state { text-align: center; padding: 2rem; color: rgba(255,255,255,.28); font-size: .82rem; }

@@ -1,0 +1,51 @@
+{# ============================================================
+   매물종류 선택 모달 컴포넌트
+   사용법: {% include 'components/modal_property_type.html' %}
+   트리거: openPropertyTypeModal() / closePropertyTypeModal()
+   사용 페이지: index.html
+   관련 JS: property-type-filter.js
+   ============================================================ #}
+
+<!-- ✅ 매물종류 선택 모달 -->
+<div class="property-type-modal" id="propertyTypeModal" onclick="closePropertyTypeModal(event)">
+    <div class="property-type-modal-content" onclick="event.stopPropagation()">
+        <!-- X 닫기 버튼 -->
+        <button class="property-type-close-btn" onclick="closePropertyTypeModal()" aria-label="닫기">×</button>
+        <!-- 제목 -->
+        <div class="modal-title">매물종류</div>
+        <div class="modal-subtitle">(중복 선택 가능)</div>
+
+        <!-- 첫 번째 줄: 전체, 원룸, 투베이, 투룸 -->
+        <div class="property-type-row">
+            <div class="property-type-option selected" data-category=""
+                onclick="selectPropertyType(event, '', '전체')">
+                <span class="option-text">전체</span>
+            </div>
+            <div class="property-type-option" data-category="90" onclick="selectPropertyType(event, '90', '원룸')">
+                <span class="option-text">원룸</span>
+            </div>
+            <div class="property-type-option" data-category="91" onclick="selectPropertyType(event, '91', '투베이')">
+                <span class="option-text">투베이</span>
+            </div>
+            <div class="property-type-option" data-category="93" onclick="selectPropertyType(event, '93', '투룸')">
+                <span class="option-text">투룸</span>
+            </div>
+        </div>
+
+        <!-- 두 번째 줄: 쓰리룸, 무보증/단기 -->
+        <div class="property-type-row">
+            <div class="property-type-option" data-category="94" onclick="selectPropertyType(event, '94', '쓰리룸')">
+                <span class="option-text">쓰리룸</span>
+            </div>
+            <div class="property-type-option" data-category="92"
+                onclick="selectPropertyType(event, '92', '무보증/단기')">
+                <span class="option-text">무보증/단기</span>
+            </div>
+        </div>
+
+        <!-- 적용하기 버튼 -->
+        <div class="property-type-apply-row">
+            <button class="property-type-apply-btn" onclick="applyAndClosePropertyTypeModal()">적용하기</button>
+        </div>
+    </div>
+</div>

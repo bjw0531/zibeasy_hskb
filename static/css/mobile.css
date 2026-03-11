@@ -1,0 +1,767 @@
+/* ============================================
+   mobile.css - 검색/GPS만 담당
+   list.css - 매물 목록 패널 담당
+   ============================================ */
+
+/* 통합 검색창 (모바일 기본 + 자동 반응형) */
+.search-bar-container {
+    position: fixed;
+    top: 12px;
+    left: 10px;
+    right: 100px;
+    z-index: 1000;
+}
+
+.search-bar {
+    background: white;
+    border: #c8c8c8 1px solid;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.unified-search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+}
+
+.unified-search-input::placeholder {
+    color: #999;
+}
+
+/* 검색 페이지 */
+.search-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: white;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(100%);
+    transition: transform 0.3s ease-in-out;
+    overflow: hidden;
+    /* ✅ iOS 키보드 스크롤 방지 */
+}
+
+.search-page.active {
+    transform: translateY(0);
+}
+
+.search-page-header {
+    position: sticky;
+    /* ✅ 스크롤해도 상단에 고정 */
+    top: 0;
+    z-index: 100;
+    background: white;
+    display: flex;
+    align-items: center;
+    padding: clamp(10px, 3vw, 14px);
+    padding-top: calc(clamp(10px, 3vw, 14px) + env(safe-area-inset-top, 0px));
+    /* ✅ iOS 노치 영역 대응 */
+    border-bottom: 1px solid #e0e0e0;
+}
+
+/* 뒤로가기 버튼 — view.html 상단 버튼과 동일한 스타일 */
+.back-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    padding: 4px 8px;
+    cursor: pointer;
+    color: #4B5563;
+    line-height: 1;
+}
+
+.search-page-input-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: #f5f5f5;
+    border-radius: clamp(6px, 2vw, 10px);
+    padding: 0 clamp(10px, 3vw, 14px);
+    /* ✅ 상하 패딩 제거, 좌우만 유지 */
+    margin-left: 8px;
+    margin-right: clamp(8px, 3vw, 14px);
+    min-width: 0;
+    height: 44px;
+    /* ✅ 고정 높이 설정 */
+    box-sizing: border-box;
+}
+
+.search-page-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: clamp(14px, 4vw, 16px);
+    margin-left: 8px;
+    min-width: 0;
+    /* ✅ 입력란 오버플로우 방지 */
+}
+
+/* ✅ 검색어 지우기 버튼 */
+.search-clear-btn {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-left: 4px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.search-clear-btn:hover {
+    opacity: 1;
+}
+
+.search-clear-btn:active {
+    transform: scale(0.9);
+}
+
+.search-page-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: clamp(12px, 4vw, 20px);
+}
+
+.search-recent h3 {
+    font-size: clamp(13px, 3.5vw, 15px);
+    color: #666;
+    margin-bottom: 12px;
+}
+
+#recentSearches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(6px, 2vw, 10px);
+    margin-bottom: 24px;
+}
+
+.recent-item {
+    background: #f5f5f5;
+    padding: clamp(6px, 2vw, 10px) clamp(10px, 3vw, 14px);
+    border-radius: clamp(12px, 4vw, 18px);
+    font-size: clamp(13px, 3.5vw, 15px);
+    color: #333;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.recent-item:active {
+    background: #e0e0e0;
+}
+
+.search-results {
+    display: block;
+}
+
+/* ✅ 검색 자동완성 결과 */
+.search-suggestions {
+    padding: 8px 0;
+}
+
+.search-suggestion-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.search-suggestion-item:hover,
+.search-suggestion-item:active {
+    background: #f5f5f5;
+}
+
+.suggestion-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.suggestion-icon.station-icon-circle {
+    background: #3D9EDB;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+}
+
+.suggestion-icon.station-icon-circle img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+}
+
+.suggestion-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.suggestion-main {
+    font-size: 15px;
+    font-weight: 500;
+    color: #333;
+}
+
+.suggestion-sub {
+    font-size: 12px;
+    color: #888;
+}
+
+.search-no-results-msg {
+    padding: 40px 20px;
+    text-align: center;
+    color: #666;
+}
+
+.search-no-results-msg p {
+    font-size: 14px;
+}
+
+.search-recent-section {
+    padding: 8px 0;
+}
+
+.search-recent-section h4 {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 12px;
+    padding: 0 4px;
+}
+
+.search-recent-item {
+    display: inline-block;
+    background: #f5f5f5;
+    padding: 8px 14px;
+    border-radius: 16px;
+    font-size: 13px;
+    color: #333;
+    cursor: pointer;
+    margin: 0 6px 8px 0;
+    transition: background 0.2s;
+}
+
+.search-recent-item:hover,
+.search-recent-item:active {
+    background: #e8e8e8;
+}
+
+.search-results.active {
+    display: block;
+}
+
+.search-result-item {
+    padding: clamp(12px, 4vw, 18px) 0;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+}
+
+.search-result-item:active {
+    background: #f9f9f9;
+}
+
+.search-result-title {
+    font-size: clamp(15px, 4vw, 17px);
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.search-result-address {
+    font-size: clamp(13px, 3.5vw, 15px);
+    color: #666;
+}
+
+/* ✅ 새로고침 버튼 (GPS 버튼 위) */
+.refresh-floating-btn {
+    position: fixed;
+    bottom: calc(380px + env(safe-area-inset-bottom, 0px));
+    right: 10px;
+    width: 36px;
+    height: 36px;
+    background: rgb(255, 255, 255);
+    border: 0.5px solid #c4c4c4;
+    border-radius: 15%;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    /* ✅ Carbon 아이콘 색상 */
+    color: rgb(110, 110, 110);
+}
+
+.refresh-floating-btn:active {
+    background: #f0f0f0;
+    transform: scale(0.95);
+}
+
+/* ✅ img → svg 로 교체됨 */
+.refresh-floating-btn svg {
+    width: clamp(18px, 6vw, 24px);
+    height: clamp(18px, 6vw, 24px);
+    transition: transform 0.5s ease;
+}
+
+.refresh-floating-btn.spinning svg {
+    animation: spinRefresh 0.6s ease-out;
+}
+
+@keyframes spinRefresh {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* GPS 버튼 (모바일 기본 + 자동 반응형) */
+.gps-floating-btn {
+    position: fixed;
+    bottom: calc(340px + env(safe-area-inset-bottom, 0px));
+    right: 10px;
+    width: 36px;
+    height: 36px;
+    background: rgb(255, 255, 255);
+    border: 0.5px solid #c4c4c4;
+    border-radius: 15%;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    /* ✅ Carbon 아이콘 색상 */
+    color: rgb(110, 110, 110);
+}
+
+.gps-floating-btn svg {
+    width: clamp(18px, 6vw, 24px);
+    height: clamp(18px, 6vw, 24px);
+}
+
+/* ✅ 크로스헤어 토글 버튼 (GPS 버튼 아래) */
+.crosshair-toggle-btn {
+    position: fixed;
+    bottom: calc(300px + env(safe-area-inset-bottom, 0px));
+    right: 10px;
+    width: 36px;
+    height: 36px;
+    background: rgb(255, 255, 255);
+    border-radius: 15%;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease, border 0.2s ease;
+    /* ✅ 켜진 상태(기본): #009dff 아이콘 + 테두리 */
+    color: #009dff;
+    border: 1px solid #009dff;
+}
+
+/* ✅ 꺼진(OFF) 상태: 진한 아이콘 + 테두리 없음 */
+.crosshair-toggle-btn.crosshair-toggle-off {
+    color: rgb(110, 110, 110);
+    border: 0.5px solid #c4c4c4;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+.crosshair-toggle-btn:active {
+    background: #f0f0f0;
+    transform: scale(0.95);
+}
+
+.crosshair-toggle-btn svg {
+    width: clamp(18px, 6vw, 22px);
+    height: clamp(18px, 6vw, 22px);
+}
+
+/* ✅ 매물종류 선택박스 - "무보증/단기" 크기에 맞춰 고정 */
+.property-type-selector {
+    position: fixed;
+    top: 12px;
+    right: 10px;
+    background: #ffffff;
+    border: #ff6469 1px solid;
+    color: #ff6469;
+    border-radius: 6px;
+    padding: 10px 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+    z-index: 1001;
+    width: 80px;
+    /* ✅ 고정 너비 (무보증/단기 크기에 맞춤) */
+    justify-content: center;
+    text-align: center;
+}
+
+.property-type-text {
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 100%;
+}
+
+.property-type-arrow {
+    font-size: 10px;
+    transition: transform 0.2s ease;
+}
+
+.property-type-selector.active .property-type-arrow {
+    transform: rotate(180deg);
+}
+
+/* ✅ 매물종류 선택 모달 */
+.property-type-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    backdrop-filter: blur(0px);
+}
+
+.property-type-modal.active {
+    display: flex;
+}
+
+.property-type-modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    min-width: 260px;
+    max-width: 90vw;
+    animation: modalSlideIn 0.3s ease;
+    position: relative;
+}
+
+/* ✅ X 버튼 추가 */
+.modal-close-btn,
+.property-type-close-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 28px;
+    height: 28px;
+    background: none;
+    border: none;
+    font-size: 22px;
+    color: #999;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+    line-height: 1;
+}
+
+.modal-close-btn:hover,
+.property-type-close-btn:hover {
+    background: #f5f5f5;
+    color: #333;
+}
+
+.modal-close-btn:active,
+.property-type-close-btn:active {
+    transform: scale(0.9);
+}
+
+/* ✅ 모달 제목 */
+.modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+    margin-bottom: 0px;
+    /* 줄임 */
+    padding-bottom: 0;
+    /* 제거 */
+    border-bottom: none;
+    /* 제거 */
+}
+
+/* ✅ 모달 부제목 (중복 선택 가능) */
+.modal-subtitle {
+    font-size: 13px;
+    font-weight: 400;
+    color: #999;
+    text-align: center;
+    margin-top: 0;
+    /* 수정 */
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    /* 추가 */
+    border-bottom: 1px solid #e5e7eb;
+    /* 추가 */
+}
+
+/* ✅ 매물종류 행 */
+.property-type-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    justify-content: center;
+}
+
+.property-type-row:last-child {
+    margin-bottom: 0;
+}
+
+/* ✅ 매물종류 옵션 버튼 */
+.property-type-option {
+    padding: 6px 10px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    background: #f8f9fa;
+    border: 1px solid #e5e7eb;
+    min-width: 54px;
+    flex: 1;
+    max-width: 80px;
+
+    /* ✅ 완벽한 가운데 정렬을 위한 flex 속성 추가 */
+    display: flex;
+    justify-content: center;
+    /* 가로 중앙 정렬 */
+    align-items: center;
+    /* 세로 중앙 정렬 */
+}
+
+/* ✅ 선택된 옵션 스타일 */
+.property-type-option.selected {
+    background: linear-gradient(135deg, #ff6469, #ff7d82);
+    color: white;
+    border-color: #ff6469;
+}
+
+.option-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    white-space: nowrap;
+
+    /* ✅ 추가 정렬 보장 */
+    text-align: center;
+}
+
+.property-type-option.selected .option-text {
+    color: white;
+    font-weight: 600;
+}
+
+/* ✅ "무보증/단기" 텍스트만 자간 줄이기 */
+.property-type-option[data-category="92"] .option-text {
+    letter-spacing: -0.5px;
+    font-size: 13px;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.property-type-option:last-child {
+    margin-bottom: 0;
+}
+
+/* ✅ 적용하기 버튼 영역 */
+.property-type-apply-row {
+    margin-top: 10px;
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: center;
+}
+
+/* ✅ 적용하기 버튼 - 테두리 라인 스타일 */
+.property-type-apply-btn {
+    width: auto;
+    min-width: 80px;
+    padding: 8px 24px;
+    background: transparent;
+    color: #ff6469;
+    border: 1.5px solid #ff6469;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.property-type-apply-btn:hover {
+    background: rgba(255, 112, 117, 0.08);
+}
+
+.property-type-apply-btn:active {
+    transform: scale(0.98);
+    background: rgba(255, 112, 117, 0.15);
+}
+
+/* ✅ 적용하기 버튼 클릭 시 배경색 채움 애니메이션 */
+.property-type-apply-btn.applying {
+    background: rgba(255, 112, 117, 1);
+    color: white;
+    transition: background 0.1s ease, color 0.1s ease;
+}
+
+/* ✅ 모달 닫힘 애니메이션 - 아래로 빠르게 슬라이드 */
+@keyframes modalSlideOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(100px);
+    }
+}
+
+.property-type-modal-content.closing {
+    animation: modalSlideOut 0.2s ease-out forwards;
+}
+
+/* ✅ 매물 없음 안내 토스트 */
+.no-properties-toast {
+    position: fixed;
+    top: 85%;
+    left: 15%;
+    right: 15%;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    text-align: center;
+    z-index: 2000;
+    animation: toastFadeInOut 1.5s ease-in-out;
+    pointer-events: none;
+}
+
+/* ✅ 매물이 없을 때 드래그 패널 비활성화 */
+.list-panel.disabled {
+    pointer-events: auto;
+    /* ✅ 클릭 이벤트는 받되 */
+}
+
+.list-panel.disabled .list-header {
+    cursor: not-allowed;
+    background: #ffffff;
+}
+
+/* ✅ 0개 매물일 때 글자 색상 변경 */
+.list-panel.disabled .list-count {
+    color: #999 !important;
+    /* 회색으로 변경 */
+    font-weight: normal;
+    /* 굵기 줄임 */
+}
+
+/* ✅ 0개 매물일 때 전체 텍스트 색상 변경 */
+.list-panel.disabled .list-title {
+    color: #999 !important;
+    /* 전체 텍스트 회색으로 */
+}
+
+/* ✅ 네이버 지도 저작권 로고 위치 조정은 map.js adjustLogoPosition()에서 JS로만 처리
+   CSS 셀렉터 방식은 거리자(scale bar) 내부 요소까지 잘못 이동시키는 부작용이 있어 제거 */
+
+/* ✅ 새로고침 오버레이 */
+.refresh-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    backdrop-filter: blur(2px);
+}
+
+.refresh-overlay.active {
+    display: flex;
+}
+
+.refresh-overlay-content {
+    background: white;
+    padding: 20px 32px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.refresh-overlay-content span {
+    font-size: 15px;
+    font-weight: 500;
+    color: #333;
+}
+
+.refresh-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #f0f0f0;
+    border-top-color: rgba(255, 112, 117, 1);
+    border-radius: 50%;
+    animation: refreshSpin 0.8s linear infinite;
+}
+
+@keyframes refreshSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}

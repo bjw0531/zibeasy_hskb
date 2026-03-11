@@ -1,0 +1,536 @@
+/* ─────────────────────────────────────────────────────────────
+   home.css — 홈 페이지 전용 스타일
+   ───────────────────────────────────────────────────────────── */
+
+/* 홈 페이지 기본 body */
+body {
+    background-color: #f5f5f5;
+    height: 100dvh;
+    /* dvh: iOS 동적 뷰포트 높이 (safe area 포함) */
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    /* body 자체는 스크롤 방지 (컨테이너에서 처리) */
+    display: flex;
+    justify-content: center;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+/* 메인 컨테이너 - 모바일 최우선 */
+.home-container {
+    width: 100%;
+    max-width: 644px;
+    height: 100%;
+    /* 부모(body) 높이에 맞춤 */
+    /* 하단 padding: 하단 탭바 높이 + safe area 포함 */
+    padding: 10px 16px calc(40px + env(safe-area-inset-bottom, 0px) + 12px);
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    /* 작은 화면에서 요소 잘림 방지 — 필요 시 스크롤 허용 */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    /* 스크롤바 시각적으로 숨김 */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+}
+
+.home-container::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+}
+
+/* 상단 헤더 영역 */
+.home-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin-top: 5px;
+    margin-bottom: 26px;
+    flex-shrink: 0;
+}
+
+/* 검색창 */
+.home-search {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #b4b4b4;
+    border-radius: 24px;
+    padding: 8px 10px;
+    gap: 8px;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.home-search:hover {
+    border-color: #ccc;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.home-search input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 14px;
+    width: 100%;
+    font-family: inherit;
+    cursor: pointer;
+    color: #aaa !important;
+    -webkit-text-fill-color: #aaa; /* iOS/사파리에서 readonly 색상 고정 */
+    opacity: 1; /* 투명도 때문에 흐리게 보이는 현상 방지 */
+}
+
+.home-search .search-icon {
+    color: #888;
+    flex-shrink: 0;
+}
+
+/* 로고 영역 */
+.home-logo {
+    text-align: right;
+    flex-shrink: 0;
+    line-height: 1.2;
+}
+
+.home-logo .logo-main {
+    font-family: "Tilt Warp", "Noto Sans KR", sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: #ff5055;
+    letter-spacing: -0.5px;
+}
+
+.home-logo .logo-sub {
+    font-size: 12px;
+    color: #999;
+    font-weight: 400;
+}
+
+/* 롤링 텍스트 영역 — Vertical Clip Slide (헤더 아래 배치) */
+.rolling-text {
+    text-align: center;
+    margin-bottom: 10px;
+    position: relative;
+    height: 24px;
+    overflow: hidden;
+    flex-shrink: 0;
+    -webkit-clip-path: inset(0 0 0 0);
+    clip-path: inset(0 0 0 0);
+}
+
+.rolling-text-track {
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.rolling-text-item {
+    height: 24px;
+    line-height: 24px;
+    font-size: 15px;
+    font-weight: 450;
+    color: #666;
+    letter-spacing: -0.3px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* 롤링 텍스트 강조 — 딥 블루 */
+.rolling-highlight {
+    color: #1d6fdb;
+    font-weight: 700;
+}
+
+/* 버튼 그리드 영역 */
+.home-buttons {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    justify-content: flex-start;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+/* 큰 버튼 행 */
+.home-buttons-row-big {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+/* 큰 버튼 */
+.home-btn-big {
+    background: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 14px;
+    padding: 25px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    gap: 8px;
+    text-decoration: none;
+    color: inherit;
+}
+
+.home-btn-big:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+}
+
+.home-btn-big:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* Primary CTA — 브랜드 컬러 배경으로 시선 유도 */
+.home-btn-big.btn-primary {
+    background: #fff;
+    border-color: #ddd;
+}
+
+.home-btn-big.btn-primary .btn-text {
+    color: #333;
+}
+
+.home-btn-big.btn-primary .btn-icon svg {
+    fill: #ff5055;
+}
+
+
+.home-btn-big .btn-text {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: #333;
+    text-align: left;
+}
+
+.home-btn-big .btn-icon {
+    flex-shrink: 0;
+}
+
+/* 중간 이어보기 섹션 */
+.home-continue {
+    margin-top: 4px;
+    padding: 14px 12px 12px;
+    border-radius: 14px;
+    border: 1px solid #e9edf3;
+    background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+}
+
+.home-continue-head {
+    margin-bottom: 10px;
+}
+
+.home-continue-head h2 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: #273142;
+    letter-spacing: -0.02em;
+}
+
+.home-continue-head p {
+    margin: 3px 0 0;
+    font-size: 12px;
+    color: #7f8a9b;
+    letter-spacing: -0.01em;
+}
+
+.home-continue-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.home-continue-item {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    min-height: 76px;
+    padding: 10px 10px;
+    border-radius: 12px;
+    text-decoration: none;
+    border: 1px solid #e7edf5;
+    background: #fff;
+    color: inherit;
+}
+
+.home-continue-item:active {
+    transform: scale(0.98);
+}
+
+.home-continue-item .continue-icon {
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.home-continue-item .continue-icon svg {
+    width: 22px;
+    height: 22px;
+    fill: currentColor;
+}
+
+.home-continue-item .continue-title {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #2d3748;
+}
+
+.home-continue-item .continue-desc {
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.35;
+    color: #8b97a8;
+}
+
+.home-continue-item-liked {
+    color: #ea4a67;
+}
+
+.home-continue-item-recent {
+    color: #2e9ce4;
+}
+
+.home-continue-item-liked .continue-title,
+.home-continue-item-recent .continue-title {
+    color: #2d3748;
+}
+
+/* 리스트 아이콘 (빨간 줄무늬) */
+.icon-list-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 4px 0;
+}
+
+.icon-list-lines span {
+    display: block;
+    height: 5px;
+    border-radius: 2px;
+    background-color: #ccc;
+}
+
+.icon-list-lines span:nth-child(1) { width: 28px; }
+.icon-list-lines span:nth-child(2) { width: 22px; }
+.icon-list-lines span:nth-child(3) { width: 28px; }
+
+/* 지도 핀 아이콘 */
+.icon-map-pin {
+    position: relative;
+    width: 36px;
+    height: 44px;
+}
+
+.icon-map-pin .pin-body {
+    width: 28px;
+    height: 28px;
+    background: #e74c3c;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    position: absolute;
+    top: -20px;
+    left: -16px;
+}
+
+.icon-map-pin .pin-body::after {
+    content: '';
+    width: 14px;
+    height: 14px;
+    background: #fff;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.icon-map-pin .pin-wave {
+    position: absolute;
+    bottom: -18px;
+    left: 50%;
+    transform: translateX(-56%);
+    width: 26px;
+    height: 6px;
+    background: rgba(231, 76, 60, 0.2);
+    border-radius: 50%;
+}
+
+/* 하단 메뉴 카드 - 항상 푸터 바로 위에 배치 */
+.home-menu-card {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 12px 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    display: block;
+    margin-bottom: 8px;
+    flex-shrink: 0;
+}
+
+.home-menu-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px 6px;
+}
+
+/* 메뉴 아이템 (아이콘 + 텍스트) */
+.home-menu-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+}
+
+.home-menu-item .menu-icon {
+    color: #777;
+    stroke-width: 1.8;
+}
+
+.home-menu-item .menu-text {
+    font-size: 12px;
+    font-weight: 500;
+    color: #555;
+    text-align: center;
+    line-height: 1.4;
+}
+
+/* 하단 설명 영역 */
+.home-footer {
+    padding: 10px 4px;
+    flex-shrink: 0;
+    border-top: 1px solid #eee;
+}
+
+.home-footer .footer-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #555;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* 하단 연락처 링크 스타일 */
+.footer-contact-link {
+    font-size: 13px;
+    font-weight: 700;
+    color: #555;
+    text-decoration: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.footer-contact-link:active {
+    color: #111;
+}
+
+.home-footer .footer-desc {
+    font-size: 12px;
+    color: #777;
+    line-height: 2;
+    text-align: center;
+    position: relative;
+}
+
+/* 데스크탑 대응 */
+@media (min-width: 481px) {
+    .home-container {
+        padding: 32px 24px calc(52px + env(safe-area-inset-bottom, 0px) + 24px);
+    }
+
+    .home-btn-big .btn-text {
+        font-size: 16px;
+    }
+}
+
+/* ─────────────────────────────────────────────
+   중개보수 계산기 오버레이
+───────────────────────────────────────────── */
+#feeCalcOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    background: #fff;
+    display: none; /* JS가 제어 */
+    flex-direction: column;
+    transform-origin: center center;
+}
+
+/* 열리는 애니메이션 */
+#feeCalcOverlay.fee-opening {
+    display: flex;
+    animation: feeSlideOpen 0.38s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+
+/* 닫히는 애니메이션 */
+#feeCalcOverlay.fee-closing {
+    display: flex;
+    animation: feeSlideClose 0.32s cubic-bezier(0.55, 0, 1, 0.45) forwards;
+}
+
+@keyframes feeSlideOpen {
+    from { transform: scale(0.05); opacity: 0; }
+    to   { transform: scale(1);    opacity: 1; }
+}
+
+@keyframes feeSlideClose {
+    from { transform: scale(1);    opacity: 1; }
+    to   { transform: scale(0.05); opacity: 0; }
+}
+
+/* 오버레이 상단 닫기 바 */
+#feeCalcBar {
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    height: 52px;
+    min-height: 52px;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+#feeCalcBar .fc-close-btn {
+    background: none;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    color: #444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#feeCalcBar .fc-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #222;
+    flex: 1;
+}
+
+/* iframe */
+#feeCalcFrame {
+    flex: 1;
+    border: none;
+    width: 100%;
+    height: 100%;
+}

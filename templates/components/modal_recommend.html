@@ -1,0 +1,69 @@
+{# ============================================================
+   테마별 검색 모달 컴포넌트
+   사용법: {% include 'components/modal_recommend.html' %}
+   트리거: openRecommendModal() / closeRecommendModal()
+   사용 페이지: index.html
+   관련 JS: index.html 인라인 JS (toggleThemeOption, applyThemeFilter, resetThemeSelection)
+   CSS: quick-filter.css (.theme-modal-content, .theme-btn, .theme-category 등)
+   ============================================================ #}
+
+<!-- ✅ 테마별 검색 모달 -->
+<div class="station-modal" id="recommendModal" onclick="closeRecommendModal(event)">
+    <div class="station-modal-content theme-modal-content" onclick="event.stopPropagation()">
+        <!-- X 닫기 버튼 -->
+        <button class="modal-close-btn" onclick="closeRecommendModal()" aria-label="닫기">×</button>
+        <div class="modal-title">테마별 검색</div>
+        <div class="modal-subtitle">원하는 조건을 선택하세요</div>
+
+        <div class="theme-list-container">
+            <!-- 추천 카테고리 -->
+            <div class="theme-category">
+                <div class="theme-category-label">추천</div>
+                <div class="theme-category-buttons">
+                    <div class="theme-row">
+                        <button class="theme-btn" onclick="toggleThemeOption(this, 'realtime')">실시간 추천</button>
+                        <button class="theme-btn" onclick="toggleThemeOption(this, 'premium')">신축 고급형</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 가성비 카테고리 -->
+            <div class="theme-category">
+                <div class="theme-category-label">가성비</div>
+                <div class="theme-category-buttons">
+                    <div class="theme-row">
+                        <button class="theme-btn" onclick="toggleThemeOption(this, 'deposit100')">보증금 100가능</button>
+                        <button class="theme-btn" onclick="toggleThemeOption(this, 'budget_oneroom')">알뜰형 원룸</button>
+                    </div>
+                    <div class="theme-row">
+                        <button class="theme-btn" onclick="toggleThemeOption(this, 'budget_twobay')">알뜰형 투베이/투룸</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 구조/스타일 카테고리 -->
+            <div class="theme-category">
+                <div class="theme-category-label">구조/스타일</div>
+                <div class="theme-category-buttons">
+                    <div class="theme-row">
+                        <button class="theme-btn" onclick="toggleThemeOption(this, 'big_oneroom')">큰 원룸</button>
+                        <button class="theme-btn" onclick="toggleThemeOption(this, 'separate_oneroom')">분리형 원룸</button>
+                    </div>
+                    <div class="theme-row">
+                        <button class="theme-btn" onclick="toggleThemeOption(this, 'arch_twobay')">아치형 투베이</button>
+                        <button class="theme-btn" onclick="toggleThemeOption(this, 'living_twobay')">분리형 투베이</button>
+                    </div>
+                    <div class="theme-row">
+                        <button class="theme-btn" onclick="toggleThemeOption(this, 'wide_tworoom')">거실있는 투룸</button>
+                        <button class="theme-btn" onclick="toggleThemeOption(this, 'unique')">독특한 스타일</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 하단 버튼 영역 (초기화 버튼 제거 - 아무것도 선택 않고 적용하기 누르면 초기화) -->
+        <div class="theme-modal-footer">
+            <button class="theme-apply-btn" onclick="applyThemeFilter()">적용하기</button>
+        </div>
+    </div>
+</div>

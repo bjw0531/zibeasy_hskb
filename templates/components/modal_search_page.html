@@ -1,0 +1,35 @@
+{# ============================================================
+   검색 전용 페이지 컴포넌트 (전체 화면 오버레이)
+   사용법: {% include 'components/modal_search_page.html' %}
+   트리거: openSearchPage() / closeSearchPage()
+   사용 페이지: index.html
+   관련 JS: search.js, index.html 인라인 JS (openSearchPage, closeSearchPage, clearSearchInput)
+   ============================================================ #}
+
+<!-- 검색 전용 페이지 (전체 화면 오버레이) -->
+<div class="search-page" id="searchPage">
+    <div class="search-page-header">
+        <button class="back-btn" onclick="closeSearchPage()">←</button>
+        <div class="search-page-input-wrapper">
+            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="rgb(100, 100, 100)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+            </svg>
+            <input type="text" id="searchPageInput" class="search-page-input" placeholder="매물번호/지역/역으로 검색"
+                autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+            <button type="button" class="search-clear-btn" id="searchClearBtn" onclick="clearSearchInput()"
+                style="display: none;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" fill="#999" />
+                    <path d="M8 8l8 8M16 8l-8 8" stroke="white" stroke-width="2" stroke-linecap="round" />
+                </svg>
+            </button>
+        </div>
+    </div>
+    <div class="search-page-content">
+        <div class="search-results" id="searchResults">
+            <!-- 검색 결과 표시 (최근 검색어 포함) -->
+        </div>
+    </div>
+</div>

@@ -1,0 +1,243 @@
+{# ============================================================
+   전체 필터 페이지 컴포넌트
+   사용법: {% include 'components/modal_full_filter.html' %}
+   트리거: openFullFilterPage() / closeFullFilterPage()
+   사용 페이지: index.html
+   ============================================================ #}
+
+<!-- ✅ 전체 필터 페이지 (전체 화면 오버레이) -->
+<div class="full-filter-page" id="fullFilterPage">
+    <div class="full-filter-header">
+        <button class="back-btn" onclick="closeFullFilterPage()">←</button>
+        <h1 class="full-filter-title">전체필터</h1>
+        <button class="close-btn" onclick="closeFullFilterPage()" aria-label="닫기">×</button>
+    </div>
+
+    <div class="full-filter-content">
+        <!-- ✅ 거래유형 섹션 -->
+        <div class="filter-section">
+            <h3 class="filter-section-title">거래유형 <span style="font-size: 11px; font-weight: normal; color: #999;">(중복 선택 가능)</span></h3>
+            <div class="filter-buttons-row">
+                <button class="filter-btn selected" data-filter="trade_type" data-value="monthly"
+                    onclick="toggleFilterBtn(this)">월세</button>
+                <button class="filter-btn selected" data-filter="trade_type" data-value="jeonse"
+                    onclick="toggleFilterBtn(this)">전세</button>
+                <button class="filter-btn selected" data-filter="trade_type" data-value="short_term"
+                    onclick="toggleFilterBtn(this)">무보증/단기</button>
+            </div>
+        </div>
+
+        <!-- ✅ 가격 섹션 -->
+        <div class="filter-section">
+            <h3 class="filter-section-title">가격</h3>
+
+            <!-- 보증금 -->
+            <div class="filter-subsection">
+                <label class="filter-subsection-label">보증금</label>
+                <div class="slider-value-display" id="depositValueDisplay">전체</div>
+                <div class="dual-range-slider" id="depositSlider">
+                    <div class="slider-ticks">
+                        <div class="slider-tick tick-min"></div>
+                        <div class="slider-tick tick-center"></div>
+                        <div class="slider-tick tick-max"></div>
+                    </div>
+                    <div class="slider-track">
+                        <div class="slider-range" id="depositRange"></div>
+                    </div>
+                    <input type="range" class="slider-thumb thumb-min" id="depositMin" min="0" max="20" value="0"
+                        oninput="updateDepositSlider()">
+                    <input type="range" class="slider-thumb thumb-max" id="depositMax" min="0" max="20" value="20"
+                        oninput="updateDepositSlider()">
+                    <div class="slider-labels">
+                        <span>최소</span>
+                        <span>4000만원</span>
+                        <span>최대</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 월세 -->
+            <div class="filter-subsection">
+                <div class="filter-subsection-header">
+                    <label class="filter-subsection-label">월세</label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="includeManagement" onchange="updateMonthlySlider()">
+                        <span class="checkbox-text">관리비 포함</span>
+                    </label>
+                </div>
+                <div class="slider-value-display" id="monthlyValueDisplay">전체</div>
+                <div class="dual-range-slider" id="monthlySlider">
+                    <div class="slider-ticks">
+                        <div class="slider-tick tick-min"></div>
+                        <div class="slider-tick tick-center"></div>
+                        <div class="slider-tick tick-max"></div>
+                    </div>
+                    <div class="slider-track">
+                        <div class="slider-range" id="monthlyRange"></div>
+                    </div>
+                    <input type="range" class="slider-thumb thumb-min" id="monthlyMin" min="0" max="20" value="0"
+                        oninput="updateMonthlySlider()">
+                    <input type="range" class="slider-thumb thumb-max" id="monthlyMax" min="0" max="20" value="20"
+                        oninput="updateMonthlySlider()">
+                    <div class="slider-labels">
+                        <span>최소</span>
+                        <span>60만원</span>
+                        <span>최대</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ✅ 구조 섹션 -->
+        <div class="filter-section">
+            <h3 class="filter-section-title">구조 <span style="font-size: 11px; font-weight: normal; color: #999;">(중복 선택 가능)</span></h3>
+
+            <!-- ✅ 주방/베란다 가로 배열 컨테이너 -->
+            <div class="filter-subsection-row">
+                <!-- 주방 -->
+                <div class="filter-subsection">
+                    <label class="filter-subsection-label">주방</label>
+                    <div class="filter-buttons-row">
+                        <button class="filter-btn selected" data-filter="kitchen" data-value="separate"
+                            onclick="toggleFilterBtn(this)">분리형</button>
+                        <button class="filter-btn selected" data-filter="kitchen" data-value="open"
+                            onclick="toggleFilterBtn(this)">오픈형</button>
+                    </div>
+                </div>
+
+                <!-- 베란다 -->
+                <div class="filter-subsection">
+                    <label class="filter-subsection-label">베란다</label>
+                    <div class="filter-buttons-row">
+                        <button class="filter-btn selected" data-filter="balcony" data-value="separate"
+                            onclick="toggleFilterBtn(this)">분리형</button>
+                        <button class="filter-btn selected" data-filter="balcony" data-value="extended"
+                            onclick="toggleFilterBtn(this)">확장형</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ✅ 매물형태 섹션 -->
+        <div class="filter-section">
+            <h3 class="filter-section-title">거실 형태 <span style="font-size: 11px; font-weight: normal; color: #999;">(중복 선택 가능)</span></h3>
+            <p class="filter-section-subtitle">투베이/투룸/쓰리룸</p>
+            <div class="filter-buttons-row">
+                <button class="filter-btn" data-filter="room_type" data-value="separate"
+                    onclick="toggleFilterBtn(this)">거실 분리형</button>
+                <button class="filter-btn" data-filter="room_type" data-value="arch"
+                    onclick="toggleFilterBtn(this)">거실 아치형</button>
+                <button class="filter-btn" data-filter="room_type" data-value="duplex"
+                    onclick="toggleFilterBtn(this)">거실 복층형</button>
+            </div>
+        </div>
+
+        <!-- ✅ 면적 섹션 -->
+        <div class="filter-section">
+            <div class="filter-section-header">
+                <h3 class="filter-section-title">면적</h3>
+                <div class="unit-toggle">
+                    <button class="unit-btn" data-unit="sqm" onclick="toggleAreaUnit('sqm')">㎡</button>
+                    <button class="unit-btn active" data-unit="pyeong" onclick="toggleAreaUnit('pyeong')">평</button>
+                </div>
+            </div>
+            <div class="slider-value-display" id="areaValueDisplay">전체</div>
+            <div class="dual-range-slider" id="areaSlider">
+                <div class="slider-ticks">
+                    <div class="slider-tick tick-min"></div>
+                    <div class="slider-tick tick-center"></div>
+                    <div class="slider-tick tick-max"></div>
+                </div>
+                <div class="slider-track">
+                    <div class="slider-range" id="areaRange"></div>
+                </div>
+                <input type="range" class="slider-thumb thumb-min" id="areaMin" min="0" max="8" value="0"
+                    oninput="updateAreaSlider()">
+                <input type="range" class="slider-thumb thumb-max" id="areaMax" min="0" max="8" value="8"
+                    oninput="updateAreaSlider()">
+                <div class="slider-labels">
+                    <span>최소</span>
+                    <span id="areaCenterLabel">25평</span>
+                    <span>최대</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ✅ 층수 섹션 -->
+        <div class="filter-section">
+            <h3 class="filter-section-title">층수 <span style="font-size: 11px; font-weight: normal; color: #999;">(중복 선택 가능)</span></h3>
+            <div class="filter-buttons-row wrap">
+                <button class="filter-btn selected" data-filter="floor" data-value="all"
+                    onclick="toggleFloorBtn(this)">전체</button>
+                <button class="filter-btn" data-filter="floor" data-value="1"
+                    onclick="toggleFloorBtn(this)">1층</button>
+                <button class="filter-btn" data-filter="floor" data-value="2"
+                    onclick="toggleFloorBtn(this)">2층</button>
+                <button class="filter-btn" data-filter="floor" data-value="middle"
+                    onclick="toggleFloorBtn(this)">중간층</button>
+                <button class="filter-btn" data-filter="floor" data-value="top"
+                    onclick="toggleFloorBtn(this)">최상층</button>
+                <button class="filter-btn" data-filter="floor" data-value="rooftop"
+                    onclick="toggleFloorBtn(this)">옥탑</button>
+            </div>
+        </div>
+
+        <!-- ✅ 건물 년차 섹션 -->
+        <div class="filter-section">
+            <h3 class="filter-section-title">건물 년차</h3>
+            <div class="filter-buttons-row wrap">
+                <button class="filter-btn selected" data-filter="building_age" data-value="all"
+                    onclick="toggleBuildingAgeBtn(this)">전체</button>
+                <button class="filter-btn" data-filter="building_age" data-value="5"
+                    onclick="toggleBuildingAgeBtn(this)">5년 이내</button>
+                <button class="filter-btn" data-filter="building_age" data-value="10"
+                    onclick="toggleBuildingAgeBtn(this)">10년 이내</button>
+                <button class="filter-btn" data-filter="building_age" data-value="15"
+                    onclick="toggleBuildingAgeBtn(this)">15년 이내</button>
+                <button class="filter-btn" data-filter="building_age" data-value="15over"
+                    onclick="toggleBuildingAgeBtn(this)">15년 이상</button>
+            </div>
+        </div>
+
+        <!-- ✅ 기타사항 섹션 -->
+        <div class="filter-section">
+            <h3 class="filter-section-title">기타사항 <span style="font-size: 11px; font-weight: normal; color: #999;">(중복 선택 가능)</span></h3>
+            <p class="filter-section-subtitle">매물조건</p>
+            <div class="filter-buttons-row wrap">
+                <button class="filter-btn" data-filter="options" data-value="south"
+                    onclick="toggleFilterBtn(this)">남향</button>
+                <button class="filter-btn" data-filter="options" data-value="internet_included"
+                    onclick="toggleFilterBtn(this)">인터넷 포함</button>
+                <button class="filter-btn" data-filter="options" data-value="internet_separate"
+                    onclick="toggleFilterBtn(this)">인터넷 별도</button>
+                <button class="filter-btn" data-filter="options" data-value="elevator"
+                    onclick="toggleFilterBtn(this)">엘리베이터</button>
+                <button class="filter-btn" data-filter="options" data-value="parking_gate"
+                    onclick="toggleFilterBtn(this)">주차차단기</button>
+                <button class="filter-btn" data-filter="options" data-value="drum_washer"
+                    onclick="toggleFilterBtn(this)">드럼세탁기</button>
+                <button class="filter-btn" data-filter="options" data-value="normal_washer"
+                    onclick="toggleFilterBtn(this)">일반세탁기</button>
+                <button class="filter-btn" data-filter="options" data-value="terrace"
+                    onclick="toggleFilterBtn(this)">테라스</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ 하단 버튼 영역 -->
+    <div class="full-filter-footer">
+        <button class="filter-reset-btn" onclick="showResetConfirm()">초기화</button>
+        <button class="filter-apply-btn" onclick="applyFullFilter()">적용하기</button>
+    </div>
+</div>
+
+<!-- ✅ 초기화 확인 팝업 -->
+<div class="reset-confirm-modal" id="resetConfirmModal" onclick="closeResetConfirm(event)">
+    <div class="reset-confirm-content" onclick="event.stopPropagation()">
+        <p class="reset-confirm-text">필터를 초기화 하시겠습니까?</p>
+        <div class="reset-confirm-buttons">
+            <button class="reset-cancel-btn" onclick="closeResetConfirm()">취소</button>
+            <button class="reset-ok-btn" onclick="resetAllFiltersConfirmed()">확인</button>
+        </div>
+    </div>
+</div>

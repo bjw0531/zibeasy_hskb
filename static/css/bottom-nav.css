@@ -1,0 +1,162 @@
+/* ── 하단 내비게이션 바 ── */
+
+/* 하단 내비가 가려지지 않도록 body 하단 여백 확보 */
+body {
+  padding-bottom: calc(52px + env(safe-area-inset-bottom));
+}
+
+/* 내비게이션 바 컨테이너 */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9000;
+
+  /* ── VT API: 페이지 전환 중 nav를 별도 레이어로 분리하여 제자리 고정 ── */
+  view-transition-name: bottom-nav;
+
+  display: flex;
+  align-items: stretch;
+
+  background: #fff;
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.07);
+
+  /* iOS Safe Area 대응 */
+  padding-bottom: env(safe-area-inset-bottom);
+  height: calc(52px + env(safe-area-inset-bottom));
+}
+
+/* 각 탭 아이템 */
+.bottom-nav__item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 5px 0 4px;
+  cursor: pointer;
+  text-decoration: none;
+  color: #9ca3af; /* 기본: 회색 */
+  transition: color 0.18s ease;
+  -webkit-tap-highlight-color: transparent; /* 모바일 탭 하이라이트 제거 */
+  user-select: none;
+}
+
+/* 탭 아이콘 래퍼 (5개 탭 대응: 24px) */
+.bottom-nav__icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* 인라인 SVG 아이콘 */
+.bottom-nav__icon .bottom-nav__icon-svg {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  line-height: 1;
+  display: block;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  --icon-scale: 1;
+  --icon-scale-active: calc(var(--icon-scale) * 1.08);
+  --icon-scale-press: calc(var(--icon-scale) * 0.92);
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(var(--icon-scale));
+  transition:
+    stroke 0.2s ease,
+    fill 0.2s ease,
+    transform 0.18s ease;
+}
+
+/* 홈/리스트/지도/더보기 아이콘: 동일한 도톰 라인 스타일 */
+.bottom-nav__icon .bottom-nav__icon-svg--home,
+.bottom-nav__icon .bottom-nav__icon-svg--list,
+.bottom-nav__icon .bottom-nav__icon-svg--map,
+.bottom-nav__icon .bottom-nav__icon-svg--more {
+  stroke-width: 1.95;
+}
+.bottom-nav__icon .bottom-nav__icon-svg--home { --icon-scale: 1.00; }
+.bottom-nav__icon .bottom-nav__icon-svg--list { --icon-scale: 1.12; }
+.bottom-nav__icon .bottom-nav__icon-svg--map { --icon-scale: 0.96; }
+.bottom-nav__icon .bottom-nav__icon-svg--filled { --icon-scale: 0.95; }
+.bottom-nav__icon .bottom-nav__icon-svg--more { --icon-scale: 0.94; }
+
+/* 관심목록(하트) 아이콘은 한 단계 굵게 */
+.bottom-nav__icon .bottom-nav__icon-svg--filled {
+  stroke-width: 1.95;
+}
+
+/* 탭 레이블 */
+.bottom-nav__label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  opacity: 1;
+  white-space: nowrap;
+}
+
+/* 활성 탭 — 색상 */
+.bottom-nav__item.active {
+  color: #3D9EDB;
+}
+
+/* 활성 탭 아이콘 */
+.bottom-nav__item.active .bottom-nav__icon .bottom-nav__icon-svg {
+  transform: scale(var(--icon-scale-active));
+}
+
+/* 탭 클릭 시 피드백 */
+.bottom-nav__item:active .bottom-nav__icon .bottom-nav__icon-svg {
+  transform: scale(var(--icon-scale-press));
+}
+
+/* 저장형 아이콘은 활성 시 채움으로 강조 */
+.bottom-nav__item.active .bottom-nav__icon .bottom-nav__icon-svg--filled {
+  fill: currentColor;
+}
+
+/* 찜 탭 — 뱃지 (찜 개수 표시) */
+.bottom-nav__badge {
+  position: absolute;
+  top: -5px;
+  right: -7px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 9999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+  font-family: 'Pretendard Variable', 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  text-align: center;
+  box-sizing: border-box;
+  display: none; /* JS로 카운트 있을 때만 표시 */
+  align-items: center;
+  justify-content: center;
+  /* ── 탭 선택 시 아이콘(transform: scale 적용) 위로 뱃지가 노출되도록 ── */
+  z-index: 5;
+  transform: translateZ(0);
+}
+.bottom-nav__badge.visible {
+  display: inline-flex;
+}
+
+/* ── PC/모바일 모두 표시 ── */

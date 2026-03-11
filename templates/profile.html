@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>더보기 — 천안하우스</title>
+
+  {% include 'include.html' %}
+
+  <!-- 하단 내비게이션 스타일 -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/bottom-nav.css') }}?v=7">
+
+  <style>
+    /* ── 기본 리셋 ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Pretendard Variable", 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      background: #f8f7f5;
+      color: #111;
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    /* ── 간소한 상단 헤더 ── */
+    .page-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #fff;
+      border-bottom: 1px solid #f0f0f0;
+      padding: 14px 16px;
+    }
+    .page-header-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #111;
+    }
+
+    /* ── 프로필 카드 ── */
+    .profile-card {
+      background: #fff;
+      margin: 12px 16px;
+      border-radius: 18px;
+      padding: 20px 18px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+    }
+
+    /* ── 프로필 아바타 ── */
+    .profile-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 9999px;
+      flex-shrink: 0;
+      overflow: hidden;
+      background: #f0ecff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .profile-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .profile-avatar svg { width: 30px; height: 30px; fill: #9ca3af; }
+
+    .profile-info { flex: 1; min-width: 0; }
+    .profile-name {
+      font-size: 17px;
+      font-weight: 700;
+      color: #111;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .profile-desc {
+      font-size: 12px;
+      color: #aaa;
+      line-height: 1.4;
+    }
+
+    /* ── 로그인 버튼 (비로그인 상태) ── */
+    .btn-login {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: rgb(255,97,96);
+      color: #fff;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      flex-shrink: 0;
+      transition: opacity 0.15s;
+    }
+    .btn-login:active { opacity: 0.8; }
+
+    /* ── 로그아웃 버튼 (로그인 상태) ── */
+    .btn-logout {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: #f5f5f5;
+      color: #888;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .btn-logout:active { background: #ebebeb; }
+
+    /* ── 본문 ── */
+    .page-body {
+      padding: 4px 16px 100px;
+    }
+
+    /* ── 통계 카드 2열 ── */
+    .stat-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: #fff;
+      border-radius: 14px;
+      border: 1px solid #f0f0f0;
+      padding: 16px 14px;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 44px;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .stat-card:active { transform: scale(0.97); }
+
+    .stat-icon {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .stat-icon svg { width: 20px; height: 20px; fill: #fff; }
+    .stat-icon--liked  { background: #FF7075; }
+    .stat-icon--recent { background: #3D9EDB; }
+
+    .stat-info { flex: 1; }
+    .stat-value {
+      font-size: 22px;
+      font-weight: 900;
+      color: #111;
+      line-height: 1;
+      margin-bottom: 3px;
+    }
+    .stat-label {
+      font-size: 11px;
+      color: #aaa;
+      font-weight: 500;
+    }
+
+    /* ── 섹션 타이틀 ── */
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #bbb;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+      padding: 0 2px;
+    }
+
+    /* ── 메뉴 섹션 ── */
+    .menu-section {
+      background: #fff;
+      border-radius: 14px;
+      border: 1px solid #f0f0f0;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .menu-item {
+      display: flex;
+      align-items: center;
+      min-height: 44px;
+      padding: 12px 14px;
+      gap: 12px;
+      border-bottom: 1px solid #f5f5f5;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.15s ease;
+    }
+    .menu-item:last-child { border-bottom: none; }
+    .menu-item:active { background: #fafafa; }
+
+    .menu-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .menu-icon svg { width: 18px; height: 18px; fill: #fff; }
+    .menu-text { flex: 1; }
+    .menu-label { font-size: 14px; font-weight: 600; color: #111; }
+    .menu-desc  { font-size: 12px; color: #aaa; margin-top: 2px; }
+    .menu-arrow {
+      width: 16px; height: 16px;
+      fill: #ddd;
+      flex-shrink: 0;
+    }
+
+    /* ── 찜 목록 동기화 알림 (로그인 후 1회 표시) ── */
+    .sync-notice {
+      display: none;
+      background: #f0f9ff;
+      border: 1px solid rgba(61,158,219,0.25);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: #3D9EDB;
+      margin-bottom: 16px;
+      align-items: center;
+      gap: 8px;
+    }
+    .sync-notice.show { display: flex; }
+
+    /* ── 푸터 ── */
+    .app-footer {
+      text-align: center;
+      padding: 4px 0 8px;
+    }
+    .app-version {
+      font-size: 12px;
+      color: #ccc;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── 간소한 상단 헤더 ── -->
+  <header class="page-header">
+    <div class="page-header-title">더보기</div>
+  </header>
+
+  <!-- ── 프로필 카드 ── -->
+  <div class="profile-card">
+    <!-- 아바타: 로그인 상태에 따라 프로필 사진 or 기본 아이콘 -->
+    <div class="profile-avatar">
+      {% if current_user.logged_in and current_user.profile %}
+        <img src="{{ current_user.profile }}" alt="{{ current_user.name }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <svg style="display:none;" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      {% else %}
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      {% endif %}
+    </div>
+
+    <div class="profile-info">
+      {% if current_user.logged_in %}
+        <!-- 로그인 상태: 실제 닉네임 표시 -->
+        <div class="profile-name">{{ current_user.name }}</div>
+        {% if current_user.login_type == 'kakao' %}
+          <div class="profile-desc">카카오 계정으로 로그인 중</div>
+        {% elif current_user.login_type == 'naver' %}
+          <div class="profile-desc">네이버 계정으로 로그인 중</div>
+        {% else %}
+          <div class="profile-desc">이메일 계정으로 로그인 중</div>
+        {% endif %}
+      {% else %}
+        <!-- 비로그인 상태 -->
+        <div class="profile-name">비회원</div>
+        <div class="profile-desc">로그인하면 더 많은 기능을 사용할 수 있어요</div>
+      {% endif %}
+    </div>
+
+    <!-- 로그인/로그아웃 버튼 -->
+    {% if current_user.logged_in %}
+      <a href="/auth/logout" class="btn-logout">로그아웃</a>
+    {% else %}
+      <a href="/login" class="btn-login">로그인</a>
+    {% endif %}
+  </div>
+
+  <!-- ── 본문 ── -->
+  <main class="page-body">
+
+    <!-- 찜 동기화 알림 (로그인 후 auth.js에서 표시) -->
+    <div class="sync-notice" id="sync-notice">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+      </svg>
+      <span>관심목록이 서버에 동기화되었어요!</span>
+    </div>
+
+    <!-- 통계 카드 -->
+    <div class="stat-row">
+      <a href="/liked" class="stat-card">
+        <div class="stat-icon stat-icon--liked">
+          <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-liked">0</div>
+          <div class="stat-label">관심목록</div>
+        </div>
+      </a>
+      <a href="/liked?tab=recent" class="stat-card">
+        <div class="stat-icon stat-icon--recent">
+          <svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 1 0 0 18A9 9 0 0 0 13 3zm0 16a7 7 0 1 1 0-14A7 7 0 0 1 13 19zm.5-11H12v6l5.25 3.15.75-1.23-4.5-2.67V8z"/></svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-recent">0</div>
+          <div class="stat-label">최근 본 매물</div>
+        </div>
+      </a>
+    </div>
+
+    <!-- 서비스 메뉴 -->
+    <div class="section-title">서비스</div>
+    <div class="menu-section">
+      <a href="/map" class="menu-item">
+        <div class="menu-icon" style="background:#7c3aed;">
+          <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-label">매물 지도</div>
+          <div class="menu-desc">천안 지역 매물을 지도에서 확인</div>
+        </div>
+        <svg class="menu-arrow" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+      </a>
+      <a href="/list" class="menu-item">
+        <div class="menu-icon" style="background:#3D9EDB;">
+          <svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-label">매물 리스트</div>
+          <div class="menu-desc">전체 매물을 리스트로 확인</div>
+        </div>
+        <svg class="menu-arrow" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+      </a>
+    </div>
+
+    <!-- 정보 메뉴 -->
+    <div class="section-title">정보</div>
+    <div class="menu-section">
+      <a href="/about" class="menu-item">
+        <div class="menu-icon" style="background:#10b981;">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-label">서비스 소개</div>
+          <div class="menu-desc">천안하우스 서비스 안내</div>
+        </div>
+        <svg class="menu-arrow" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+      </a>
+      <a href="/feedback" class="menu-item">
+        <div class="menu-icon" style="background:#f59e0b;">
+          <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/></svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-label">오류제보</div>
+          <div class="menu-desc">서비스 관련 문의 및 피드백</div>
+        </div>
+        <svg class="menu-arrow" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+      </a>
+    </div>
+
+    <!-- 약관 메뉴 -->
+    <div class="section-title">약관 및 정책</div>
+    <div class="menu-section">
+      <a href="/terms" class="menu-item">
+        <div class="menu-icon" style="background:#6b7280;">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-label">이용약관</div>
+        </div>
+        <svg class="menu-arrow" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+      </a>
+      <a href="/privacy" class="menu-item">
+        <div class="menu-icon" style="background:#6b7280;">
+          <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+        </div>
+        <div class="menu-text">
+          <div class="menu-label">개인정보처리방침</div>
+        </div>
+        <svg class="menu-arrow" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+      </a>
+    </div>
+
+    <!-- 푸터 -->
+    <div class="app-footer">
+      <div class="app-version" id="copyright-year">Copyright © 2010- 천안하우스 All rights reserved.</div>
+      <div class="app-version" style="margin-top:2px;">v1.0 · by bangteam</div>
+    </div>
+
+  </main>
+
+  {# ── 하단 내비게이션 바 ── #}
+  {% set active_nav = 'profile' %}
+  {% include 'components/bottom-nav.html' %}
+
+  <script>
+  (function() {
+    /* ── 찜/최근 카운트: 서버(DB)에서 직접 전달된 값 ── */
+    var statLikedEl  = document.getElementById('stat-liked');
+    var statRecentEl = document.getElementById('stat-recent');
+    if (statLikedEl)  statLikedEl.textContent  = '{{ liked_count }}';
+    if (statRecentEl) statRecentEl.textContent = '{{ recent_count }}';
+
+    /* ── Copyright 연도 동적 표시 ── */
+    var yearEl = document.getElementById('copyright-year');
+    if (yearEl) yearEl.textContent = 'Copyright © 2010-' + new Date().getFullYear() + ' 천안하우스 All rights reserved.';
+  })();
+  </script>
+
+  <!-- 찜 목록 서버 동기화 스크립트 -->
+  <script src="{{ url_for('static', filename='js/auth.js') }}?v=1"></script>
+</body>
+</html>

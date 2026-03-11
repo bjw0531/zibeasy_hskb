@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>나침반 — 천안하우스</title>
+    {% include 'include.html' %}
+    <style>
+        :root {
+            --accent: #e74c3c;
+            --bg1: #f8f7f5;
+            --bg2: #ffffff;
+            --text: #1f2937;
+            --muted: #6b7280;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100dvh;
+            font-family: "Pretendard Variable", 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 10% 15%, rgba(231, 76, 60, 0.1), transparent 45%),
+                radial-gradient(circle at 85% 20%, rgba(61, 158, 219, 0.14), transparent 50%),
+                linear-gradient(165deg, var(--bg1), var(--bg2));
+            display: flex;
+            justify-content: center;
+        }
+
+        .compass-page {
+            width: 100%;
+            max-width: 680px;
+            padding: max(16px, env(safe-area-inset-top)) 18px calc(22px + env(safe-area-inset-bottom));
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .back-btn {
+            border: 1px solid #e8e8e8;
+            background: #fff;
+            border-radius: 12px;
+            width: 42px;
+            height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: #333;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .title {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: -0.2px;
+        }
+
+        .badge {
+            min-width: 42px;
+        }
+
+        .status-card {
+            background: rgba(255, 255, 255, 0.86);
+            border: 1px solid #ececec;
+            border-radius: 16px;
+            padding: 14px 16px;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+        }
+
+        .status-en {
+            font-size: clamp(30px, 8vw, 44px);
+            font-weight: 900;
+            color: #111;
+            letter-spacing: 0.5px;
+        }
+
+        .status-ko {
+            font-size: clamp(18px, 4.2vw, 24px);
+            font-weight: 700;
+            color: var(--accent);
+            margin-top: 2px;
+        }
+
+        .status-degree {
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .compass-stage {
+            margin: 4px auto 2px;
+            position: relative;
+            width: min(82vw, 420px);
+            height: min(82vw, 420px);
+        }
+
+        .heading-arrow-wrap {
+            position: absolute;
+            top: -28px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .heading-arrow {
+            width: 0;
+            height: 0;
+            border-left: 12px solid transparent;
+            border-right: 12px solid transparent;
+            border-top: 18px solid var(--accent);
+            margin: 0 auto 4px;
+            filter: drop-shadow(0 4px 6px rgba(231, 76, 60, 0.35));
+        }
+
+        .heading-arrow-label {
+            font-size: 12px;
+            color: #7c2d12;
+            font-weight: 700;
+            background: rgba(255, 245, 243, 0.95);
+            border: 1px solid #ffd3cc;
+            border-radius: 999px;
+            padding: 3px 10px;
+        }
+
+        .compass-shell {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background:
+                radial-gradient(circle at 50% 42%, #ffffff 8%, #f8fafc 52%, #e5e7eb 100%);
+            border: 8px solid #f3f4f6;
+            box-shadow:
+                0 14px 44px rgba(17, 24, 39, 0.16),
+                inset 0 2px 0 rgba(255, 255, 255, 0.7),
+                inset 0 -8px 20px rgba(17, 24, 39, 0.08);
+            overflow: hidden;
+        }
+
+        .compass-dial {
+            position: absolute;
+            inset: 14px;
+            border-radius: 50%;
+            border: 2px solid rgba(17, 24, 39, 0.1);
+            transition: transform 0.14s linear;
+            background:
+                repeating-conic-gradient(
+                    from 0deg,
+                    rgba(17, 24, 39, 0.35) 0deg 1.2deg,
+                    transparent 1.2deg 11.25deg
+                ),
+                radial-gradient(circle at center, rgba(255, 255, 255, 0) 62%, rgba(17, 24, 39, 0.07) 63% 66%, rgba(255, 255, 255, 0) 67%);
+        }
+
+        .dial-ring {
+            position: absolute;
+            inset: 34px;
+            border-radius: 50%;
+            border: 1px solid rgba(17, 24, 39, 0.18);
+            opacity: 0.65;
+        }
+
+        .cardinal {
+            position: absolute;
+            font-size: 24px;
+            font-weight: 900;
+            color: #334155;
+            text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
+        }
+
+        .cardinal.n { left: 50%; top: 10px; transform: translateX(-50%); color: var(--accent); }
+        .cardinal.e { right: 14px; top: 50%; transform: translateY(-50%); }
+        .cardinal.s { left: 50%; bottom: 10px; transform: translateX(-50%); }
+        .cardinal.w { left: 14px; top: 50%; transform: translateY(-50%); }
+
+        .north-needle {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 10px;
+            height: 170px;
+            background: linear-gradient(to bottom, #ef4444 0 50%, #93c5fd 50% 100%);
+            clip-path: polygon(50% 0%, 100% 18%, 100% 82%, 50% 100%, 0% 82%, 0% 18%);
+            filter: drop-shadow(0 5px 12px rgba(0, 0, 0, 0.22));
+            opacity: 0.92;
+            z-index: 4;
+        }
+
+        .center-cap {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            background: #111827;
+            border: 3px solid #fff;
+            box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.15);
+            z-index: 5;
+        }
+
+        .control-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .control-btn {
+            border: none;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .control-btn.start {
+            color: #fff;
+            background: linear-gradient(135deg, #ef4444, #f97316);
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.24);
+        }
+
+        .control-btn.stop {
+            color: #374151;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+        }
+
+        .hint {
+            text-align: center;
+            color: #6b7280;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <main class="compass-page">
+        <div class="topbar">
+            <a href="/" class="back-btn" aria-label="홈으로">
+                <i data-lucide="arrow-left" style="width:19px;height:19px;"></i>
+            </a>
+            <div class="title">실시간 나침반</div>
+            <div class="badge"></div>
+        </div>
+
+        <section class="status-card">
+            <div class="status-en" id="directionEn">N</div>
+            <div class="status-ko" id="directionKo">(북향)</div>
+            <div class="status-degree" id="directionDegree">0°</div>
+        </section>
+
+        <section class="compass-stage" aria-label="나침반">
+            <div class="heading-arrow-wrap">
+                <div class="heading-arrow"></div>
+                <div class="heading-arrow-label">현재 진행 방향</div>
+            </div>
+
+            <div class="compass-shell">
+                <div class="compass-dial" id="compassDial">
+                    <div class="dial-ring"></div>
+                    <span class="cardinal n">N</span>
+                    <span class="cardinal e">E</span>
+                    <span class="cardinal s">S</span>
+                    <span class="cardinal w">W</span>
+                </div>
+                <div class="north-needle" aria-hidden="true"></div>
+                <div class="center-cap" aria-hidden="true"></div>
+            </div>
+        </section>
+
+        <div class="control-row">
+            <button class="control-btn start" id="startCompassBtn">나침반 시작</button>
+            <button class="control-btn stop" id="stopCompassBtn">나침반 정지</button>
+        </div>
+
+        <p class="hint">휴대폰을 움직이면 방향이 실시간으로 갱신됩니다. iPhone은 시작 버튼을 눌러 센서 권한을 허용해 주세요.</p>
+    </main>
+
+    <script>
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+
+        const directionEnEl = document.getElementById('directionEn');
+        const directionKoEl = document.getElementById('directionKo');
+        const directionDegreeEl = document.getElementById('directionDegree');
+        const compassDialEl = document.getElementById('compassDial');
+        const startBtn = document.getElementById('startCompassBtn');
+        const stopBtn = document.getElementById('stopCompassBtn');
+
+        const directions = [
+            { en: 'N', ko: '북향' },
+            { en: 'NE', ko: '동북향' },
+            { en: 'E', ko: '동향' },
+            { en: 'SE', ko: '남동향' },
+            { en: 'S', ko: '남향' },
+            { en: 'SW', ko: '남서향' },
+            { en: 'W', ko: '서향' },
+            { en: 'NW', ko: '서북향' }
+        ];
+
+        let isListening = false;
+        let targetHeading = 0;      // 0~360 정규화 값 (센서 원본)
+        let smoothHeading = 0;      // 라벨/방향 계산용 (0~360)
+        let smoothRotation = 0;     // 실제 회전 렌더링용 (연속 각도, unbounded)
+        let hasHeading = false;
+        let rafId = null;
+
+        function normalizeHeading(value) {
+            return (value + 360) % 360;
+        }
+
+        function shortestAngleDiff(from, to) {
+            return ((to - from + 540) % 360) - 180;
+        }
+
+        function getDirectionByHeading(heading) {
+            const idx = Math.round(heading / 45) % 8;
+            return directions[idx];
+        }
+
+        function extractHeading(event) {
+            if (typeof event.webkitCompassHeading === 'number') {
+                return normalizeHeading(event.webkitCompassHeading);
+            }
+            if (typeof event.alpha === 'number') {
+                return normalizeHeading(360 - event.alpha);
+            }
+            return null;
+        }
+
+        function updateCompass(heading, rotationAngle = heading) {
+            if (heading === null) return;
+
+            const dir = getDirectionByHeading(heading);
+            // rotationAngle은 연속 각도로 유지해 0/360 경계에서 회전 점프를 방지
+            compassDialEl.style.transform = `rotate(${-rotationAngle}deg)`;
+            directionEnEl.textContent = dir.en;
+            directionKoEl.textContent = `(${dir.ko})`;
+            directionDegreeEl.textContent = `${Math.round(heading)}°`;
+        }
+
+        function handleOrientation(event) {
+            if (!isListening) return;
+            const heading = extractHeading(event);
+            if (heading === null) return;
+
+            targetHeading = heading;
+            if (!hasHeading) {
+                smoothHeading = heading;
+                smoothRotation = heading;
+                hasHeading = true;
+                updateCompass(smoothHeading, smoothRotation);
+            }
+        }
+
+        function animateCompass() {
+            if (!isListening) return;
+
+            if (hasHeading) {
+                const baseHeading = normalizeHeading(smoothRotation);
+                const diff = shortestAngleDiff(baseHeading, targetHeading);
+                smoothRotation += diff * 0.12;
+                smoothHeading = normalizeHeading(smoothRotation);
+                updateCompass(smoothHeading, smoothRotation);
+            }
+
+            rafId = window.requestAnimationFrame(animateCompass);
+        }
+
+        function stopCompass() {
+            window.removeEventListener('deviceorientation', handleOrientation, true);
+            window.removeEventListener('deviceorientationabsolute', handleOrientation, true);
+            if (rafId) {
+                window.cancelAnimationFrame(rafId);
+                rafId = null;
+            }
+            isListening = false;
+        }
+
+        async function startCompass() {
+            if (!window.DeviceOrientationEvent) {
+                alert('이 기기에서는 나침반 센서를 지원하지 않습니다.');
+                return;
+            }
+
+            try {
+                if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    const permission = await DeviceOrientationEvent.requestPermission();
+                    if (permission !== 'granted') {
+                        alert('나침반 권한이 거부되었습니다. 설정에서 모션/방향 접근을 허용해 주세요.');
+                        return;
+                    }
+                }
+            } catch (err) {
+                console.error('나침반 권한 요청 실패:', err);
+                alert('나침반 권한 요청에 실패했습니다.');
+                return;
+            }
+
+            stopCompass();
+            isListening = true;
+            hasHeading = false;
+            window.addEventListener('deviceorientation', handleOrientation, true);
+            window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+            rafId = window.requestAnimationFrame(animateCompass);
+        }
+
+        startBtn.addEventListener('click', startCompass);
+        stopBtn.addEventListener('click', stopCompass);
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) stopCompass();
+        });
+
+        window.addEventListener('beforeunload', stopCompass);
+    </script>
+</body>
+</html>

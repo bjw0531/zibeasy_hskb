@@ -1,0 +1,302 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}오류 제보/기능 제안 · HouseKB Admin{% endblock %}
+
+{% block header_right %}
+  <a href="{{ url_for('admin.index') }}" class="btn-sm btn-back">← 대시보드</a>
+  <a href="{{ url_for('admin.logout') }}" class="btn-sm btn-logout">로그아웃</a>
+{% endblock %}
+
+{% block head %}
+<style>
+  .main { padding: 1.25rem; max-width: 1220px; margin: 0 auto; }
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .page-title { font-size: 1.12rem; font-weight: 700; color: #fff; }
+  .total-badge { font-size: .8rem; color: rgba(255,255,255,.45); margin-left: .45rem; }
+
+  .search-bar {
+    display: flex; flex-wrap: wrap; gap: .6rem;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: .85rem;
+    padding: .9rem 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .search-bar input,
+  .search-bar select {
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: .5rem;
+    color: #e8e6e3;
+    font-size: .85rem;
+    padding: .45rem .75rem;
+  }
+
+  .search-bar input { flex: 1; min-width: 170px; }
+  .search-bar select option { background: #27243a; }
+
+  .btn-search,
+  .btn-reset {
+    padding: .45rem 1rem;
+    border-radius: .5rem;
+    font-size: .85rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    border: 1px solid;
+  }
+
+  .btn-search {
+    background: rgba(112,255,167,.25);
+    border-color: rgba(112,255,167,.4);
+    color: #b7ffb3;
+  }
+
+  .btn-reset {
+    background: rgba(255,112,117,.25);
+    border-color: rgba(255,112,117,.4);
+    color: #FFB3B5;
+  }
+
+  .table-wrap {
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: .85rem;
+    overflow: auto;
+  }
+
+  table { width: 100%; border-collapse: collapse; min-width: 1180px; }
+  thead tr { background: rgba(255,255,255,.09); }
+  th {
+    padding: .65rem .55rem;
+    font-size: .78rem;
+    font-weight: 700;
+    color: rgba(255,255,255,.45);
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+  td {
+    padding: .62rem .55rem;
+    font-size: .82rem;
+    color: #d8d5d0;
+    text-align: center;
+    vertical-align: top;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    line-height: 1.5;
+  }
+  .left { text-align: left; }
+
+  .badge {
+    display: inline-block;
+    padding: .2rem .55rem;
+    border-radius: 9999px;
+    font-size: .72rem;
+    font-weight: 700;
+  }
+
+  .type-error { background: rgba(239,68,68,.2); color: #fca5a5; }
+  .type-feature { background: rgba(59,130,246,.2); color: #93c5fd; }
+  .type-improve { background: rgba(16,185,129,.2); color: #86efac; }
+  .st-new { background: rgba(245,158,11,.2); color: #fcd34d; }
+  .st-contacted { background: rgba(99,102,241,.2); color: #c7d2fe; }
+  .st-done { background: rgba(34,197,94,.2); color: #86efac; }
+
+  .status-form { display: flex; gap: .4rem; align-items: center; justify-content: center; }
+  .status-form select {
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: .4rem;
+    color: #e8e6e3;
+    font-size: .74rem;
+    padding: .3rem .4rem;
+  }
+  .status-form select option { background: #27243a; }
+  .btn-save {
+    padding: .28rem .56rem;
+    border-radius: .4rem;
+    border: 1px solid rgba(255,255,255,.22);
+    background: rgba(255,255,255,.10);
+    color: #e8e6e3;
+    font-size: .72rem;
+    cursor: pointer;
+  }
+
+  .att-list {
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+  }
+
+  .att-list a {
+    color: #93c5fd;
+    text-decoration: none;
+    font-size: .76rem;
+  }
+
+  .empty { text-align: center; padding: 2.8rem 1rem; color: rgba(255,255,255,.35); font-size: .9rem; }
+
+  .pagination {
+    display: flex; justify-content: center; align-items: center;
+    gap: .3rem; margin-top: 1.2rem; flex-wrap: wrap;
+  }
+  .pagination a,
+  .pagination span {
+    padding: .4rem .65rem;
+    border-radius: .45rem;
+    font-size: .8rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid rgba(255,255,255,.1);
+    color: rgba(255,255,255,.55);
+  }
+  .pagination span.current {
+    background: rgba(255,112,117,.25);
+    border-color: rgba(255,112,117,.4);
+    color: #FFB3B5;
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<main class="main">
+  <div class="page-header">
+    <div>
+      <span class="page-title">오류 제보 / 기능 제안</span>
+      <span class="total-badge">총 {{ total }}건</span>
+    </div>
+  </div>
+
+  <form class="search-bar" method="get" action="{{ url_for('admin.feedback_reports') }}">
+    <input type="text" name="keyword" value="{{ keyword }}" placeholder="이름/연락처/URL/내용 검색">
+
+    <select name="report_type">
+      <option value="">전체 유형</option>
+      <option value="error_report" {% if report_type == 'error_report' %}selected{% endif %}>오류 제보</option>
+      <option value="feature_suggestion" {% if report_type == 'feature_suggestion' %}selected{% endif %}>기능 제안</option>
+      <option value="improvement_opinion" {% if report_type == 'improvement_opinion' %}selected{% endif %}>개선 의견</option>
+    </select>
+
+    <select name="status">
+      <option value="">전체 상태</option>
+      <option value="new" {% if status == 'new' %}selected{% endif %}>신규</option>
+      <option value="contacted" {% if status == 'contacted' %}selected{% endif %}>연락완료</option>
+      <option value="done" {% if status == 'done' %}selected{% endif %}>종료</option>
+    </select>
+
+    <button class="btn-search" type="submit">검색</button>
+    <a class="btn-reset" href="{{ url_for('admin.feedback_reports') }}">초기화</a>
+  </form>
+
+  <div class="table-wrap">
+    {% if rows %}
+    <table>
+      <thead>
+      <tr>
+        <th>ID</th>
+        <th>유형</th>
+        <th>이름/연락처</th>
+        <th>환경</th>
+        <th>URL</th>
+        <th class="left">제보 내용</th>
+        <th>첨부</th>
+        <th>상태</th>
+        <th>접수일</th>
+      </tr>
+      </thead>
+      <tbody>
+      {% for row in rows %}
+      <tr>
+        <td>{{ row.id }}</td>
+        <td>
+          {% if row.report_type == 'error_report' %}
+            <span class="badge type-error">오류 제보</span>
+          {% elif row.report_type == 'feature_suggestion' %}
+            <span class="badge type-feature">기능 제안</span>
+          {% else %}
+            <span class="badge type-improve">개선 의견</span>
+          {% endif %}
+        </td>
+        <td>{{ row.name }}<br>{{ row.phone }}</td>
+        <td>
+          {{ row.device_type or '-' }}{% if row.device_etc %} / {{ row.device_etc }}{% endif %}<br>
+          {{ row.browser_type or '-' }}{% if row.browser_etc %} / {{ row.browser_etc }}{% endif %}
+        </td>
+        <td class="left">{{ row.page_url or '-' }}</td>
+        <td class="left">
+          {% if row.report_type == 'error_report' %}
+            {{ row.error_description or '-' }}
+          {% elif row.report_type == 'feature_suggestion' %}
+            <strong>제안:</strong> {{ row.feature_description or '-' }}<br>
+            <strong>이유:</strong> {{ row.feature_reason or '-' }}<br>
+            <strong>참고:</strong> {{ row.reference_service or '-' }}{% if row.reference_service_etc %} / {{ row.reference_service_etc }}{% endif %}
+          {% else %}
+            {{ row.improvement_description or '-' }}
+          {% endif %}
+        </td>
+        <td>
+          {% if row.attachments %}
+            <div class="att-list">
+              {% for f in row.attachments %}
+                <a href="{{ url_for('admin.feedback_file', filename=f) }}" target="_blank">{{ f }}</a>
+              {% endfor %}
+            </div>
+          {% else %}
+            -
+          {% endif %}
+        </td>
+        <td>
+          <div style="margin-bottom:.35rem;">
+            {% if row.status == 'new' %}
+              <span class="badge st-new">신규</span>
+            {% elif row.status == 'contacted' %}
+              <span class="badge st-contacted">연락완료</span>
+            {% else %}
+              <span class="badge st-done">종료</span>
+            {% endif %}
+          </div>
+          <form class="status-form" method="post" action="{{ url_for('admin.update_feedback_report_status', report_id=row.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="report_type" value="{{ report_type }}">
+            <input type="hidden" name="current_status" value="{{ status }}">
+            <input type="hidden" name="keyword" value="{{ keyword }}">
+            <input type="hidden" name="page" value="{{ page }}">
+            <select name="status">
+              <option value="new" {% if row.status == 'new' %}selected{% endif %}>신규</option>
+              <option value="contacted" {% if row.status == 'contacted' %}selected{% endif %}>연락완료</option>
+              <option value="done" {% if row.status == 'done' %}selected{% endif %}>종료</option>
+            </select>
+            <button class="btn-save" type="submit">저장</button>
+          </form>
+        </td>
+        <td>{{ row.created_at }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <div class="empty">접수된 제보/제안이 없습니다.</div>
+    {% endif %}
+  </div>
+
+  {% if total_pages > 1 %}
+  <div class="pagination">
+    {% if page > 1 %}
+      <a href="{{ url_for('admin.feedback_reports', page=page-1, report_type=report_type, status=status, keyword=keyword) }}">이전</a>
+    {% endif %}
+
+    {% for p in range(1, total_pages + 1) %}
+      {% if p == page %}
+        <span class="current">{{ p }}</span>
+      {% else %}
+        <a href="{{ url_for('admin.feedback_reports', page=p, report_type=report_type, status=status, keyword=keyword) }}">{{ p }}</a>
+      {% endif %}
+    {% endfor %}
+
+    {% if page < total_pages %}
+      <a href="{{ url_for('admin.feedback_reports', page=page+1, report_type=report_type, status=status, keyword=keyword) }}">다음</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</main>
+{% endblock %}

@@ -1,0 +1,10 @@
+.heart-unliked {
+    color: rgba(156, 163, 175, 0.6);
+    /* gray-400 + opacity */
+}
+
+/* 눌린 하트(rose-400) */
+.heart-liked {
+    color: rgb(251, 113, 133);
+    /* rose-400 */
+}

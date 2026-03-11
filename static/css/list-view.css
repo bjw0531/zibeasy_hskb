@@ -1,0 +1,922 @@
+/* ============================================================
+   list-view.css
+   리스트형 매물 검색 페이지 전용 스타일 (홈 → 리스트로 매물보기)
+   레이아웃: 상단 검색바 + 필터 라인 + 2열 그리드 매물 목록
+   ============================================================ */
+
+/* ── CSS 변수 ─────────────────────────────────────────────── */
+:root {
+    --lv-header-height: 62px; /* 검색창 10px 하강 반영 */
+    --lv-filter-height: 44px;
+    --lv-accent: #e74c3c;
+    --lv-accent-light: #fef2f2;
+    --lv-text-primary: #1a1a1a;
+    --lv-text-secondary: #555;
+    --lv-text-muted: #666;
+    --lv-border: #ebebeb;
+    --lv-bg: #fff;
+    --lv-white: #fff;
+    --lv-radius-card: 10px;
+    --lv-shadow-card: 0 1px 6px rgba(0,0,0,0.08);
+}
+
+/* ── 전체 페이지 레이아웃 ──────────────────────────────────── */
+body.lv-body {
+    margin: 0;
+    padding: 0;
+    background: var(--lv-bg);
+    overflow: hidden;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── 상단 헤더 (검색바 + 매물종류) ─────────────────────────── */
+.lv-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    background: var(--lv-white);
+    /* border-bottom 제거 — 가로 라인 없음 */
+    /* iOS safe area 대응 */
+    padding-top: env(safe-area-inset-top, 0px);
+}
+
+.lv-header-inner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 12px 8px; /* 검색창 10px 하강: top 8→18px */
+    height: var(--lv-header-height);
+    box-sizing: border-box;
+}
+
+/* ── 검색 입력 박스 (지도형과 동일 스타일, 그림자 제거) ────────── */
+.lv-search-box {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+    border: #b4b4b4 1px solid; 
+    border-radius: 6px;
+    padding: 10px;
+    cursor: pointer;
+    min-width: 0;
+    box-shadow: none; /* 리스트 페이지는 그림자 제거 */
+    transition: all 0.2s;
+}
+
+.lv-search-box:active {
+    box-shadow: none; /* 리스트 페이지는 그림자 제거 */
+}
+
+.lv-search-icon {
+    flex-shrink: 0;
+    color: rgb(100, 100, 100);
+}
+
+.lv-search-placeholder {
+    flex: 1;
+    font-size: 14px;
+    color: #999;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+    user-select: none;
+}
+
+/* ── 매물종류 버튼 (지도형과 동일 스타일, 그림자 제거) ──────── */
+.lv-type-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 6px;
+    background: #ffffff;
+    border: #ff6469 1px solid;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #ff6469;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    width: 80px;
+    justify-content: center;
+    text-align: center;
+    box-shadow: none; /* 리스트 페이지는 그림자 제거 */
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* 모달 열린 상태 — 화살표 회전 */
+.lv-type-btn.active .lv-type-arrow {
+    transform: rotate(180deg);
+}
+
+.lv-type-btn .lv-type-arrow {
+    font-size: 10px;
+    transition: transform 0.2s ease;
+}
+
+/* ── 필터 라인 ────────────────────────────────────────────── */
+.lv-filter-bar {
+    position: fixed;
+    top: calc(var(--lv-header-height) + env(safe-area-inset-top, 0px));
+    left: 0;
+    right: 0;
+    z-index: 190;
+    height: var(--lv-filter-height);
+    background: var(--lv-white);
+    border-bottom: 1px solid var(--lv-border);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 8px;
+    /* ✅ 버튼이 많아지면 가로 스크롤 */
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.lv-filter-bar::-webkit-scrollbar {
+    display: none;
+}
+
+/* ── 필터 칩 공통 스타일 ──────────────────────────────────── */
+.lv-filter-chip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 32px;
+    padding: 0 12px;
+    background: var(--lv-white);
+    border: 1px solid #d0d0d0;
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--lv-text-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.lv-filter-chip:active {
+    transform: scale(0.96);
+}
+
+/* ✅ 전체필터 버튼 — 좌측 구분선 역할 */
+.lv-filter-chip--all {
+    border-color: #888;
+    color: #333;
+    font-weight: 600;
+    padding: 0 14px;
+}
+
+.lv-filter-chip--all svg {
+    flex-shrink: 0;
+}
+
+/* ✅ 드롭다운 화살표 */
+.lv-filter-arrow {
+    font-size: 8px;
+    color: #999;
+    transition: transform 0.2s ease;
+}
+
+/* ✅ 필터 활성 상태 — 브랜드 컬러 표시 */
+.lv-filter-chip.active {
+    background: var(--lv-accent-light);
+    border-color: var(--lv-accent);
+    color: var(--lv-accent);
+    font-weight: 600;
+}
+
+.lv-filter-chip.active .lv-filter-arrow {
+    color: var(--lv-accent);
+    transform: rotate(180deg);
+}
+
+/* ── 스크롤 영역 (매물 목록) ────────────────────────────────── */
+.lv-scroll {
+    position: fixed;
+    top: calc(var(--lv-header-height) + var(--lv-filter-height) + env(safe-area-inset-top, 0px));
+    left: 0;
+    right: 0;
+    bottom: calc(52px + env(safe-area-inset-bottom, 0px)); /* 하단 탭바 높이 */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    background: var(--lv-bg);
+}
+
+.lv-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+/* ── 2열 그리드 ─────────────────────────────────────────────── */
+.lv-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 8px;   /* 좌우 카드 사이 여백 */
+    row-gap: 0;        /* 행 구분 없음 (border-bottom 제거됨) */
+    padding: 0 6px;    /* 화면 좌우 여백 */
+    /* 각 카드 사진이 310px 이상 커지지 않도록:
+       310px × 2열 + gap 8px + 좌우 패딩 16px = 644px */
+    max-width: 644px;
+    margin: 0 auto;    /* 와이드 화면에서 중앙 정렬 */
+}
+
+/* ── 매물 카드 (세로형: 사진 상단 + 정보 하단) ─────────────── */
+.lv-card {
+    background: var(--lv-white);
+    border-radius: 0;
+    box-shadow: none;
+    border-bottom: none; /* 매물간 가로 라인 제거 */
+    padding-top: 0px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+}
+
+.lv-card:active {
+    transform: scale(0.97);
+}
+
+/* ── 카드 썸네일 (사진) ─────────────────────────────────────── */
+.lv-card-thumb {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 770 / 513; /* 원본 사진 비율 770×513 */
+    /* max-width는 그리드 max-width(644px)로 이미 제한됨 — 별도 상한 불필요 */
+    border-radius: 4px;
+    background: #ebebeb;
+    overflow: hidden;
+}
+
+/* 사진 안쪽 그림자 (지도형 패널 목록과 동일) */
+.lv-card-thumb::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.15);
+    pointer-events: none;
+    border-radius: 4px;
+}
+
+.lv-card-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    animation: lvImgFadeIn 0.3s ease;
+}
+
+@keyframes lvImgFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* 사진 없을 때 플레이스홀더 */
+.lv-thumb-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+}
+
+/* 계약완료 오버레이 */
+.lv-card-thumb .lv-end-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 6;
+}
+
+/* 영상 있음 아이콘 — 지도형 패널 목록과 동일 크기/정렬 */
+.lv-movie-icon {
+    position: absolute;
+    bottom: 6%;
+    left: 6%;
+    width: clamp(20px, 16%, 44px);  /* 지도형 패널과 동일: clamp(20px, 16%, 44px) */
+    height: clamp(20px, 16%, 44px);
+    z-index: 7; /* ::after 인셋 그림자(z-index: auto) 위에 확실히 표시 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lv-movie-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* 찜하기 버튼 */
+.lv-heart-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 10;
+    padding: 6px 6px 8px 10px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ── 카드 정보 영역 (사진 하단) ─────────────────────────────── */
+.lv-card-info {
+    padding: 8px 2px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start; /* 최종수정일 제외 전체 가운데 정렬 */
+}
+
+/* 매물번호 — 라운드 사각형 배지 스타일 */
+.lv-card-num {
+    display: inline-block;
+    padding: 2px 8px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: clamp(11px, 2.5vw, 11px);
+    font-weight: 500;
+    color: #666;
+    background: #f9f9f9;
+    line-height: 1.5;
+}
+
+/* 가격 — #333 다크 색상 */
+.lv-card-price {
+    font-size: clamp(15px, 4vw, 17px);
+    font-weight: 700;
+    color: #333;
+    line-height: 1.3;
+    margin-top: 1px;
+    text-align: center; /* 가운데 정렬 */
+}
+
+/* 관리비 — list.css .price-management와 동일 스타일 */
+.lv-card-price .lv-price-mgmt {
+    font-size: clamp(11px, 2.8vw, 12px);
+    font-weight: 450;
+    color: rgb(140, 140, 140);
+}
+
+/* 주소 + 종류 — list.css .property-card-address와 동일 스타일 */
+.lv-card-addr {
+    font-size: clamp(12px, 3vw, 13px);
+    font-weight: 600;
+    color: rgb(120, 120, 120);
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: start; /* 가운데 정렬 */
+    width: 100%; /* 부모 너비 기준으로 가운데 정렬 */
+}
+
+/* 매물종류명 (원룸/투베이 등) — 주소 라인 내 별도 크기 적용 */
+.lv-card-cat {
+    font-size: 13px; /* 종류명만 13px */
+}
+
+/* 설명 — 1줄 초과 시 '...' 처리 */
+.lv-card-title {
+    font-size: clamp(12px, 3vw, 12px);
+    font-weight: 400;
+    color: var(--lv-text-secondary);
+    line-height: 1.4;
+    white-space: nowrap;   /* 1줄로 강제 */
+    overflow: hidden;
+    text-overflow: ellipsis; /* 초과 시 '...' */
+    text-align: start; /* 가운데 정렬 */
+    width: 100%; /* 부모 너비 기준으로 가운데 정렬 */
+}
+
+/* 시간 (최종수정일 — 가운데 정렬 예외: 왼쪽 정렬 유지) */
+.lv-card-time {
+    font-size: 12px;
+    color: #646464;
+    margin-top: 1px;
+    align-self: flex-start;
+}
+
+.lv-card-time.needs-check {
+    color: #e53935;
+    font-weight: 500;
+}
+
+/* 계약완료 가격 스타일 */
+.lv-card-price.contract-done {
+    color: #e53935;
+    font-weight: 700;
+}
+
+/* ── 로딩 스피너 ─────────────────────────────────────────────── */
+.lv-loading {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 0;
+    gap: 12px;
+    color: var(--lv-text-muted);
+    font-size: 13px;
+}
+
+.lv-spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid #eee;
+    border-top-color: var(--lv-accent);
+    border-radius: 50%;
+    animation: lvSpin 0.7s linear infinite;
+}
+
+@keyframes lvSpin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── 빈 결과 ─────────────────────────────────────────────────── */
+.lv-empty {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 24px;
+    gap: 10px;
+    text-align: center;
+}
+
+.lv-empty-icon {
+    font-size: 40px;
+    opacity: 0.5;
+}
+
+.lv-empty-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--lv-text-secondary);
+}
+
+.lv-empty-msg {
+    font-size: 13px;
+    color: var(--lv-text-muted);
+    line-height: 1.6;
+}
+
+/* ── 검색 페이지 (지도 페이지 검색 UI와 동일) ───────────────────── */
+.search-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: white;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(100%);
+    transition: transform 0.3s ease-in-out;
+    overflow: hidden;
+}
+
+.search-page.active {
+    transform: translateY(0);
+}
+
+.search-page-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: white;
+    display: flex;
+    align-items: center;
+    padding: clamp(10px, 3vw, 14px);
+    padding-top: calc(clamp(10px, 3vw, 14px) + env(safe-area-inset-top, 0px));
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    padding: 4px 8px;
+    cursor: pointer;
+    color: #4B5563;
+    line-height: 1;
+}
+
+.search-page-input-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: #f5f5f5;
+    border-radius: clamp(6px, 2vw, 10px);
+    padding: 0 clamp(10px, 3vw, 14px);
+    margin-left: 8px;
+    margin-right: clamp(8px, 3vw, 14px);
+    min-width: 0;
+    height: 44px;
+    box-sizing: border-box;
+}
+
+.search-page-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: clamp(14px, 4vw, 16px);
+    margin-left: 8px;
+    min-width: 0;
+}
+
+.search-clear-btn {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-left: 4px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.search-clear-btn:hover {
+    opacity: 1;
+}
+
+.search-clear-btn:active {
+    transform: scale(0.9);
+}
+
+.search-page-content {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 12px;
+}
+
+.search-results {
+    display: block;
+}
+
+.search-suggestions {
+    padding: 8px 0;
+}
+
+.search-suggestion-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background 0.2s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.search-suggestion-item:hover,
+.search-suggestion-item:active {
+    background: #f5f5f5;
+}
+
+.suggestion-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.suggestion-icon.station-icon-circle {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #3D9EDB;
+    border-radius: 50%;
+}
+
+.suggestion-icon.station-icon-circle img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+}
+
+.suggestion-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.suggestion-main {
+    font-size: 15px;
+    font-weight: 500;
+    color: #333;
+}
+
+.suggestion-sub {
+    font-size: 12px;
+    color: #888;
+}
+
+.search-no-results-msg {
+    padding: 40px 20px;
+    text-align: center;
+    color: #666;
+}
+
+.search-no-results-msg p {
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.search-recent-section {
+    padding: 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.search-recent-section h4 {
+    font-size: 13px;
+    color: #666;
+    margin: 0;
+    padding: 0 4px;
+    flex: 0 0 auto;
+}
+
+.search-recent-item {
+    display: inline-block;
+    background: #f5f5f5;
+    padding: 8px 14px;
+    border-radius: 16px;
+    font-size: 13px;
+    color: #333;
+    cursor: pointer;
+    margin: 0 6px 8px 0;
+    transition: background 0.2s;
+}
+
+.search-recent-item:hover,
+.search-recent-item:active {
+    background: #e8e8e8;
+}
+
+.lv-recent-clear {
+    font-size: 12px;
+    color: #888;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0 4px;
+    margin-left: auto;
+}
+
+/* ── 매물종류 모달 (지도형과 동일 스타일 — 중앙 팝업) ─────── */
+.lv-type-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 9100;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(0px);
+}
+
+.lv-type-modal-backdrop.open {
+    display: flex;
+}
+
+/* 모달 콘텐츠 박스 */
+.lv-type-modal {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    min-width: 280px;
+    max-width: 90vw;
+    animation: lvModalSlideIn 0.3s ease;
+    position: relative;
+}
+
+/* X 닫기 버튼 */
+.lv-type-close-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 28px;
+    height: 28px;
+    background: none;
+    border: none;
+    font-size: 22px;
+    color: #999;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+    line-height: 1;
+}
+
+.lv-type-close-btn:hover {
+    background: #f5f5f5;
+    color: #333;
+}
+
+.lv-type-close-btn:active {
+    transform: scale(0.9);
+}
+
+/* 모달 제목 */
+.lv-type-modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+/* 모달 부제목 */
+.lv-type-modal-sub {
+    font-size: 13px;
+    font-weight: 400;
+    color: #999;
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* 매물종류 옵션 행 */
+.lv-type-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    justify-content: center;
+}
+
+/* 매물종류 옵션 버튼 (지도형과 동일) */
+.lv-type-option {
+    padding: 8px 10px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    background: #f8f9fa;
+    border: 1px solid #e5e7eb;
+    min-width: 60px;
+    flex: 1;
+    max-width: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* 선택된 옵션 (지도형과 동일 그라디언트) */
+.lv-type-option.selected {
+    background: linear-gradient(135deg, #ff6469, #ff7d82);
+    color: white;
+    border-color: #ff6469;
+    font-weight: 600;
+}
+
+/* "무보증/단기" 자간 좁히기 */
+.lv-type-option[data-code="92"] {
+    letter-spacing: -0.5px;
+    font-size: 13px;
+}
+
+/* 적용하기 버튼 행 */
+.lv-type-apply-row {
+    margin-top: 10px;
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: center;
+}
+
+/* 적용하기 버튼 (지도형과 동일 — 테두리 라인 스타일) */
+.lv-type-apply-btn {
+    width: auto;
+    min-width: 100px;
+    padding: 8px 24px;
+    background: transparent;
+    color: rgba(255, 112, 117, 1);
+    border: 1.5px solid rgba(255, 112, 117, 1);
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.lv-type-apply-btn:hover {
+    background: rgba(255, 112, 117, 0.08);
+}
+
+.lv-type-apply-btn:active {
+    transform: scale(0.98);
+    background: rgba(255, 112, 117, 0.15);
+}
+
+/* 적용 버튼 클릭 시 배경 채움 애니메이션 */
+.lv-type-apply-btn.applying {
+    background: rgba(255, 112, 117, 1);
+    color: white;
+    transition: background 0.1s ease, color 0.1s ease;
+}
+
+/* 모달 열림/닫힘 애니메이션 */
+@keyframes lvModalSlideIn {
+    from { opacity: 0; transform: scale(0.9) translateY(-20px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes lvModalSlideOut {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(100px); }
+}
+
+.lv-type-modal.closing {
+    animation: lvModalSlideOut 0.2s ease-out forwards;
+}
+
+/* ── 결과 카운트 헤더 (우측 끝 정렬) ───────────────────────── */
+.lv-result-bar {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* 우측 끝 정렬 */
+    padding: 8px 4px 8px;
+}
+
+.lv-result-count {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--lv-text-muted);
+}
+
+/* 레이블(전체/원룸 등) */
+#lvCountLabel {
+    color: var(--lv-text-muted);
+    font-weight: 600;
+}
+
+.lv-result-count strong {
+    color: var(--lv-text-primary);
+    font-weight: 700;
+}
+
+/* ── 무한 스크롤 로딩 (더보기) ─────────────────────────────── */
+.lv-more-loading {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: center;
+    padding: 16px 0;
+}
+
+.lv-more-spinner {
+    width: 22px;
+    height: 22px;
+    border: 2.5px solid #eee;
+    border-top-color: var(--lv-accent);
+    border-radius: 50%;
+    animation: lvSpin 0.7s linear infinite;
+}

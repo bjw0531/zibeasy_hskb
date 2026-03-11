@@ -1,0 +1,167 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}관리자 페이지 · HouseKB{% endblock %}
+
+<!-- 관리자 홈: 대시보드 버튼 불필요, 로그아웃만 표시 -->
+{% block header_right %}
+<a href="{{ url_for('admin.logout') }}" class="btn-sm btn-logout">로그아웃</a>
+{% endblock %}
+
+{% block head %}
+<style>
+  /* ── 메인 영역 ── */
+  .main { padding: 1.5rem; }
+
+  .welcome { margin-bottom: 1.5rem; }
+  .welcome h2 { font-size: 1.3rem; font-weight: 700; color: #fff; }
+  .welcome p  { font-size: 0.85rem; color: rgba(255,255,255,0.45); margin-top: 0.25rem; }
+
+  /* ── 카드 그리드 ── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  @media (min-width: 640px) {
+    .grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  .card {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 1rem;
+    padding: 1.25rem 1rem;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.15s, transform 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    text-align: center;
+  }
+  .card:active { background: rgba(255,255,255,0.14); transform: scale(0.97); }
+
+  .card-icon {
+    width: 48px; height: 48px;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .card-icon svg { width: 26px; height: 26px; fill: white; }
+
+  .card-label { font-size: 0.875rem; font-weight: 600; color: #e8e6e3; }
+  .card-desc  { font-size: 0.75rem;  color: rgba(255,255,255,0.4); }
+
+  /* 아이콘 색상 */
+  .ic-purple { background: linear-gradient(135deg, #FF7075, #FF4F56); }
+  .ic-blue   { background: linear-gradient(135deg, #3b82f6, #06b6d4); }
+  .ic-green  { background: linear-gradient(135deg, #10b981, #34d399); }
+  .ic-orange { background: linear-gradient(135deg, #f59e0b, #f97316); }
+  .ic-pink   { background: linear-gradient(135deg, #ec4899, #f43f5e); }
+  .ic-gray   { background: linear-gradient(135deg, #64748b, #9a9590); }
+  .ic-red    { background: linear-gradient(135deg, #ef4444, #dc2626); }
+
+  /* ── 구분선 ── */
+  .section-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 1.75rem 0 0.75rem;
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<main class="main">
+
+  <div class="welcome">
+    <h2>안녕하세요, {{ admin_name }}님</h2>
+    <p>HouseKB 관리자 페이지입니다.</p>
+  </div>
+
+  <!-- 매물 관리 -->
+  <div class="section-title">매물 관리</div>
+  <div class="grid">
+    <a href="{{ url_for('admin.maemul_list') }}" class="card">
+      <div class="card-icon ic-purple">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+      </div>
+      <div class="card-label">매물 관리</div>
+      <div class="card-desc">등록·수정·삭제</div>
+    </a>
+    <a href="{{ url_for('admin.maemul_new') }}" class="card">
+      <div class="card-icon ic-green">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+      </div>
+      <div class="card-label">매물 등록</div>
+      <div class="card-desc">새 매물 추가</div>
+    </a>
+    <a href="/map" class="card">
+      <div class="card-icon ic-blue">
+        <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+      </div>
+      <div class="card-label">지도 보기</div>
+      <div class="card-desc">지도형 매물 검색</div>
+    </a>
+  </div>
+
+  <!-- 보안 · 통계 관리 -->
+  <div class="section-title">보안 · 통계</div>
+  <div class="grid">
+    <a href="{{ url_for('admin.house_requests') }}" class="card">
+      <div class="card-icon ic-orange">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 4h5v2h-5V7zm0 4h5v2h-5v-2zM7 7h3v3H7V7zm0 4h3v3H7v-3z"/></svg>
+      </div>
+      <div class="card-label">집 요청 접수</div>
+      <div class="card-desc">내놓기/구하기 문의</div>
+    </a>
+    <a href="{{ url_for('admin.feedback_reports') }}" class="card">
+      <div class="card-icon ic-pink">
+        <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21Zm12-3h-2v-2h2v2Zm0-4h-2v-4h2v4Z"/></svg>
+      </div>
+      <div class="card-label">오류/개선 제보</div>
+      <div class="card-desc">오류·기능제안 접수</div>
+    </a>
+    <a href="{{ url_for('admin.blocklist') }}" class="card">
+      <div class="card-icon ic-red">
+        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+      </div>
+      <div class="card-label">블랙리스트</div>
+      <div class="card-desc">악의적 사용자 차단</div>
+    </a>
+    <a href="{{ url_for('admin.analytics') }}" class="card">
+      <div class="card-icon ic-blue">
+        <!-- 바 차트 아이콘 -->
+        <svg viewBox="0 0 24 24"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg>
+      </div>
+      <div class="card-label">접속 통계</div>
+      <div class="card-desc">방문자 & 로그 분석</div>
+    </a>
+    <a href="{{ url_for('admin.members') }}" class="card">
+      <div class="card-icon ic-gray">
+        <!-- 사용자 그룹 아이콘 -->
+        <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+      </div>
+      <div class="card-label">회원 관리</div>
+      <div class="card-desc">가입·소셜 회원 관리</div>
+    </a>
+  </div>
+
+  <!-- 사이트 이동 -->
+  <div class="section-title">사이트 이동</div>
+  <div class="grid">
+    <a href="/" class="card">
+      <div class="card-icon ic-green">
+        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      </div>
+      <div class="card-label">메인 홈</div>
+      <div class="card-desc">사이트 홈으로</div>
+    </a>
+  </div>
+
+</main>
+{% endblock %}

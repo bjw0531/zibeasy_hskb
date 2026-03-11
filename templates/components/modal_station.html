@@ -1,0 +1,44 @@
+{# ============================================================
+   역 주변 매물 선택 모달 컴포넌트
+   사용법: {% include 'components/modal_station.html' %}
+   트리거: openStationModal() / closeStationModal()
+   사용 페이지: index.html
+   관련 JS: stations.js
+   CSS: quick-filter.css (.station-modal, .station-modal-content 등)
+   ============================================================ #}
+
+<!-- ✅ 역 선택 모달 -->
+<div class="station-modal" id="stationModal" onclick="closeStationModal(event)">
+    <div class="station-modal-content" onclick="event.stopPropagation()">
+        <!-- X 닫기 버튼 -->
+        <button class="modal-close-btn" onclick="closeStationModal()" aria-label="닫기">×</button>
+        <div class="modal-title">역 주변 매물</div>
+        <div class="modal-subtitle">역을 선택하세요 (반경 800m, 도보 15분 내)</div>
+        <div class="station-list">
+            <button class="station-option" onclick="selectStationFromModal('dujeong')">
+                <span class="station-icon" style="display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: #3D9EDB; border-radius: 50%;">
+                    <img src="/static/images/station_icon.png" alt="역" style="width: 14px; height: 14px; object-fit: contain;">
+                </span>
+                <span class="station-name">두정역</span>
+            </button>
+            <button class="station-option" onclick="selectStationFromModal('cheonan')">
+                <span class="station-icon" style="display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: #3D9EDB; border-radius: 50%;">
+                    <img src="/static/images/station_icon.png" alt="역" style="width: 14px; height: 14px; object-fit: contain;">
+                </span>
+                <span class="station-name">천안역</span>
+            </button>
+            <button class="station-option" onclick="selectStationFromModal('bongmyeong')">
+                <span class="station-icon" style="display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: #3D9EDB; border-radius: 50%;">
+                    <img src="/static/images/station_icon.png" alt="역" style="width: 14px; height: 14px; object-fit: contain;">
+                </span>
+                <span class="station-name">봉명역</span>
+            </button>
+            <button class="station-option" onclick="selectStationFromModal('ssangyong')">
+                <span class="station-icon" style="display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: #3D9EDB; border-radius: 50%;">
+                    <img src="/static/images/station_icon.png" alt="역" style="width: 14px; height: 14px; object-fit: contain;">
+                </span>
+                <span class="station-name">쌍용역</span>
+            </button>
+        </div>
+    </div>
+</div>

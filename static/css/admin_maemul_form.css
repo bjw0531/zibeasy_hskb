@@ -1,0 +1,717 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100dvh;
+  background: #1e1b28;
+  font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  color: #e8e6e3;
+}
+
+/* ── 헤더 스타일은 admin/base.html 인라인 CSS에서 관리 ── */
+
+/* ── 폼 본문 ── */
+.main {
+  padding: 1.25rem;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.page-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 1.25rem;
+}
+
+/* 에러 박스 */
+.error-box {
+  background: rgba(239, 68, 68, .12);
+  border: 1px solid rgba(239, 68, 68, .35);
+  border-radius: .65rem;
+  padding: .75rem 1rem;
+  color: #fca5a5;
+  font-size: .875rem;
+  margin-bottom: 1rem;
+}
+
+/* ── 섹션 카드 ── */
+.section {
+  background: rgba(255, 255, 255, .08);
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: .85rem;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.section-title {
+  font-size: .7rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, .35);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+/* ── 폼 그리드 ── */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .75rem;
+}
+
+.form-grid .full {
+  grid-column: 1 / -1;
+}
+
+.field label {
+  display: block;
+  font-size: .75rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, .5);
+  margin-bottom: .3rem;
+}
+
+.field label .req {
+  color: #f97316;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, .07);
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: .55rem;
+  color: #e8e6e3;
+  font-size: .9rem;
+  font-family: inherit; /* 브라우저 기본 모노스페이스 폰트 방지 */
+  padding: .55rem .75rem;
+  outline: none;
+  transition: border-color .2s, background .2s;
+  -webkit-appearance: none;
+}
+
+/* 드롭다운 화살표 아이콘 표시 (select에만 적용) */
+.field select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right .85rem center;
+  padding-right: 2.4rem; /* 화살표 공간 확보 */
+  cursor: pointer;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: #FF7075;
+  background: rgba(255, 112, 117, .1);
+}
+
+/* 포커스 시 화살표도 인디고 색으로 변경 */
+.field select:focus {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23FF7075' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right .85rem center;
+}
+
+.field textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+
+.field select option {
+  background: #27243a;
+}
+
+/* 단위 붙은 인풋 */
+.input-unit {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, .07);
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: .55rem;
+  overflow: hidden;
+  transition: border-color .2s;
+}
+
+.input-unit:focus-within {
+  border-color: #FF7075;
+  background: rgba(255, 112, 117, .1);
+}
+
+.input-unit input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: .55rem .75rem;
+}
+
+.input-unit input:focus {
+  box-shadow: none;
+}
+
+.unit-label {
+  padding: 0 .65rem;
+  font-size: .78rem;
+  color: rgba(255, 255, 255, .35);
+  white-space: nowrap;
+}
+
+/* ── 프리미엄 토글 스위치 ── */
+.radio-group {
+  display: flex;
+  background: rgba(0, 0, 0, .28);
+  border: 1px solid rgba(255, 255, 255, .07);
+  border-radius: .8rem;
+  padding: .22rem;
+  gap: .22rem;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, .35);
+}
+
+.radio-chip {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: .58rem .5rem;
+  border-radius: .58rem;
+  cursor: pointer;
+  color: rgba(255, 255, 255, .28);
+  font-size: .85rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+  transition: all .25s cubic-bezier(.4, 0, .2, 1);
+  user-select: none;
+  overflow: hidden;
+}
+
+/* 기본 라디오 인풋 숨김 */
+.radio-chip input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* 선택된 상태 — 글로우 필 */
+.radio-chip:has(input:checked) {
+  background: linear-gradient(145deg, #FF7A7F 0%, #FF4F56 55%, #e83e45 100%);
+  color: #fff;
+  font-weight: 700;
+  transform: translateY(-1px);
+  box-shadow:
+    0 6px 20px rgba(255, 79, 86, .55),
+    0 2px 6px rgba(0, 0, 0, .35),
+    inset 0 1px 0 rgba(255, 255, 255, .22);
+}
+
+/* 상단 쉬머 하이라이트 */
+.radio-chip:has(input:checked)::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 48%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .18) 0%, transparent 100%);
+  border-radius: .58rem .58rem 0 0;
+  pointer-events: none;
+}
+
+/* 호버 시 살짝 밝아짐 */
+.radio-chip:not(:has(input:checked)):hover {
+  color: rgba(255, 255, 255, .6);
+  background: rgba(255, 255, 255, .06);
+}
+
+/* 층 정보 인라인 레이아웃 — 바깥 박스 없이 안쪽 입력은 밑줄만 */
+.floor-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0;
+}
+
+.floor-text {
+  font-size: .85rem;
+  color: rgba(255, 255, 255, .4);
+  white-space: nowrap;
+}
+
+.floor-input {
+  width: 3rem; /* 숫자 2자리에 맞춘 컴팩트 너비 */
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, .3); /* 밑줄만 */
+  border-radius: 0;
+  padding: 0 .35rem;
+  color: #fff;
+  font-size: .9rem;
+  font-family: inherit;
+  text-align: center;
+  outline: none;
+}
+
+.floor-input:focus {
+  border-bottom-color: #FF7075; /* 포커스 시 밑줄 강조 */
+}
+
+/* 2열 소형 */
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .6rem;
+}
+
+.row3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: .6rem;
+}
+
+/* ── 이미지 업로드 영역 ── */
+.img-grid {
+  display: grid;
+  /* 5열 고정: 항상 4행(20슬롯)으로 높이 고정 */
+  grid-template-columns: repeat(5, 1fr);
+  gap: .55rem;
+}
+
+/* 모바일: 4열로 줄임 (4행×5열→5행×4열, 스크롤 최소화) */
+@media (max-width: 600px) {
+  .img-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* 공통 슬롯 */
+.img-slot {
+  aspect-ratio: 4/3;
+  position: relative;
+  border-radius: .55rem;
+  overflow: hidden;
+}
+
+/* 사진이 채워진 슬롯 */
+.img-slot.filled {
+  background: rgba(255, 255, 255, .09);
+  border: 1.5px solid rgba(255, 255, 255, .12);
+  transition: border-color .2s;
+}
+
+.img-slot.filled:hover {
+  border-color: rgba(255, 112, 117, .5);
+}
+
+/* 빈 슬롯: 클릭하면 사진 추가 */
+.img-slot.empty {
+  border: 1.5px dashed rgba(255, 255, 255, .08);
+  background: rgba(255, 255, 255, .02);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, .12);
+  cursor: pointer;
+  transition: border-color .2s, color .2s, background .2s;
+}
+
+.img-slot.empty:hover {
+  border-color: rgba(255, 112, 117, .4);
+  color: rgba(255, 112, 117, .55);
+  background: rgba(255, 112, 117, .05);
+}
+
+.img-slot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.img-slot .placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: .3rem;
+  color: rgba(255, 255, 255, .25);
+  font-size: .7rem;
+}
+
+.img-slot .placeholder svg {
+  width: 24px;
+  height: 24px;
+  fill: rgba(255, 255, 255, .2);
+}
+
+.img-slot input[type=file] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+
+/* 삭제 버튼 (기존 이미지) */
+.img-del-btn {
+  position: absolute;
+  top: .3rem;
+  right: .3rem;
+  width: 22px;
+  height: 22px;
+  background: rgba(239, 68, 68, .85);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+
+.img-num {
+  position: absolute;
+  bottom: .3rem;
+  left: .3rem;
+  background: rgba(0, 0, 0, .55);
+  border-radius: .25rem;
+  padding: .1rem .35rem;
+  font-size: .65rem;
+  color: rgba(255, 255, 255, .7);
+}
+
+/* ── 추천정보 pill 체크박스 ── */
+.pill-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+}
+
+.pill-label {
+  display: inline-flex;
+  align-items: center;
+  padding: .35rem .85rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .10);
+  border: 1px solid rgba(255, 255, 255, .12);
+  cursor: pointer;
+  user-select: none;
+  font-size: .82rem;
+  color: #9a9590;
+  transition: background .15s, border-color .15s, color .15s;
+}
+
+/* 메인/써브 추천 체크 상태 */
+.pill-label.good:has(input:checked) {
+  background: rgba(255, 112, 117, .25);
+  border-color: rgba(255, 112, 117, .65);
+  color: #FFB3B5;
+}
+
+/* 테마 체크 상태 */
+.pill-label.thema:has(input:checked) {
+  background: rgba(139, 92, 246, .25);
+  border-color: rgba(139, 92, 246, .65);
+  color: #c4b5fd;
+}
+
+/* 네이티브 체크박스 숨김 */
+.pill-label input[type=checkbox] {
+  display: none;
+}
+
+/* 추천 그룹 소제목 */
+.rec-subtitle {
+  font-size: .72rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, .38);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  margin-bottom: .45rem;
+}
+
+.rec-block {
+  margin-bottom: 1rem;
+}
+
+.rec-block:last-child {
+  margin-bottom: 0;
+}
+
+/* ── 하단 저장 버튼 ── */
+.form-footer {
+  display: flex;
+  gap: .75rem;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+}
+
+.btn-cancel {
+  padding: .7rem 1.4rem;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, .15);
+  border-radius: .65rem;
+  color: #9a9590;
+  font-size: .9rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background .15s;
+}
+
+.btn-cancel:hover {
+  background: rgba(255, 255, 255, .10);
+}
+
+.btn-save {
+  padding: .7rem 1.8rem;
+  background: linear-gradient(135deg, #FF7075, #FF4F56);
+  border: none;
+  border-radius: .65rem;
+  color: #fff;
+  font-size: .9rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(255, 112, 117, .35);
+  transition: transform .15s, box-shadow .15s;
+}
+
+.btn-save:active {
+  transform: scale(.97);
+}
+
+.btn-save:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid .full {
+    grid-column: 1;
+  }
+}
+
+/* ── 옵션정보 체크박스 그리드 ── */
+.opt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.opt-hide-label {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .78rem;
+  color: rgba(255, 255, 255, .45);
+  cursor: pointer;
+  user-select: none;
+}
+
+.opt-hide-label input[type=checkbox] {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: #FF7075;
+}
+
+.opt-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.opt-table td {
+  padding: .45rem .6rem;
+  border-bottom: 1px solid rgba(255, 255, 255, .10);
+  vertical-align: middle;
+}
+
+.opt-table tr:last-child td {
+  border-bottom: none;
+}
+
+.opt-cat {
+  font-size: .75rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, .45);
+  white-space: nowrap;
+  width: 80px;
+  padding-right: .8rem;
+}
+
+.opt-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem .6rem;
+}
+
+.opt-chk-label {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  padding: .3rem .65rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .09);
+  border: 1px solid rgba(255, 255, 255, .1);
+  font-size: .8rem;
+  color: #9a9590;
+  cursor: pointer;
+  user-select: none;
+  transition: background .15s, border-color .15s, color .15s;
+}
+
+.opt-chk-label input[type=checkbox] {
+  display: none;
+}
+
+.opt-chk-label:has(input:checked) {
+  background: rgba(255, 112, 117, .22);
+  border-color: rgba(255, 112, 117, .55);
+  color: #FFB3B5;
+}
+
+@media (max-width: 480px) {
+  .opt-cat {
+    width: 60px;
+    font-size: .7rem;
+  }
+
+  .opt-chk-label {
+    font-size: .75rem;
+  }
+}
+
+/* ── 관리비 섹션 ── */
+.pm-row1 {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  flex-wrap: wrap;
+  margin-bottom: .75rem;
+}
+
+.pm-amount {
+  min-width: 130px;
+  flex-shrink: 0;
+}
+
+.pm-divider {
+  width: 1px;
+  height: 22px;
+  background: rgba(255, 255, 255, .15);
+  flex-shrink: 0;
+}
+
+.pm-select {
+  flex: 1;
+  min-width: 160px;
+  background: rgba(255, 255, 255, .07);
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: .55rem;
+  color: #e8e6e3;
+  font-size: .875rem;
+  padding: .55rem .75rem;
+  outline: none;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right .85rem center;
+  padding-right: 2.4rem;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.pm-select:focus {
+  border-color: #FF7075;
+  background-color: rgba(255, 112, 117, .1);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23FF7075' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right .85rem center;
+}
+
+.pm-select option {
+  background: #27243a;
+}
+
+.pm-row2 {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  flex-wrap: wrap;
+}
+
+.pm-row2-label {
+  font-size: .72rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, .35);
+  letter-spacing: .04em;
+  margin-right: .2rem;
+  white-space: nowrap;
+}
+
+/* pill 체크박스 — pm-pill */
+.pm-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: .35rem .85rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .10);
+  border: 1px solid rgba(255, 255, 255, .12);
+  cursor: pointer;
+  user-select: none;
+  font-size: .82rem;
+  color: #9a9590;
+  transition: background .15s, border-color .15s, color .15s;
+}
+
+.pm-pill input[type=checkbox] {
+  display: none;
+}
+
+.pm-pill:has(input:checked) {
+  background: rgba(245, 158, 11, .2);
+  border-color: rgba(245, 158, 11, .55);
+  color: #fcd34d;
+}
+
+@media (max-width: 480px) {
+  .pm-select {
+    min-width: 100%;
+  }
+}
+
+/* ── 사진 섹션 헤더 ── */
+.photo-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: .75rem;
+}
+
+/* 드래그 고스트 */
+.drag-ghost {
+  opacity: .35;
+  border: 2px dashed #FF7075 !important;
+}
+
+/* 채워진 슬롯: 드래그 커서 */
+.img-slot.filled {
+  cursor: grab;
+}
+
+.img-slot.filled:active {
+  cursor: grabbing;
+}

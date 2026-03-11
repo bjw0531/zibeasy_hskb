@@ -1,0 +1,42 @@
+[Unit]
+Description=HouseKB Flask Application (Gunicorn)
+After=network.target mysql.service
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/housekb
+Environment="PATH=/usr/bin:/usr/local/bin:/home/ubuntu/.local/bin"
+
+# Gunicorn으로 실행 (기존: python3 app.py)
+ExecStart=/usr/bin/gunicorn --config gunicorn_config.py wsgi:app
+
+Restart=always
+RestartSec=10
+StandardOutput=append:/home/ubuntu/housekb/logs/service.log
+StandardError=append:/home/ubuntu/housekb/logs/service_error.log
+
+# 프로세스 제한
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

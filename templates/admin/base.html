@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="csrf-token" content="{{ csrf_token }}" />
+  <title>{% block title %}HouseKB Admin{% endblock %}</title>
+  <script>
+    (function () {
+      if (!window.fetch) return;
+      var tokenMeta = document.querySelector('meta[name="csrf-token"]');
+      var csrfToken = tokenMeta ? tokenMeta.getAttribute('content') : '';
+      if (!csrfToken) return;
+
+      var originalFetch = window.fetch;
+      var unsafeMethods = { POST: true, PUT: true, PATCH: true, DELETE: true };
+
+      window.fetch = function (input, init) {
+        init = init || {};
+        var method = String(init.method || 'GET').toUpperCase();
+        if (!unsafeMethods[method]) {
+          return originalFetch(input, init);
+        }
+
+        var rawUrl = (typeof input === 'string') ? input : (input && input.url ? input.url : '');
+        try {
+          var urlObj = new URL(rawUrl || window.location.href, window.location.href);
+          if (urlObj.origin === window.location.origin) {
+            var headers = new Headers(init.headers || {});
+            if (!headers.has('X-CSRF-Token')) {
+              headers.set('X-CSRF-Token', csrfToken);
+            }
+            init.headers = headers;
+            if (!init.credentials) init.credentials = 'same-origin';
+          }
+        } catch (e) {}
+
+        return originalFetch(input, init);
+      };
+    })();
+  </script>
+  <style>
+    /* ── 공통 리셋 & 기본 ── */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100dvh;
+      background: #1e1b28;
+      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      color: #e8e6e3;
+    }
+
+    /* ── 공통 헤더 ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .875rem 1.25rem;
+      background: rgba(255, 255, 255, .07);
+      border-bottom: 1px solid rgba(255, 255, 255, .13);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(12px);
+    }
+
+    /* 로고+타이틀 → 관리자 홈 링크 */
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: .65rem;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, #FF7075, #FF4F56);
+      border-radius: .45rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .logo-icon svg {
+      width: 18px;
+      height: 18px;
+      fill: white;
+    }
+
+    .header-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: .65rem;
+    }
+
+    .admin-badge {
+      font-size: .75rem;
+      color: rgba(255, 255, 255, .45);
+    }
+
+    /* 공통 소형 버튼 */
+    .btn-sm {
+      padding: .35rem .8rem;
+      border-radius: .45rem;
+      font-size: .78rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      border: 1px solid;
+      white-space: nowrap;
+      transition: background .15s;
+    }
+
+    .btn-home {
+      background: rgba(255, 255, 255, .10);
+      border-color: rgba(255, 255, 255, .12);
+      color: #c8c5c0;
+    }
+
+    .btn-back {
+      background: rgba(255, 255, 255, .10);
+      border-color: rgba(255, 255, 255, .12);
+      color: #c8c5c0;
+    }
+
+    .btn-logout {
+      background: rgba(239, 68, 68, .15);
+      border-color: rgba(239, 68, 68, .3);
+      color: #fca5a5;
+    }
+
+    /* 모바일: 헤더 내 내비게이션 버튼 숨김 (로그아웃 제외) */
+    @media (max-width: 600px) {
+      .btn-home, .btn-back { display: none; }
+    }
+
+    /* 소형 화면: 헤더 타이틀 문구 숨김 (로고 아이콘만 표시) */
+    @media (max-width: 400px) {
+      .header-title { display: none; }
+    }
+  </style>
+  {% block head %}{% endblock %}
+</head>
+
+<body>
+
+  <!-- 공통 헤더: 로고 클릭 시 관리자 홈 이동 -->
+  <header class="header">
+    <a href="{{ url_for('admin.index') }}" class="header-left">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+        </svg>
+      </div>
+      <span class="header-title">HouseKB 관리자</span>
+    </a>
+    <div class="header-right">
+      <span class="admin-badge">{{ admin_name }}</span>
+      {% block header_right %}
+      <!-- 기본: 대시보드 + 로그아웃 (각 페이지에서 override 가능) -->
+      <a href="{{ url_for('admin.index') }}" class="btn-sm btn-home">대시보드</a>
+      <a href="{{ url_for('admin.logout') }}" class="btn-sm btn-logout">로그아웃</a>
+      {% endblock %}
+    </div>
+  </header>
+
+  {% block body %}{% endblock %}
+
+</body>
+</html>
