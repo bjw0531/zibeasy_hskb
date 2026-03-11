@@ -8,7 +8,7 @@
 
   <link rel="stylesheet" href="{{ url_for('static', filename='css/bottom-nav.css') }}?v=7">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/list-view.css') }}?v=4">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/liked.css') }}?v=26">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/liked.css') }}?v=24">
 
   <script>
   if ('onpagereveal' in window) {
@@ -95,7 +95,7 @@
           <div class="list-header">
             <span class="list-count">{{ liked|length }}개 저장됨</span>
           </div>
-          <div class="lv-grid liked-grid" id="liked-list">
+          <div class="lv-grid" id="liked-list">
             {% for p in liked %}
             <a href="/view/{{ p.code }}" class="lv-card {{ 'liked-card--contracted' if p.is_contracted else '' }}" style="animation-delay: {{ loop.index0 * 0.05 }}s">
               <div class="lv-card-thumb">
@@ -191,7 +191,7 @@
             <span class="list-count">{{ recent|length }}개 기록됨</span>
             <button class="btn-clear-all" id="btn-clear-recent" type="button">전체 삭제</button>
           </div>
-          <div id="recent-list" class="lv-grid liked-grid">
+          <div id="recent-list" class="lv-grid">
             {% for p in recent %}
             <a href="/view/{{ p.code }}" class="lv-card {{ 'recent-card--contracted' if p.is_contracted else '' }}" style="animation-delay: {{ loop.index0 * 0.04 }}s">
               <div class="lv-card-thumb">
