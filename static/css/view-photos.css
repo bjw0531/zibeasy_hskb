@@ -8,6 +8,7 @@ body {
 body {
     color: #111827;
     font-family: 'Pretendard Variable', Pretendard, sans-serif;
+    padding-bottom: 0 !important;
 }
 
 button {
@@ -214,6 +215,11 @@ button {
     color: #fff;
     font-size: 13px;
     letter-spacing: 0.3px;
+}
+
+.detail-contact-bar,
+.bottom-nav {
+    display: none !important;
 }
 
 @media (min-width: 768px) {

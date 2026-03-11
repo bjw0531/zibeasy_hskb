@@ -7,6 +7,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const viewerCurrentEl = document.getElementById('photoStoryViewerCurrent');
     const viewerTotalEl = document.getElementById('photoStoryViewerTotal');
 
+    document.querySelectorAll('.detail-contact-bar, .bottom-nav').forEach((element) => {
+        element.style.display = 'none';
+    });
+
     if (viewerTotalEl) {
         viewerTotalEl.textContent = String(window.viewPhotosData?.totalPhotos || photoCards.length || 0);
     }
