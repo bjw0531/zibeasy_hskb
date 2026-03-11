@@ -1061,7 +1061,7 @@ window.applyThemeFilter = function() {
 window.applyFullFilter = async function() {
     console.log('✅ 전체 필터 적용 (리스트 페이지)');
 
-    const filterChip = document.getElementById('lvFilterAll');
+    const filterChip = document.getElementById('filterIconBtn');
 
     /* 필터 활성 상태 확인 → 칩 버튼 표시 */
     const isActive = checkIfFilterActive();
