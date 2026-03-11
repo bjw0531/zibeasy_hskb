@@ -1029,29 +1029,47 @@ body.liked-page .panel-recent .btn-clear-all {
 }
 
 body.liked-page .liked-grid {
-  padding: 8px 10px 14px;
-  column-gap: 10px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  padding: 10px 14px 18px;
+  max-width: 560px;
+  margin: 0 auto;
 }
 
 body.liked-page .liked-grid .lv-card {
+  display: grid;
+  grid-template-columns: minmax(122px, 38%) minmax(0, 1fr);
+  align-items: stretch;
   background: #ffffff;
   border: 1px solid #eceff3;
-  border-radius: 12px;
+  border-radius: 14px;
   box-shadow: 0 1px 6px rgba(15, 23, 42, 0.06);
   overflow: hidden;
-  margin-bottom: 12px;
+  margin-bottom: 0;
+  text-decoration: none;
+  color: inherit;
 }
 
 body.liked-page .liked-grid .lv-card-thumb {
   border-radius: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 112px;
+  aspect-ratio: auto;
 }
 
 body.liked-page .liked-grid .lv-card-thumb::after {
   border-radius: 0;
 }
 
+body.liked-page .liked-grid .lv-card-thumb img {
+  height: 100%;
+}
+
 body.liked-page .liked-grid .lv-card-info {
-  padding: 10px 10px 16px;
+  justify-content: center;
+  padding: 12px 12px 12px;
   gap: 5px;
 }
 
@@ -1076,11 +1094,22 @@ body.liked-page .liked-grid .lv-card-addr {
 
 body.liked-page .liked-grid .lv-card-time {
   color: #7b8494;
+  margin-top: 2px;
 }
 
 body.liked-page .liked-grid .lv-card-price .lv-price-mgmt {
   font-weight: 450;
   color: #8c8c8c;
+}
+
+@media (min-width: 768px) {
+  body.liked-page .liked-grid {
+    max-width: 620px;
+  }
+
+  body.liked-page .liked-grid .lv-card {
+    grid-template-columns: minmax(160px, 34%) minmax(0, 1fr);
+  }
 }
 
 body.liked-page .lv-heart-btn .heart-liked {
