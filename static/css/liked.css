@@ -925,12 +925,17 @@ body.liked-page .tab-panel.is-hidden {
 }
 
 @keyframes tab-slide-from-right {
-  from {
-    opacity: 0.28;
-    transform: translateX(44px) scale(0.992);
-    filter: blur(3px);
+  0% {
+    opacity: 0.16;
+    transform: translateX(72px) scale(0.988);
+    filter: blur(5px);
   }
-  to {
+  68% {
+    opacity: 1;
+    transform: translateX(-7px) scale(1.002);
+    filter: blur(0);
+  }
+  100% {
     opacity: 1;
     transform: translateX(0) scale(1);
     filter: blur(0);
@@ -938,12 +943,17 @@ body.liked-page .tab-panel.is-hidden {
 }
 
 @keyframes tab-slide-from-left {
-  from {
-    opacity: 0.28;
-    transform: translateX(-44px) scale(0.992);
-    filter: blur(3px);
+  0% {
+    opacity: 0.16;
+    transform: translateX(-72px) scale(0.988);
+    filter: blur(5px);
   }
-  to {
+  68% {
+    opacity: 1;
+    transform: translateX(7px) scale(1.002);
+    filter: blur(0);
+  }
+  100% {
     opacity: 1;
     transform: translateX(0) scale(1);
     filter: blur(0);
@@ -952,12 +962,12 @@ body.liked-page .tab-panel.is-hidden {
 
 body.liked-page.tab-swipe-left .hero-copy:not(.is-hidden),
 body.liked-page.tab-swipe-left .tab-panel:not(.is-hidden) {
-  animation: tab-slide-from-right 0.48s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: tab-slide-from-right 0.56s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 body.liked-page.tab-swipe-right .hero-copy:not(.is-hidden),
 body.liked-page.tab-swipe-right .tab-panel:not(.is-hidden) {
-  animation: tab-slide-from-left 0.48s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: tab-slide-from-left 0.56s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 body.liked-page .liked-hero-copy {
