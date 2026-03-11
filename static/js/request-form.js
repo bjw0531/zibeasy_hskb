@@ -63,6 +63,16 @@
         }
     }
 
+    function goPrev() {
+        if (currentStep <= 0) return;
+        currentStep--;
+        render();
+        requestAnimationFrame(() => {
+            const active = stepsContainer.querySelector('.sf-active, .sf-confirm');
+            if (active) active.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+    }
+
     /* 동적 가격 단계의 라벨 결정 */
     function getPriceLabel() {
         const tx = answers.transaction_type;
@@ -180,7 +190,7 @@
         });
 
         wrap.appendChild(inp);
-        wrap.appendChild(btn);
+        wrap.appendChild(createActions(btn));
         return wrap;
     }
 
@@ -201,7 +211,7 @@
         });
 
         wrap.appendChild(inp);
-        wrap.appendChild(btn);
+        wrap.appendChild(createActions(btn));
         return wrap;
     }
 
@@ -252,7 +262,7 @@
         });
 
         wrap.appendChild(grid);
-        wrap.appendChild(btn);
+        wrap.appendChild(createActions(btn));
         return wrap;
     }
 
@@ -329,7 +339,7 @@
             });
 
             wrap.appendChild(grid);
-            wrap.appendChild(btn);
+            wrap.appendChild(createActions(btn));
         } else {
             /* 전세 or 매매 — 단일 입력 */
             const key = tx === '전세' ? 'jeonse_price' : 'sale_price';
@@ -358,7 +368,7 @@
             });
 
             wrap.appendChild(inp);
-            wrap.appendChild(btn);
+            wrap.appendChild(createActions(btn));
         }
 
         return wrap;
@@ -397,8 +407,7 @@
         });
 
         wrap.appendChild(ta);
-        wrap.appendChild(btn);
-        wrap.appendChild(skip);
+        wrap.appendChild(createActions(skip, btn));
         return wrap;
     }
 
@@ -409,6 +418,23 @@
         btn.className = 'sf-next-btn';
         btn.textContent = '다음';
         return btn;
+    }
+
+    function createPrevBtn() {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'sf-prev-btn';
+        btn.textContent = '이전';
+        btn.addEventListener('click', goPrev);
+        return btn;
+    }
+
+    function createActions(...buttons) {
+        const actions = document.createElement('div');
+        actions.className = 'sf-actions';
+        if (currentStep > 0) actions.appendChild(createPrevBtn());
+        buttons.forEach((button) => actions.appendChild(button));
+        return actions;
     }
 
     /* ── 확인 카드 ── */
@@ -493,7 +519,7 @@
         submitBtn.id = 'sfSubmitBtn';
         submitBtn.textContent = '집 내놓기 신청하기';
         submitBtn.disabled = true;
-        card.appendChild(submitBtn);
+        card.appendChild(createActions(submitBtn));
 
         /* 이벤트 바인딩 (렌더 후) */
         requestAnimationFrame(() => {

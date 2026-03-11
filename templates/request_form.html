@@ -8,15 +8,18 @@
     <style>
         * { box-sizing: border-box; }
         :root {
-            --rq-bg: #f5f6f8;
+            --rq-bg: #f5f7fa;
             --rq-surface: #ffffff;
-            --rq-surface-soft: #fafafa;
+            --rq-surface-soft: #f8fafc;
             --rq-text: #1f2937;
-            --rq-text-sub: #777;
-            --rq-line: #e7e7e7;
+            --rq-text-sub: #6b7280;
+            --rq-line: #e8edf3;
             --rq-brand: #111827;
             --rq-brand-strong: #111827;
             --rq-blue: #1d6fdb;
+            --rq-blue-soft: #eef6ff;
+            --rq-rose: #e65b79;
+            --rq-rose-soft: #fff1f4;
         }
         body.request-page {
             margin: 0;
@@ -26,28 +29,38 @@
             min-height: 100dvh;
             -webkit-text-size-adjust: 100%;
             text-size-adjust: 100%;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body.request-page[data-active-tab="find_home"] {
+            background: var(--rq-bg);
+        }
+        body.request-page::before {
+            display: none;
         }
         .request-page .page {
             width: min(100%, 644px);
             min-height: 100dvh;
             margin: 0 auto;
-            padding: max(10px, env(safe-area-inset-top)) 14px calc(env(safe-area-inset-bottom, 0px) + 18px);
+            padding: max(12px, env(safe-area-inset-top)) 14px calc(env(safe-area-inset-bottom, 0px) + 20px);
             display: flex;
             flex-direction: column;
+            position: relative;
+            z-index: 1;
         }
         .topbar {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
         .back-btn {
             width: 36px;
             height: 36px;
-            border-radius: 11px;
-            border: 1px solid #dcdcdc;
+            border-radius: 12px;
+            border: 1px solid var(--rq-line);
             background: #fff;
-            color: #666;
+            color: #475569;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -57,86 +70,85 @@
         .request-brand {
             flex: 1;
             min-width: 0;
-            background: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 14px;
-            padding: 10px 12px;
+            background: transparent;
+            border: 0;
+            border-radius: 0;
+            padding: 4px 2px;
             box-shadow: none;
         }
         .brand-main {
             font-family: "Pretendard Variable", 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-            color: var(--rq-brand);
+            color: #111827;
             font-size: 19px;
-            line-height: 1;
-            letter-spacing: -0.4px;
-            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.3px;
+            font-weight: 760;
         }
+        body.request-page[data-active-tab="find_home"] .brand-main { color: var(--rq-blue); }
         .brand-sub {
             margin-top: 4px;
             font-size: 12.5px;
-            color: #555;
+            color: var(--rq-text-sub);
+            line-height: 1.45;
         }
         .tabs {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-            background: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 5px;
+            display: flex;
+            gap: 8px;
+            background: transparent;
+            border: 0;
+            border-radius: 0;
+            padding: 2px 0 0;
             margin-bottom: 10px;
         }
         .tab-btn {
-            border: 1px solid transparent;
-            border-radius: 9px;
-            background: transparent;
-            height: 40px;
-            font-size: 14px;
-            font-weight: 620;
-            color: #666;
+            flex: 1 1 0;
+            min-width: 0;
+            border: 1px solid var(--rq-line);
+            border-radius: 999px;
+            background: #fff;
+            height: 38px;
+            font-size: 13px;
+            font-weight: 650;
+            color: #6b7280;
             cursor: pointer;
             font-family: inherit;
             transition: all 0.2s ease;
         }
-        .tab-btn[data-tab="lease_out"] {
-            background: #f3f4f6;
-            border-color: #e5e7eb;
-            color: #374151;
-        }
-        .tab-btn[data-tab="find_home"] {
-            background: #f2f7ff;
-            border-color: #dbeafe;
-            color: #1d4ed8;
-        }
         .tab-btn.active[data-tab="lease_out"] {
-            background: #111827;
-            border-color: #111827;
-            color: #fff;
+            background: var(--rq-rose-soft);
+            border-color: #f3ccd6;
+            color: var(--rq-rose);
             box-shadow: none;
         }
         .tab-btn.active[data-tab="find_home"] {
-            background: #1d6fdb;
-            border-color: #1d6fdb;
-            color: #fff;
+            background: var(--rq-blue-soft);
+            border-color: #cfe2f8;
+            color: var(--rq-blue);
             box-shadow: none;
         }
         .panel {
             display: none;
-            padding: 0;
+            padding: 16px 16px calc(env(safe-area-inset-bottom, 0px) + 14px);
+            border-radius: 20px;
+            border: 1px solid var(--rq-line);
+            background: #fff;
+            color: #111827;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+            min-height: calc(100dvh - 182px);
         }
         .panel.active { display: block; }
         .panel-title {
-            font-size: 19px;
-            font-weight: 740;
-            letter-spacing: -0.25px;
+            font-size: 20px;
+            font-weight: 720;
+            letter-spacing: -0.3px;
             color: #222;
             margin-bottom: 6px;
         }
         .panel-lead {
             margin: 0 0 10px;
-            font-size: 12.5px;
-            color: #777;
-            line-height: 1.5;
+            font-size: 13px;
+            color: #6b7280;
+            line-height: 1.55;
         }
         .sf-shell {
             padding: 2px 0 0;
@@ -225,10 +237,10 @@
             background: #fff;
         }
         .find-home-shell {
-            background: #fff;
-            border: 1px solid #dbe7ff;
-            border-radius: 14px;
-            padding: 12px;
+            background: transparent;
+            border: 0;
+            border-radius: 0;
+            padding: 0;
             box-shadow: none;
         }
         .agree-line {
@@ -306,9 +318,9 @@
         }
     </style>
     <!-- Conversational UI 스타일 -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/request-form.css') }}?v=20260308d">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/request-form.css') }}?v=20260311c">
 </head>
-<body class="request-page">
+<body class="request-page" data-active-tab="lease_out">
     <main class="page">
         <div class="topbar">
             <a href="/" class="back-btn" aria-label="홈으로 돌아가기">
@@ -321,8 +333,8 @@
         </div>
 
         <div class="tabs">
-            <button class="tab-btn active" data-tab="lease_out">집 내놓기</button>
             <button class="tab-btn" data-tab="find_home">집 구하기</button>
+            <button class="tab-btn active" data-tab="lease_out">집 내놓기</button>
         </div>
 
         <section class="panel active" id="panel-lease_out">
@@ -407,7 +419,7 @@
         });
     </script>
     <!-- Conversational UI: 집 내놓기 -->
-    <script src="{{ url_for('static', filename='js/request-form.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/request-find-home.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/request-form.js') }}?v=20260311c"></script>
+    <script src="{{ url_for('static', filename='js/request-find-home.js') }}?v=20260311c"></script>
 </body>
 </html>

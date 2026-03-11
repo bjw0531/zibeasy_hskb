@@ -4,9 +4,9 @@
     position: sticky;
     top: 0;
     z-index: 4;
-    margin-bottom: 12px;
-    background: rgba(245, 246, 248, 0.96);
-    padding: 4px 0;
+    margin-bottom: 14px;
+    background: transparent;
+    padding: 0;
 }
 
 .sf-progress-segments {
@@ -33,25 +33,25 @@
 .sf-steps {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
 }
 
 .sf-active {
-    border: none;
-    border-radius: 0;
-    padding: 0;
-    background: transparent;
-    box-shadow: none;
+    border: 1px solid #e8edf3;
+    border-radius: 16px;
+    padding: 15px;
+    background: #fff;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
     animation: sfCardIn 0.2s ease;
 }
 
 .sf-active-label {
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     color: #111827;
-    font-size: clamp(16px, 3.8vw, 18px);
-    font-weight: 720;
-    letter-spacing: -0.2px;
-    line-height: 1.35;
+    font-size: clamp(17px, 3.8vw, 19px);
+    font-weight: 700;
+    letter-spacing: -0.25px;
+    line-height: 1.4;
 }
 
 .sf-active input,
@@ -63,9 +63,9 @@
     color: #333;
     font-family: inherit;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 500;
     line-height: 1.4;
-    padding: 10px 11px;
+    padding: 11px 12px;
     transition: border-color 0.16s ease, box-shadow 0.16s ease;
 }
 
@@ -98,24 +98,45 @@
 }
 
 .sf-dual-label {
-    margin-bottom: 4px;
+    margin-bottom: 5px;
     color: #8a8a8a;
-    font-size: 11px;
+    font-size: 11.5px;
+    font-weight: 600;
+}
+
+.sf-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.sf-prev-btn {
+    min-width: 88px;
+    height: 42px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    background: #fff;
+    color: #4b5563;
+    font-family: inherit;
+    font-size: 14px;
     font-weight: 620;
+    cursor: pointer;
+    padding: 0 14px;
+    white-space: nowrap;
 }
 
 .sf-next-btn {
     width: 100%;
     height: 42px;
-    margin-top: 10px;
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     background: #111827;
     color: #fff;
     font-family: inherit;
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
+    flex: 1;
     box-shadow: none;
     transition: transform 0.12s ease, opacity 0.16s ease;
 }
@@ -160,16 +181,18 @@
 }
 
 .sf-skip-btn {
-    margin-top: 6px;
-    border: none;
-    background: none;
-    color: #888;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    background: #fff;
+    color: #4b5563;
     font-family: inherit;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 620;
     cursor: pointer;
-    width: 100%;
-    min-height: 24px;
+    min-width: 96px;
+    height: 42px;
+    padding: 0 14px;
+    white-space: nowrap;
 }
 
 .sf-skip-btn:hover {
@@ -177,11 +200,11 @@
 }
 
 .sf-confirm {
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 12px;
+    border: 1px solid #e8edf3;
+    border-radius: 16px;
+    padding: 15px;
     background: #fff;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
     animation: sfCardIn 0.25s ease;
 }
 
@@ -263,15 +286,15 @@
 .sf-submit-btn {
     width: 100%;
     height: 42px;
-    margin-top: 11px;
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     background: #111827;
     color: #fff;
     font-family: inherit;
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
+    flex: 1;
     box-shadow: none;
     transition: transform 0.12s ease, opacity 0.16s ease;
 }
@@ -335,7 +358,7 @@
 
 /* Find-home step form */
 .fh-progress {
-    margin-bottom: 12px;
+    margin-bottom: 14px;
 }
 
 .fh-progress-segments {
@@ -365,19 +388,21 @@
 }
 
 .fh-step-card {
-    border: 1px solid #dbe7ff;
-    border-radius: 14px;
+    border: 1px solid #e8edf3;
+    border-radius: 16px;
     background: #fff;
-    padding: 14px;
+    padding: 15px;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
     animation: fhFadeIn 0.2s ease;
 }
 
 .fh-step-title {
     margin-bottom: 10px;
     color: #1f2937;
-    font-size: 17px;
-    font-weight: 740;
-    letter-spacing: -0.2px;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.25px;
+    line-height: 1.4;
 }
 
 .fh-field {
@@ -489,10 +514,56 @@
     padding: 10px;
 }
 
+.fh-range-wrap {
+    margin-top: 2px;
+    border: 1px solid #dbeafe;
+    border-radius: 10px;
+    background: #f8fbff;
+    padding: 10px 12px;
+}
+
+.fh-range-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.fh-range-label {
+    font-size: 13px;
+    font-weight: 650;
+    color: #1f2937;
+}
+
+.fh-range-value {
+    font-size: 13px;
+    font-weight: 750;
+    color: #1d4ed8;
+}
+
+.fh-range {
+    width: 100%;
+    accent-color: #1d6fdb;
+}
+
 .fh-actions {
-    margin-top: 12px;
+    margin-top: 14px;
     display: flex;
     gap: 8px;
+}
+
+.fh-prev-btn {
+    min-width: 88px;
+    height: 44px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    background: #fff;
+    color: #4b5563;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 640;
+    cursor: pointer;
+    padding: 0 14px;
 }
 
 .fh-next-btn,
@@ -500,8 +571,21 @@
     flex: 1;
     height: 44px;
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     background: #1d6fdb;
+    color: #fff;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.fh-exit-btn {
+    flex: 1;
+    height: 44px;
+    border: none;
+    border-radius: 12px;
+    background: #111827;
     color: #fff;
     font-family: inherit;
     font-size: 14px;
@@ -518,7 +602,7 @@
 .fh-skip-btn {
     height: 44px;
     border: 1px solid #d1d5db;
-    border-radius: 10px;
+    border-radius: 12px;
     background: #fff;
     color: #4b5563;
     font-family: inherit;
@@ -533,6 +617,20 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
+}
+
+.fh-contact-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.fh-error {
+    min-height: 16px;
+    font-size: 12px;
+    line-height: 1.3;
+    color: #dc2626;
+    font-weight: 620;
 }
 
 .fh-privacy {
@@ -610,7 +708,7 @@
 @media (max-width: 720px) {
     .sf-progress {
         margin-bottom: 10px;
-        padding: 3px 0;
+        padding: 0;
     }
 
     .fh-step-card {
@@ -637,6 +735,7 @@
     }
 
     .sf-choice-btn,
+    .sf-prev-btn,
     .sf-next-btn,
     .sf-submit-btn {
         min-height: 40px;
