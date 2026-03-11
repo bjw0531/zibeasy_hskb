@@ -23,11 +23,11 @@
 }
 
 .sf-progress-segment.filled {
-    background: #111827;
+    background: #e65b79;
 }
 
 .sf-progress-segment.current {
-    background: #6b7280;
+    background: #f19ab0;
 }
 
 .sf-steps {
@@ -78,8 +78,8 @@
 .sf-active input:focus,
 .sf-active textarea:focus {
     outline: none;
-    border-color: #1d6fdb;
-    box-shadow: 0 0 0 3px rgba(29, 111, 219, 0.14);
+    border-color: #e65b79;
+    box-shadow: 0 0 0 3px rgba(230, 91, 121, 0.14);
 }
 
 .sf-active input[type="date"] {
@@ -123,6 +123,13 @@
     cursor: pointer;
     padding: 0 14px;
     white-space: nowrap;
+    transition: border-color 0.16s ease, background-color 0.16s ease, color 0.16s ease;
+}
+
+.sf-prev-btn:hover {
+    border-color: #f1ccd5;
+    background: #fff5f7;
+    color: #c74c68;
 }
 
 .sf-next-btn {
@@ -130,7 +137,7 @@
     height: 42px;
     border: none;
     border-radius: 12px;
-    background: #111827;
+    background: #e65b79;
     color: #fff;
     font-family: inherit;
     font-size: 14px;
@@ -171,9 +178,9 @@
 }
 
 .sf-choice-btn:hover {
-    border-color: #c7d2fe;
-    background: #eff6ff;
-    color: #333;
+    border-color: #f1ccd5;
+    background: #fff5f7;
+    color: #c74c68;
 }
 
 .sf-choice-btn:active {
@@ -196,7 +203,9 @@
 }
 
 .sf-skip-btn:hover {
-    color: #666;
+    border-color: #f1ccd5;
+    background: #fff5f7;
+    color: #c74c68;
 }
 
 .sf-confirm {
@@ -275,7 +284,7 @@
     border: none;
     background: none;
     padding: 0;
-    color: #1d6fdb;
+    color: #d14f6e;
     font-family: inherit;
     font-size: 12px;
     font-weight: 650;
@@ -288,7 +297,7 @@
     height: 42px;
     border: none;
     border-radius: 12px;
-    background: #111827;
+    background: #e65b79;
     color: #fff;
     font-family: inherit;
     font-size: 14px;
