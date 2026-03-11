@@ -24,7 +24,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Tilt+Warp&display=swap" rel="stylesheet">
     <link rel="icon" href="/static/images/icon.png" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bottom-nav.css') }}?v=7">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}?v=8">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}?v=9">
 
 
     <!-- ✅ View Transitions 활성화: include.html 없는 home.html에 직접 추가
@@ -411,6 +411,41 @@
                     setTimeout(function () { isTransitioning = false; }, 850);
                 }
             }, interval);
+        })();
+
+        /* 홈 화면 상단/하단 경계 오버스크롤 차단
+           - 맨 위에서 아래로 당길 때 주소창/브라우저 UI가 다시 나타나는 현상 완화
+           - 스크롤 자체는 유지하고, 경계에서만 기본 동작을 막음 */
+        (function preventHomeEdgeOverscroll() {
+            var scroller = document.querySelector('.home-container');
+            if (!scroller) return;
+
+            var startY = 0;
+            var startX = 0;
+
+            scroller.addEventListener('touchstart', function (e) {
+                if (!e.touches || e.touches.length !== 1) return;
+                startY = e.touches[0].clientY;
+                startX = e.touches[0].clientX;
+            }, { passive: true });
+
+            scroller.addEventListener('touchmove', function (e) {
+                if (!e.touches || e.touches.length !== 1) return;
+
+                var currentY = e.touches[0].clientY;
+                var currentX = e.touches[0].clientX;
+                var deltaY = currentY - startY;
+                var deltaX = Math.abs(currentX - startX);
+
+                if (deltaX > Math.abs(deltaY)) return;
+
+                var atTop = scroller.scrollTop <= 0;
+                var atBottom = Math.ceil(scroller.scrollTop + scroller.clientHeight) >= scroller.scrollHeight;
+
+                if ((atTop && deltaY > 0) || (atBottom && deltaY < 0)) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
         })();
 
     </script>

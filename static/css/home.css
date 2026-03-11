@@ -2,6 +2,11 @@
    home.css — 홈 페이지 전용 스타일
    ───────────────────────────────────────────────────────────── */
 
+html {
+    height: 100%;
+    overscroll-behavior-y: none;
+}
+
 /* 홈 페이지 기본 body */
 body {
     background-color: #f5f5f5;
@@ -15,6 +20,7 @@ body {
     justify-content: center;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    overscroll-behavior-y: none;
 }
 
 /* 메인 컨테이너 - 모바일 최우선 */
@@ -31,6 +37,7 @@ body {
     /* 작은 화면에서 요소 잘림 방지 — 필요 시 스크롤 허용 */
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
     /* 스크롤바 시각적으로 숨김 */
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE/Edge */
