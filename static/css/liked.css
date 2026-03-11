@@ -977,6 +977,24 @@ body.liked-page .liked-content-shell {
   min-height: calc(100dvh - 230px);
   padding-top: 6px;
   padding-bottom: calc(108px + env(safe-area-inset-bottom, 0px));
+  touch-action: pan-y;
+}
+
+body.liked-page .hero-copy,
+body.liked-page .tab-panel {
+  transition: transform 0.22s ease;
+}
+
+body.liked-page.tab-dragging .hero-copy:not(.is-hidden),
+body.liked-page.tab-dragging .tab-panel:not(.is-hidden) {
+  transform: translateX(var(--tab-drag-offset, 0px));
+  transition: none !important;
+  will-change: transform;
+}
+
+body.liked-page.tab-dragging .liked-content-shell {
+  cursor: grabbing;
+  user-select: none;
 }
 
 body.liked-page .list-header {

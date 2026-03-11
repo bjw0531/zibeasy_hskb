@@ -114,35 +114,103 @@
   /* ── 좌우 스와이프 탭 전환 ─────────────────────────────────── */
   function bindSwipeSwitch() {
     var shell = document.querySelector('.liked-content-shell');
-    if (!shell) return;
+    if (!shell || !window.PointerEvent) return;
 
-    var startX = 0, startY = 0, startAt = 0, tracking = false;
+    var startX = 0;
+    var startY = 0;
+    var startAt = 0;
+    var tracking = false;
+    var dragging = false;
+    var activePointerId = null;
+    var suppressClickUntil = 0;
 
     function canStart(target) {
-      return target && !target.closest('a, button, input, textarea, select, label, .lv-heart-btn, .recent-delete-btn');
+      return target && !target.closest('button, input, textarea, select, label, .lv-heart-btn, .recent-delete-btn, .unlike-hidden');
     }
 
-    shell.addEventListener('touchstart', function (e) {
-      if (!e.touches || e.touches.length !== 1 || !canStart(e.target)) return;
-      var touch = e.touches[0];
-      startX = touch.clientX; startY = touch.clientY; startAt = Date.now(); tracking = true;
-    }, { passive: true });
+    function setDragOffset(dx) {
+      var limited = Math.max(-84, Math.min(84, dx));
+      body.style.setProperty('--tab-drag-offset', limited + 'px');
+    }
 
-    shell.addEventListener('touchend', function (e) {
-      if (!tracking || !e.changedTouches || e.changedTouches.length !== 1) { tracking = false; return; }
-      var touch   = e.changedTouches[0];
-      var dx      = touch.clientX - startX;
-      var dy      = touch.clientY - startY;
-      var adx     = Math.abs(dx);
-      var ady     = Math.abs(dy);
-      var elapsed = Date.now() - startAt;
+    function clearDragState() {
       tracking = false;
+      dragging = false;
+      activePointerId = null;
+      body.classList.remove('tab-dragging');
+      body.style.removeProperty('--tab-drag-offset');
+    }
 
-      if (elapsed > 550 || adx < 58 || adx < ady * 1.2) return;
+    function finishGesture(endX, endY) {
+      var dx = endX - startX;
+      var dy = endY - startY;
+      var adx = Math.abs(dx);
+      var ady = Math.abs(dy);
+      var elapsed = Date.now() - startAt;
+      var switched = false;
 
-      if (dx < 0 && activeTab === 'liked')  setActiveTab('recent', { bySwipe: true, swipeDir: 'left' });
-      else if (dx > 0 && activeTab === 'recent') setActiveTab('liked', { bySwipe: true, swipeDir: 'right' });
-    }, { passive: true });
+      if (dragging && adx > 14) suppressClickUntil = Date.now() + 320;
+
+      if (elapsed <= 650 && adx >= 52 && adx > ady * 1.15) {
+        if (dx < 0 && activeTab === 'liked') {
+          setActiveTab('recent', { bySwipe: true, swipeDir: 'left' });
+          switched = true;
+        } else if (dx > 0 && activeTab === 'recent') {
+          setActiveTab('liked', { bySwipe: true, swipeDir: 'right' });
+          switched = true;
+        }
+      }
+
+      clearDragState();
+      return switched;
+    }
+
+    shell.addEventListener('pointerdown', function (e) {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (!canStart(e.target)) return;
+
+      startX = e.clientX;
+      startY = e.clientY;
+      startAt = Date.now();
+      tracking = true;
+      dragging = false;
+      activePointerId = e.pointerId;
+
+      try { shell.setPointerCapture(e.pointerId); } catch (err) {}
+    });
+
+    window.addEventListener('pointermove', function (e) {
+      if (!tracking || e.pointerId !== activePointerId) return;
+
+      var dx = e.clientX - startX;
+      var dy = e.clientY - startY;
+      var adx = Math.abs(dx);
+      var ady = Math.abs(dy);
+
+      if (!dragging) {
+        if (adx < 8) return;
+        if (adx <= ady * 1.05) return;
+        dragging = true;
+        body.classList.add('tab-dragging');
+      }
+
+      setDragOffset(dx);
+    });
+
+    function handlePointerEnd(e) {
+      if (!tracking || e.pointerId !== activePointerId) return;
+      finishGesture(e.clientX, e.clientY);
+    }
+
+    window.addEventListener('pointerup', handlePointerEnd);
+    window.addEventListener('pointercancel', handlePointerEnd);
+
+    document.addEventListener('click', function (e) {
+      if (Date.now() >= suppressClickUntil) return;
+      if (!e.target.closest('.lv-card')) return;
+      e.preventDefault();
+      e.stopPropagation();
+    }, true);
   }
   bindSwipeSwitch();
 
