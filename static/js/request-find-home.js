@@ -15,9 +15,17 @@
         '쌍용동', '다가동', '불당동', '청수동', '청당동', '삼룡동', '구성동', '신방동', '기타지역'
     ];
     const TYPE_OPTIONS = ['원룸', '투베이', '투룸', '쓰리룸', '기타'];
-    const DEPOSIT_OPTIONS = ['100', '200', '300', '500', '700', '1000', '1500', '2000', '2500', '3000', '기타'];
-    const MONTHLY_OPTIONS = ['20이하', '25이하', '30이하', '35이하', '40이하', '45이하', '50이하', '60이하', '70이하', '80이하', '90이하', '100이하'];
+    const DEPOSIT_OPTIONS = [
+        ...Array.from({ length: 30 }, (_, i) => String((i + 1) * 100)),
+        '기타'
+    ];
+    const MONTHLY_OPTIONS = [
+        ...Array.from({ length: 21 }, (_, i) => String(20 + i)), /* 20~40 (1만원 단위) */
+        ...Array.from({ length: 8 }, (_, i) => String(45 + i * 5)), /* 45~80 (5만원 단위) */
+        ...Array.from({ length: 4 }, (_, i) => String(90 + i * 10)) /* 90~120 (10만원 단위) */
+    ];
     const JEONSE_NOTICE = '죄송합니다. 전세 매물은 거래를 하지 않고 있습니다.';
+    const NAME_REGEX = /^[A-Za-z가-힣\s]+$/;
 
     const TOTAL_STEPS = 6;
     let currentStep = 0;
@@ -97,6 +105,26 @@
         return btn;
     }
 
+    function createPrevButton() {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'fh-prev-btn';
+        btn.textContent = '이전';
+        btn.addEventListener('click', goPrev);
+        return btn;
+    }
+
+    function createExitButton() {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'fh-exit-btn';
+        btn.textContent = '나가기';
+        btn.addEventListener('click', () => {
+            window.history.back();
+        });
+        return btn;
+    }
+
     function createSelect(options, selectedValue, placeholder) {
         const select = document.createElement('select');
         select.className = 'fh-select';
@@ -120,6 +148,29 @@
         if (currentStep >= TOTAL_STEPS - 1) return;
         currentStep += 1;
         render();
+    }
+
+    function goPrev() {
+        if (currentStep <= 0) return;
+        currentStep -= 1;
+        render();
+    }
+
+    function formatPhoneNumber(raw) {
+        const digits = String(raw || '').replace(/\D/g, '').slice(0, 11);
+        if (digits.length <= 3) return digits;
+        if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+        return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+    }
+
+    function isValidName(name) {
+        const trimmed = (name || '').trim();
+        return !!trimmed && NAME_REGEX.test(trimmed);
+    }
+
+    function formatBudgetValue(value) {
+        if (!value || value === '기타') return value || '';
+        return `${value}만원`;
     }
 
     function renderAreaStep() {
@@ -197,6 +248,7 @@
 
         const actions = document.createElement('div');
         actions.className = 'fh-actions';
+        actions.appendChild(createPrevButton());
         const nextBtn = createNextButton();
         nextBtn.disabled = !state.preferred_type;
 
@@ -234,6 +286,8 @@
             btn.addEventListener('click', () => {
                 state.price_mode = mode;
                 if (mode === '월세') {
+                    if (!state.budget_deposit) state.budget_deposit = DEPOSIT_OPTIONS[0];
+                    if (!state.budget_monthly) state.budget_monthly = MONTHLY_OPTIONS[0];
                     state.budget_jeonse = '';
                 } else {
                     state.budget_deposit = '';
@@ -246,13 +300,67 @@
         });
         field.appendChild(modeGroup);
 
-        let depositSelect = null;
-        let monthlySelect = null;
         if (state.price_mode === '월세') {
-            depositSelect = createSelect(DEPOSIT_OPTIONS, state.budget_deposit, '보증금 선택');
-            monthlySelect = createSelect(MONTHLY_OPTIONS, state.budget_monthly, '월세 선택');
-            field.appendChild(depositSelect);
-            field.appendChild(monthlySelect);
+            if (!state.budget_deposit) state.budget_deposit = DEPOSIT_OPTIONS[0];
+            if (!state.budget_monthly) state.budget_monthly = MONTHLY_OPTIONS[0];
+
+            const depositWrap = document.createElement('div');
+            depositWrap.className = 'fh-range-wrap';
+            const depositHead = document.createElement('div');
+            depositHead.className = 'fh-range-head';
+            const depositLabel = document.createElement('span');
+            depositLabel.className = 'fh-range-label';
+            depositLabel.textContent = '보증금';
+            const depositValue = document.createElement('span');
+            depositValue.className = 'fh-range-value';
+            depositValue.textContent = formatBudgetValue(state.budget_deposit);
+            depositHead.appendChild(depositLabel);
+            depositHead.appendChild(depositValue);
+            const depositRange = document.createElement('input');
+            depositRange.type = 'range';
+            depositRange.className = 'fh-range';
+            depositRange.min = '0';
+            depositRange.max = String(DEPOSIT_OPTIONS.length - 1);
+            depositRange.step = '1';
+            depositRange.value = String(Math.max(0, DEPOSIT_OPTIONS.indexOf(state.budget_deposit)));
+            depositRange.setAttribute('data-autofocus', 'true');
+            depositRange.addEventListener('input', () => {
+                const idx = Number(depositRange.value);
+                state.budget_deposit = DEPOSIT_OPTIONS[idx] || DEPOSIT_OPTIONS[0];
+                depositValue.textContent = formatBudgetValue(state.budget_deposit);
+            });
+            depositWrap.appendChild(depositHead);
+            depositWrap.appendChild(depositRange);
+
+            const monthlyWrap = document.createElement('div');
+            monthlyWrap.className = 'fh-range-wrap';
+            const monthlyHead = document.createElement('div');
+            monthlyHead.className = 'fh-range-head';
+            const monthlyLabel = document.createElement('span');
+            monthlyLabel.className = 'fh-range-label';
+            monthlyLabel.textContent = '월세';
+            const monthlyValue = document.createElement('span');
+            monthlyValue.className = 'fh-range-value';
+            monthlyValue.textContent = formatBudgetValue(state.budget_monthly);
+            monthlyHead.appendChild(monthlyLabel);
+            monthlyHead.appendChild(monthlyValue);
+            const monthlyRange = document.createElement('input');
+            monthlyRange.type = 'range';
+            monthlyRange.className = 'fh-range';
+            monthlyRange.min = '0';
+            monthlyRange.max = String(MONTHLY_OPTIONS.length - 1);
+            monthlyRange.step = '1';
+            monthlyRange.value = String(Math.max(0, MONTHLY_OPTIONS.indexOf(state.budget_monthly)));
+            monthlyRange.addEventListener('input', () => {
+                const idx = Number(monthlyRange.value);
+                state.budget_monthly = MONTHLY_OPTIONS[idx] || MONTHLY_OPTIONS[0];
+                monthlyValue.textContent = formatBudgetValue(state.budget_monthly);
+            });
+            monthlyWrap.appendChild(monthlyHead);
+            monthlyWrap.appendChild(monthlyRange);
+
+            field.appendChild(depositWrap);
+            field.appendChild(monthlyWrap);
         } else if (state.price_mode === '전세') {
             const info = document.createElement('div');
             info.className = 'fh-info';
@@ -264,34 +372,18 @@
 
         const actions = document.createElement('div');
         actions.className = 'fh-actions';
-        const nextBtn = createNextButton();
-
-        function updateNextState() {
-            if (state.price_mode === '월세') {
-                nextBtn.disabled = !(state.budget_deposit && state.budget_monthly);
-                return;
-            }
-            nextBtn.disabled = state.price_mode !== '전세';
-        }
-
-        if (depositSelect && monthlySelect) {
-            depositSelect.setAttribute('data-autofocus', 'true');
-            depositSelect.addEventListener('change', () => {
-                state.budget_deposit = depositSelect.value;
-                updateNextState();
+        actions.appendChild(createPrevButton());
+        if (state.price_mode === '전세') {
+            actions.appendChild(createExitButton());
+        } else {
+            const nextBtn = createNextButton();
+            nextBtn.disabled = state.price_mode !== '월세' || !(state.budget_deposit && state.budget_monthly);
+            nextBtn.addEventListener('click', () => {
+                if (nextBtn.disabled) return;
+                goNext();
             });
-            monthlySelect.addEventListener('change', () => {
-                state.budget_monthly = monthlySelect.value;
-                updateNextState();
-            });
+            actions.appendChild(nextBtn);
         }
-
-        updateNextState();
-        nextBtn.addEventListener('click', () => {
-            if (nextBtn.disabled) return;
-            goNext();
-        });
-        actions.appendChild(nextBtn);
         card.appendChild(actions);
         return card;
     }
@@ -311,6 +403,7 @@
 
         const actions = document.createElement('div');
         actions.className = 'fh-actions';
+        actions.appendChild(createPrevButton());
         const nextBtn = createNextButton();
         nextBtn.disabled = !state.move_in_date;
 
@@ -344,6 +437,7 @@
 
         const actions = document.createElement('div');
         actions.className = 'fh-actions';
+        actions.appendChild(createPrevButton());
 
         const skipBtn = document.createElement('button');
         skipBtn.type = 'button';
@@ -372,6 +466,8 @@
         const grid = document.createElement('div');
         grid.className = 'fh-contact-grid';
 
+        const nameField = document.createElement('div');
+        nameField.className = 'fh-contact-field';
         const nameInput = document.createElement('input');
         nameInput.type = 'text';
         nameInput.className = 'fh-input';
@@ -379,17 +475,28 @@
         nameInput.value = state.name || '';
         nameInput.autocomplete = 'name';
         nameInput.setAttribute('data-autofocus', 'true');
+        const nameError = document.createElement('div');
+        nameError.className = 'fh-error';
 
+        const phoneField = document.createElement('div');
+        phoneField.className = 'fh-contact-field';
         const phoneInput = document.createElement('input');
         phoneInput.type = 'tel';
         phoneInput.className = 'fh-input';
         phoneInput.placeholder = '010-0000-0000';
-        phoneInput.value = state.phone || '';
+        phoneInput.value = formatPhoneNumber(state.phone || '');
         phoneInput.autocomplete = 'tel';
         phoneInput.inputMode = 'tel';
+        phoneInput.maxLength = 13;
+        const phoneError = document.createElement('div');
+        phoneError.className = 'fh-error';
 
-        grid.appendChild(nameInput);
-        grid.appendChild(phoneInput);
+        nameField.appendChild(nameInput);
+        nameField.appendChild(nameError);
+        phoneField.appendChild(phoneInput);
+        phoneField.appendChild(phoneError);
+        grid.appendChild(nameField);
+        grid.appendChild(phoneField);
         card.appendChild(grid);
 
         const privacyBox = document.createElement('div');
@@ -414,6 +521,7 @@
 
         const actions = document.createElement('div');
         actions.className = 'fh-actions';
+        actions.appendChild(createPrevButton());
         const submitBtn = document.createElement('button');
         submitBtn.type = 'button';
         submitBtn.className = 'fh-submit-btn';
@@ -421,16 +529,41 @@
         actions.appendChild(submitBtn);
         card.appendChild(actions);
 
+        function isValidPhone(phone) {
+            return /^\d{3}-\d{4}-\d{4}$/.test(phone || '');
+        }
+
+        function syncName() {
+            state.name = nameInput.value.trim();
+            if (!state.name) {
+                nameError.textContent = '';
+                return;
+            }
+            nameError.textContent = isValidName(state.name) ? '' : '한글과 영문만 입력 가능합니다.';
+        }
+
+        function syncPhone() {
+            const formatted = formatPhoneNumber(phoneInput.value || '');
+            phoneInput.value = formatted;
+            state.phone = formatted;
+            phoneError.textContent = '';
+        }
+
         function updateSubmitState() {
-            submitBtn.disabled = !(state.name && state.phone && state.privacy_agree);
+            submitBtn.disabled = !(isValidName(state.name) && isValidPhone(state.phone) && state.privacy_agree);
         }
 
         nameInput.addEventListener('input', () => {
-            state.name = nameInput.value.trim();
+            syncName();
             updateSubmitState();
         });
+        phoneInput.addEventListener('keydown', (e) => {
+            if (e.key.length === 1 && !/\d/.test(e.key)) {
+                e.preventDefault();
+            }
+        });
         phoneInput.addEventListener('input', () => {
-            state.phone = phoneInput.value.trim();
+            syncPhone();
             updateSubmitState();
         });
         check.addEventListener('change', () => {
@@ -440,8 +573,8 @@
 
         submitBtn.addEventListener('click', () => submitFindHome(submitBtn));
 
-        state.name = nameInput.value.trim();
-        state.phone = phoneInput.value.trim();
+        syncName();
+        syncPhone();
         updateSubmitState();
         return card;
     }

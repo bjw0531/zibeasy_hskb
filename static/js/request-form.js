@@ -89,6 +89,20 @@
         return answers.sale_price || '-';
     }
 
+    function formatPhoneNumber(raw) {
+        const digits = String(raw || '').replace(/\D/g, '').slice(0, 11);
+        if (digits.length <= 3) return digits;
+        if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+        return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+    }
+
+    function handlePhoneInput(input) {
+        const formatted = formatPhoneNumber(input.value);
+        input.value = formatted;
+        answers.phone = formatted;
+        return formatted;
+    }
+
     /* ── 전체 렌더링 ── */
     function render() {
         stepsContainer.innerHTML = '';
@@ -167,25 +181,37 @@
         inp.autocomplete = 'off';
         if (step.field === 'name') inp.autocomplete = 'name';
         if (step.field === 'phone') {
+            inp.type = 'tel';
             inp.inputMode = 'tel';
             inp.autocomplete = 'tel';
+            inp.maxLength = 13;
         }
         if (step.field === 'maintenance_fee') inp.inputMode = 'numeric';
         if (answers[step.field]) inp.value = answers[step.field];
 
         const btn = createNextBtn();
         btn.disabled = !inp.value.trim();
-        inp.addEventListener('input', () => { btn.disabled = !inp.value.trim(); });
+        inp.addEventListener('input', () => {
+            if (step.field === 'phone') {
+                btn.disabled = !handlePhoneInput(inp).trim();
+                return;
+            }
+            btn.disabled = !inp.value.trim();
+        });
         inp.addEventListener('keydown', (e) => {
+            if (step.field === 'phone' && e.key.length === 1 && !/\d/.test(e.key)) {
+                e.preventDefault();
+                return;
+            }
             if (e.key === 'Enter' && inp.value.trim()) {
                 e.preventDefault();
-                answers[step.field] = inp.value.trim();
+                answers[step.field] = step.field === 'phone' ? handlePhoneInput(inp) : inp.value.trim();
                 advance();
             }
         });
         btn.addEventListener('click', () => {
             if (!inp.value.trim()) return;
-            answers[step.field] = inp.value.trim();
+            answers[step.field] = step.field === 'phone' ? handlePhoneInput(inp) : inp.value.trim();
             advance();
         });
 
