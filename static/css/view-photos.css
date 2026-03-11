@@ -69,7 +69,7 @@ button {
 .photo-page-main {
     max-width: 980px;
     margin: 0 auto;
-    padding: 16px 16px calc(28px + env(safe-area-inset-bottom));
+    padding: 10px 10px calc(28px + env(safe-area-inset-bottom));
 }
 
 .photo-page-summary {
@@ -103,6 +103,7 @@ button {
 
 .property-photo-card {
     position: relative;
+    display: block;
     width: 100%;
     margin: 0;
     padding: 0;
@@ -129,18 +130,13 @@ button {
 
 .property-photo-card--wide {
     grid-column: 1 / -1;
-    aspect-ratio: 16 / 10.5;
-}
-
-.property-photo-card--half {
-    aspect-ratio: 1 / 1;
 }
 
 .property-photo-card img {
     display: block;
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    height: auto;
+    object-fit: contain;
 }
 
 .photo-story-viewer {
@@ -229,9 +225,5 @@ button {
 
     .photo-story-grid {
         gap: 12px;
-    }
-
-    .property-photo-card--half {
-        aspect-ratio: 4 / 3;
     }
 }
