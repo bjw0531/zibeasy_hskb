@@ -781,32 +781,19 @@ html { scroll-behavior: smooth; }
    /liked 통합 탭 페이지 레거시 감성 테마 (관심/최근 공통)
    ═══════════════════════════════════════════════════════════════════ */
 body.liked-page {
-  background:
-    radial-gradient(140% 95% at -10% -20%, rgba(217, 55, 95, 0.42) 0%, rgba(217, 55, 95, 0) 42%),
-    radial-gradient(95% 70% at 100% 8%, rgba(255, 105, 130, 0.26) 0%, rgba(255, 105, 130, 0) 55%),
-    radial-gradient(140% 100% at 55% 0%, #18203d 0%, #0d1125 52%, #090c1c 100%);
+  background: #f6f7fa;
   min-height: 100dvh;
-  color: #ffffff;
+  color: #111111;
   padding-top: 0;
   padding-bottom: calc(52px + env(safe-area-inset-bottom, 0px));
 }
 
 body.liked-page.tab-recent-active {
-  background:
-    radial-gradient(140% 95% at -10% -20%, rgba(42, 139, 204, 0.42) 0%, rgba(42, 139, 204, 0) 42%),
-    radial-gradient(95% 70% at 100% 8%, rgba(84, 192, 255, 0.25) 0%, rgba(84, 192, 255, 0) 55%),
-    radial-gradient(140% 100% at 55% 0%, #13355a 0%, #0a1d3d 52%, #07142f 100%);
+  background: #f6f7fa;
 }
 
 body.liked-page::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.13) 0.8px, transparent 0.8px);
-  background-size: 14px 14px;
-  opacity: 0.3;
-  pointer-events: none;
-  z-index: 0;
+  display: none;
 }
 
 body.liked-page .liked-hero,
@@ -817,6 +804,13 @@ body.liked-page .liked-content-shell {
 
 body.liked-page .liked-hero {
   padding-top: calc(env(safe-area-inset-top, 0px) + 4px);
+  padding-bottom: 18px;
+  background: linear-gradient(180deg, #fff7f8 0%, #ffffff 76%);
+  border-bottom: 1px solid #edf1f5;
+}
+
+body.liked-page.tab-recent-active .liked-hero {
+  background: linear-gradient(180deg, #f4f9ff 0%, #ffffff 76%);
 }
 
 body.liked-page .page-header {
@@ -826,14 +820,14 @@ body.liked-page .page-header {
   right: auto;
   background: transparent;
   border-bottom: 0;
-  padding: 6px 20px 0;
+  padding: 10px 20px 0;
 }
 
 body.liked-page .page-header-title {
-  color: #ff8fa3;
+  color: #6b7280;
   font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 body.liked-page .tab-bar-wrap {
@@ -844,7 +838,7 @@ body.liked-page .tab-bar-wrap {
   z-index: 1;
   background: transparent;
   border-bottom: 0;
-  padding: 6px 20px 0;
+  padding: 10px 20px 0;
 }
 
 body.liked-page .tab-bar {
@@ -860,20 +854,21 @@ body.liked-page .tab-indicator {
 body.liked-page .tab-btn {
   flex: 1 1 0;
   min-width: 0;
-  min-height: 32px;
-  padding: 7px 12px;
+  min-height: 38px;
+  padding: 8px 14px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(10, 13, 28, 0.3);
-  color: rgba(222, 229, 245, 0.9);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  border: 1px solid #e5e7eb;
+  background: rgba(255, 255, 255, 0.94);
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
   gap: 6px;
   transition:
     color 0.24s ease,
     background 0.24s ease,
-    border-color 0.24s ease;
+    border-color 0.24s ease,
+    box-shadow 0.24s ease;
 }
 
 body.liked-page #tab-recent {
@@ -881,19 +876,21 @@ body.liked-page #tab-recent {
 }
 
 body.liked-page .tab-btn.active {
-  color: #ff8fa3;
-  background: rgba(224, 41, 74, 0.18);
-  border-color: rgba(255, 122, 148, 0.5);
+  color: var(--rose);
+  background: #fff1f4;
+  border-color: #f5c8d0;
+  box-shadow: 0 1px 3px rgba(224, 41, 74, 0.08);
 }
 
 body.liked-page.tab-recent-active .page-header-title {
-  color: #78d8ff;
+  color: #6b7280;
 }
 
 body.liked-page.tab-recent-active .tab-btn.active {
-  color: #66d0ff;
-  background: rgba(38, 156, 226, 0.2);
-  border-color: rgba(108, 209, 255, 0.5);
+  color: var(--blue);
+  background: #eef7ff;
+  border-color: #cae3f5;
+  box-shadow: 0 1px 3px rgba(61, 158, 219, 0.08);
 }
 
 body.liked-page .tab-btn-icon {
@@ -906,8 +903,8 @@ body.liked-page .tab-badge {
   min-width: 20px;
   height: 18px;
   font-size: 10px;
-  background: rgba(255, 255, 255, 0.14);
-  color: #f7f9ff;
+  background: #eef1f5;
+  color: #6b7280;
 }
 
 body.liked-page .tab-btn.active .tab-badge {
@@ -957,41 +954,41 @@ body.liked-page.tab-swipe-right .tab-panel:not(.is-hidden) {
 }
 
 body.liked-page .liked-hero-copy {
-  margin: 14px 20px 0;
+  margin: 16px 20px 0;
 }
 
 body.liked-page .liked-hero-title {
-  font-size: clamp(24px, 6.8vw, 30px);
-  font-weight: 900;
-  line-height: 1.05;
-  letter-spacing: -0.03em;
-  color: #ffffff;
+  font-size: clamp(24px, 6.4vw, 28px);
+  font-weight: 700;
+  line-height: 1.22;
+  letter-spacing: -0.02em;
+  color: #111827;
 }
 
 body.liked-page .liked-hero-sub {
   margin-top: 6px;
-  margin-bottom: 6px;
-  font-size: 12px;
-  color: rgba(216, 225, 243, 0.78);
-  letter-spacing: -0.01em;
-  line-height: 1.35;
+  margin-bottom: 0;
+  font-size: 13px;
+  color: #6b7280;
+  letter-spacing: 0;
+  line-height: 1.55;
 }
 
 body.liked-page .hero-copy-recent .liked-hero-title span {
-  color: #52d0ff;
+  color: var(--blue);
 }
 
 body.liked-page.tab-recent-active .liked-hero-sub {
-  color: rgba(194, 226, 246, 0.86);
+  color: #6b7280;
 }
 
 body.liked-page .liked-content-shell {
-  margin-top: 8px;
-  border-radius: 10px 10px 0 0;
-  background: #fff;
+  margin-top: 0;
+  border-radius: 0;
+  background: #f6f7fa;
   color: #111111;
   min-height: calc(100dvh - 230px);
-  padding-top: 6px;
+  padding-top: 10px;
   padding-bottom: calc(108px + env(safe-area-inset-bottom, 0px));
   touch-action: pan-y;
 }
@@ -1020,66 +1017,83 @@ body.liked-page.tab-dragging .liked-content-shell {
 }
 
 body.liked-page .list-header {
-  padding: 0 12px;
-  min-height: 36px;
+  padding: 0 14px;
+  min-height: 40px;
   align-items: center;
   line-height: 1.2;
   border-bottom: 1px solid #edf1f5;
 }
 
 body.liked-page .list-count {
-  color: #6b7280;
-  font-weight: 700;
+  color: #4b5563;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0;
 }
 
 body.liked-page .panel-recent .btn-clear-all {
   padding: 0;
   border-radius: 0;
   background: none;
-  color: #9aa3b2;
+  color: #7b8494;
+  font-size: 12px;
+  font-weight: 500;
   line-height: 1.2;
 }
 
 body.liked-page .liked-grid {
-  padding: 0 10px 8px;
+  padding: 8px 10px 14px;
   column-gap: 10px;
 }
 
 body.liked-page .liked-grid .lv-card {
   background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 10px 22px rgba(11, 17, 35, 0.08);
+  border: 1px solid #eceff3;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(15, 23, 42, 0.06);
   overflow: hidden;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 body.liked-page .liked-grid .lv-card-thumb {
-  border-radius: 4px;
+  border-radius: 0;
 }
 
 body.liked-page .liked-grid .lv-card-thumb::after {
-  border-radius: 4px;
+  border-radius: 0;
 }
 
 body.liked-page .liked-grid .lv-card-info {
-  padding: 9px 10px 16px;
+  padding: 10px 10px 16px;
+  gap: 5px;
 }
 
 body.liked-page .liked-grid .lv-card-num {
-  border-color: #eceff4;
-  background: #f7f8fb;
+  border-color: #e5e7eb;
+  background: #f9fafb;
+  color: #6b7280;
+  font-weight: 500;
 }
 
 body.liked-page .liked-grid .lv-card-price {
-  color: #1f2937;
+  color: #333333;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 body.liked-page .liked-grid .lv-card-addr {
-  color: #6b7280;
+  color: #787878;
+  font-weight: 600;
+  line-height: 1.35;
 }
 
 body.liked-page .liked-grid .lv-card-time {
-  color: #8f9aab;
+  color: #7b8494;
+}
+
+body.liked-page .liked-grid .lv-card-price .lv-price-mgmt {
+  font-weight: 450;
+  color: #8c8c8c;
 }
 
 body.liked-page .lv-heart-btn .heart-liked {
@@ -1088,32 +1102,35 @@ body.liked-page .lv-heart-btn .heart-liked {
 
 body.liked-page .empty-state {
   margin: 16px 14px 0;
-  min-height: 420px;
-  background: #f5f7fb;
-  border-radius: 24px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
-  padding: 46px 22px 40px;
+  min-height: 400px;
+  background: #ffffff;
+  border: 1px solid #eceff3;
+  border-radius: 18px;
+  box-shadow: 0 1px 6px rgba(15, 23, 42, 0.05);
+  padding: 38px 22px 34px;
   justify-content: center;
 }
 
 body.liked-page .guest-login-prompt {
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   text-align: left;
+  border-radius: 16px;
+  box-shadow: 0 1px 6px rgba(15, 23, 42, 0.04);
 }
 
 body.liked-page #panel-liked .guest-login-prompt {
-  border-color: #f7c7d2;
-  background: linear-gradient(180deg, #fff2f5 0%, #ffffff 100%);
+  border-color: #f2d5dc;
+  background: #fff8f9;
 }
 
 body.liked-page #panel-recent .guest-login-prompt {
-  border-color: #cfe8fb;
-  background: linear-gradient(180deg, #f2f9ff 0%, #ffffff 100%);
-  box-shadow: 0 10px 26px rgba(61, 158, 219, 0.08);
+  border-color: #d7e8f6;
+  background: #f5faff;
+  box-shadow: 0 1px 6px rgba(15, 23, 42, 0.04);
 }
 
 body.liked-page #panel-recent .guest-login-badge {
-  background: #e8f4ff;
+  background: #e9f4ff;
   color: var(--blue);
 }
 
@@ -1134,38 +1151,38 @@ body.liked-page .empty-icon-wrap--liked svg {
 
 body.liked-page .empty-title {
   margin-top: 8px;
-  font-size: 28px;
-  font-weight: 900;
-  letter-spacing: -0.05em;
-  line-height: 1.08;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.22;
   color: #111827;
 }
 
 body.liked-page .empty-desc {
   margin-top: 6px;
-  font-size: 16px;
-  font-weight: 500;
-  line-height: 1.58;
-  color: #9aa3b2;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.6;
+  color: #6b7280;
 }
 
 body.liked-page .empty-cta {
   margin-top: 14px;
-  padding: 13px 30px;
-  border-radius: 14px;
-  font-size: 16px;
-  font-weight: 800;
+  padding: 13px 26px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
   color: #ffffff;
 }
 
 body.liked-page #panel-liked .empty-cta {
-  background: linear-gradient(135deg, #f43f5e 0%, #fb7185 100%);
-  box-shadow: 0 10px 20px rgba(244, 63, 94, 0.24);
+  background: #f43f5e;
+  box-shadow: 0 6px 14px rgba(244, 63, 94, 0.18);
 }
 
 body.liked-page #panel-recent .empty-cta {
-  background: linear-gradient(135deg, #1fa3e4 0%, #3bc1ff 100%);
-  box-shadow: 0 10px 20px rgba(31, 163, 228, 0.24);
+  background: #1fa3e4;
+  box-shadow: 0 6px 14px rgba(31, 163, 228, 0.18);
 }
 
 body.liked-page .empty-cta:active {
@@ -1173,11 +1190,11 @@ body.liked-page .empty-cta:active {
 }
 
 body.liked-page #panel-liked .empty-cta:active {
-  background: linear-gradient(135deg, #ee3856 0%, #f45e7a 100%);
+  background: #ee3856;
 }
 
 body.liked-page #panel-recent .empty-cta:active {
-  background: linear-gradient(135deg, #1699dc 0%, #31b6f4 100%);
+  background: #1699dc;
 }
 
 @media (min-width: 768px) {
