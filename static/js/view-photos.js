@@ -2,6 +2,7 @@ import Swiper from 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.mjs
 
 document.addEventListener('DOMContentLoaded', () => {
     const photoCards = Array.from(document.querySelectorAll('[data-photo-card]'));
+    const backBtn = document.getElementById('photoPageBackBtn');
     const viewer = document.getElementById('photoStoryViewer');
     const viewerCloseBtn = document.getElementById('photoStoryViewerClose');
     const viewerCurrentEl = document.getElementById('photoStoryViewerCurrent');
@@ -87,6 +88,20 @@ document.addEventListener('DOMContentLoaded', () => {
         closeViewer();
     }
 
+    function goBackToDetail() {
+        if (viewer?.classList.contains('open')) {
+            requestCloseViewer();
+            return;
+        }
+
+        const detailUrl = backBtn?.dataset.detailUrl || '/';
+        if (window.history.length > 1) {
+            history.back();
+            return;
+        }
+        window.location.replace(detailUrl);
+    }
+
     photoCards.forEach((card) => {
         card.addEventListener('click', () => {
             const startIndex = Number(card.dataset.photoIndex || 0);
@@ -96,6 +111,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (viewerCloseBtn) {
         viewerCloseBtn.addEventListener('click', requestCloseViewer);
+    }
+
+    if (backBtn) {
+        backBtn.addEventListener('click', goBackToDetail);
     }
 
     if (viewer) {

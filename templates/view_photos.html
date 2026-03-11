@@ -24,8 +24,9 @@
 
     <div class="photo-page-shell">
         <header class="photo-page-header">
-            <a href="{{ url_for('main.view_property', code=property.code) }}" class="photo-page-back-link"
-                aria-label="상세 페이지로 돌아가기">←</a>
+            <button type="button" id="photoPageBackBtn" class="photo-page-back-link"
+                data-detail-url="{{ url_for('main.view_property', code=property.code) }}"
+                aria-label="상세 페이지로 돌아가기">←</button>
             <div class="photo-page-header-copy">
                 <p class="photo-page-eyebrow">매물번호 {{ property.code }}</p>
                 <h1 class="photo-page-title">전체 사진 {{ ns.photo_count }}장</h1>
@@ -90,7 +91,7 @@
             totalPhotos: {{ ns.photo_count }}
         };
     </script>
-    <script type="module" src="{{ url_for('static', filename='js/view-photos.js') }}?v=3"></script>
+    <script type="module" src="{{ url_for('static', filename='js/view-photos.js') }}?v=4"></script>
 </body>
 
 </html>
