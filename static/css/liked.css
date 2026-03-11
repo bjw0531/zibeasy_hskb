@@ -926,37 +926,31 @@ body.liked-page .tab-panel.is-hidden {
 
 @keyframes tab-slide-from-right {
   0% {
-    opacity: 0.08;
-    transform: translateX(100px) scale(0.992);
-    filter: blur(4px);
+    opacity: 0.06;
+    transform: translate3d(100px, 0, 0) scale(0.992);
   }
   58% {
     opacity: 0.82;
-    transform: translateX(20px) scale(0.997);
-    filter: blur(1px);
+    transform: translate3d(22px, 0, 0) scale(0.997);
   }
   100% {
     opacity: 1;
-    transform: translateX(0) scale(1);
-    filter: blur(0);
+    transform: translate3d(0, 0, 0) scale(1);
   }
 }
 
 @keyframes tab-slide-from-left {
   0% {
-    opacity: 0.08;
-    transform: translateX(-100px) scale(0.992);
-    filter: blur(4px);
+    opacity: 0.06;
+    transform: translate3d(-100px, 0, 0) scale(0.992);
   }
   58% {
     opacity: 0.82;
-    transform: translateX(-20px) scale(0.997);
-    filter: blur(1px);
+    transform: translate3d(-22px, 0, 0) scale(0.997);
   }
   100% {
     opacity: 1;
-    transform: translateX(0) scale(1);
-    filter: blur(0);
+    transform: translate3d(0, 0, 0) scale(1);
   }
 }
 
@@ -1012,18 +1006,18 @@ body.liked-page .liked-content-shell {
 
 body.liked-page .hero-copy,
 body.liked-page .tab-panel {
-  transform: translateX(0) scale(1);
-  filter: blur(0);
+  transform: translate3d(0, 0, 0) scale(1);
   opacity: 1;
   transition:
     transform 0.46s cubic-bezier(0.16, 1, 0.3, 1),
-    opacity 0.46s cubic-bezier(0.16, 1, 0.3, 1),
-    filter 0.46s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity 0.46s cubic-bezier(0.16, 1, 0.3, 1);
+  backface-visibility: hidden;
+  will-change: transform, opacity;
 }
 
 body.liked-page.tab-dragging .hero-copy:not(.is-hidden),
 body.liked-page.tab-dragging .tab-panel:not(.is-hidden) {
-  transform: translateX(var(--tab-drag-offset, 0px));
+  transform: translate3d(var(--tab-drag-offset, 0px), 0, 0);
   transition: none !important;
   will-change: transform;
 }
