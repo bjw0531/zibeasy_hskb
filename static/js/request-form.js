@@ -103,6 +103,19 @@
         return formatted;
     }
 
+    function initDatePicker(input, onChange) {
+        if (!input || typeof window.initHouseDatePicker !== 'function') return;
+        input.type = 'text';
+        input.readOnly = true;
+        window.initHouseDatePicker(input, {
+            defaultDate: input.value || null,
+            onChange(selectedDates, dateStr) {
+                input.value = dateStr;
+                if (typeof onChange === 'function') onChange(dateStr);
+            }
+        });
+    }
+
     /* ── 전체 렌더링 ── */
     function render() {
         stepsContainer.innerHTML = '';
@@ -224,12 +237,18 @@
     function buildDateInput(step) {
         const wrap = document.createElement('div');
         const inp = document.createElement('input');
-        inp.type = 'date';
+        inp.type = 'text';
+        inp.className = 'flatpickr-input';
+        inp.placeholder = '날짜를 선택해 주세요';
         if (answers[step.field]) inp.value = answers[step.field];
 
         const btn = createNextBtn();
         btn.disabled = !inp.value;
-        inp.addEventListener('change', () => { btn.disabled = !inp.value; });
+        requestAnimationFrame(() => {
+            initDatePicker(inp, (dateStr) => {
+                btn.disabled = !dateStr;
+            });
+        });
         btn.addEventListener('click', () => {
             if (!inp.value) return;
             answers[step.field] = inp.value;

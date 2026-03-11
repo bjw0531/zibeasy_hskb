@@ -174,6 +174,19 @@
         return `${value}만원`;
     }
 
+    function initDatePicker(input, onChange) {
+        if (!input || typeof window.initHouseDatePicker !== 'function') return;
+        input.type = 'text';
+        input.readOnly = true;
+        window.initHouseDatePicker(input, {
+            defaultDate: input.value || null,
+            onChange(selectedDates, dateStr) {
+                input.value = dateStr;
+                if (typeof onChange === 'function') onChange(dateStr);
+            }
+        });
+    }
+
     function renderAreaStep() {
         const card = createStepCard('어느 지역을 원하세요? (필수) (중복선택 가능)');
         const field = document.createElement('div');
@@ -395,8 +408,10 @@
         field.className = 'fh-field';
 
         const input = document.createElement('input');
-        input.type = 'date';
+        input.type = 'text';
         input.className = 'fh-input';
+        input.classList.add('flatpickr-input');
+        input.placeholder = '날짜를 선택해 주세요';
         input.value = state.move_in_date || '';
         input.setAttribute('data-autofocus', 'true');
         field.appendChild(input);
@@ -408,9 +423,11 @@
         const nextBtn = createNextButton();
         nextBtn.disabled = !state.move_in_date;
 
-        input.addEventListener('change', () => {
-            state.move_in_date = input.value;
-            nextBtn.disabled = !state.move_in_date;
+        requestAnimationFrame(() => {
+            initDatePicker(input, (dateStr) => {
+                state.move_in_date = dateStr;
+                nextBtn.disabled = !state.move_in_date;
+            });
         });
 
         nextBtn.addEventListener('click', () => {

@@ -1,5 +1,70 @@
 /* Step form styling for /request lease_out */
 
+.request-page .flatpickr-calendar {
+    background: #ffffff;
+    border: 1px solid #e8edf3;
+    border-radius: 14px;
+    box-shadow: 0 18px 32px rgba(15, 23, 42, 0.12);
+    font-family: "Pretendard Variable", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+}
+
+.request-page .flatpickr-months {
+    padding: 6px 6px 0;
+}
+
+.request-page .flatpickr-current-month {
+    font-size: 14px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.request-page .flatpickr-weekday {
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.request-page .flatpickr-day {
+    border-radius: 10px;
+    color: #334155;
+    border-color: transparent;
+}
+
+.request-page .flatpickr-day:hover {
+    background: #f8fafc;
+    border-color: transparent;
+}
+
+.request-page .flatpickr-day.selected,
+.request-page .flatpickr-day.selected:hover {
+    background: #e65b79;
+    border-color: #e65b79;
+    color: #ffffff;
+}
+
+.request-page .flatpickr-day.today {
+    border-color: rgba(230, 91, 121, 0.35);
+    color: #d14f6e;
+}
+
+.request-page[data-active-tab="find_home"] .flatpickr-day.selected,
+.request-page[data-active-tab="find_home"] .flatpickr-day.selected:hover {
+    background: #1d6fdb;
+    border-color: #1d6fdb;
+}
+
+.request-page[data-active-tab="find_home"] .flatpickr-day.today {
+    border-color: rgba(29, 111, 219, 0.35);
+    color: #1d6fdb;
+}
+
+.request-page .flatpickr-day.flatpickr-disabled {
+    color: #cbd5e1;
+}
+
+.request-page .flatpickr-input[readonly] {
+    cursor: pointer;
+}
+
 .sf-progress {
     position: sticky;
     top: 0;
