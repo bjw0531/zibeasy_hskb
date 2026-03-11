@@ -133,9 +133,9 @@
 
     function setDragOffset(dx) {
       var limited = dx;
-      if (limited > 110) limited = 110 + ((limited - 110) * 0.18);
-      if (limited < -110) limited = -110 + ((limited + 110) * 0.18);
-      limited = Math.max(-136, Math.min(136, limited));
+      if (limited > 148) limited = 148 + ((limited - 148) * 0.16);
+      if (limited < -148) limited = -148 + ((limited + 148) * 0.16);
+      limited = Math.max(-188, Math.min(188, limited));
       body.style.setProperty('--tab-drag-offset', limited + 'px');
       body.classList.toggle('tab-drag-left', limited < -6);
       body.classList.toggle('tab-drag-right', limited > 6);
