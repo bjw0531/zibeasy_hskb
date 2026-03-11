@@ -88,14 +88,35 @@
   }
 
   function applySwipeAnimClass(dir) {
-    if (swipeResetTimer) { clearTimeout(swipeResetTimer); swipeResetTimer = null; }
-    body.classList.remove('tab-swipe-left', 'tab-swipe-right', 'tab-drag-left', 'tab-drag-right');
-    if (dir === 'left')  body.classList.add('tab-swipe-left');
-    if (dir === 'right') body.classList.add('tab-swipe-right');
-    swipeResetTimer = setTimeout(function () {
+    var swipeClass = dir === 'left' ? 'tab-swipe-left' : 'tab-swipe-right';
+    var pendingAnimations = 0;
+    var cleanupDone = false;
+
+    function cleanupSwipeClass() {
+      if (cleanupDone) return;
+      cleanupDone = true;
       body.classList.remove('tab-swipe-left', 'tab-swipe-right', 'tab-drag-left', 'tab-drag-right');
       swipeResetTimer = null;
-    }, 640);
+    }
+
+    if (swipeResetTimer) { clearTimeout(swipeResetTimer); swipeResetTimer = null; }
+    body.classList.remove('tab-swipe-left', 'tab-swipe-right', 'tab-drag-left', 'tab-drag-right');
+    body.classList.add(swipeClass);
+
+    [heroLiked, heroRecent, panelLiked, panelRecent].forEach(function (el) {
+      if (!el || el.classList.contains('is-hidden')) return;
+      pendingAnimations += 1;
+      el.addEventListener('animationend', function handleAnimationEnd(event) {
+        if (event.animationName !== 'tab-slide-from-right' && event.animationName !== 'tab-slide-from-left') return;
+        el.removeEventListener('animationend', handleAnimationEnd);
+        pendingAnimations -= 1;
+        if (pendingAnimations <= 0) cleanupSwipeClass();
+      });
+    });
+
+    swipeResetTimer = setTimeout(function () {
+      cleanupSwipeClass();
+    }, 700);
   }
 
   function positionIndicator() {
