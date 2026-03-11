@@ -132,6 +132,12 @@
     color: #c74c68;
 }
 
+.sf-prev-btn:active {
+    transform: scale(0.985);
+    border-color: #ebb8c5;
+    background: #ffeef2;
+}
+
 .sf-next-btn {
     width: 100%;
     height: 42px;
@@ -187,6 +193,12 @@
     transform: scale(0.98);
 }
 
+.sf-choice-btn.is-selected {
+    border-color: #ebb8c5;
+    background: #ffeef2;
+    color: #c74c68;
+}
+
 .sf-skip-btn {
     border: 1px solid #d1d5db;
     border-radius: 12px;
@@ -205,6 +217,13 @@
 .sf-skip-btn:hover {
     border-color: #f1ccd5;
     background: #fff5f7;
+    color: #c74c68;
+}
+
+.sf-skip-btn:active {
+    transform: scale(0.985);
+    border-color: #ebb8c5;
+    background: #ffeef2;
     color: #c74c68;
 }
 
@@ -512,6 +531,10 @@
     color: #1d4ed8;
 }
 
+.fh-radio-pill:active {
+    transform: scale(0.985);
+}
+
 .fh-info {
     margin-top: 8px;
     border: 1px solid #fed7aa;
@@ -575,6 +598,11 @@
     padding: 0 14px;
 }
 
+.fh-prev-btn:active {
+    transform: scale(0.985);
+    background: #f8fafc;
+}
+
 .fh-next-btn,
 .fh-submit-btn {
     flex: 1;
@@ -600,6 +628,13 @@
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
+}
+
+.fh-next-btn:active,
+.fh-submit-btn:active,
+.fh-exit-btn:active,
+.fh-skip-btn:active {
+    transform: scale(0.985);
 }
 
 .fh-next-btn:disabled,

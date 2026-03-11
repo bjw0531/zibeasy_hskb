@@ -294,6 +294,7 @@
 
     /* ── 선택지 버튼 빌더 ── */
     function buildChoices(step) {
+        const container = document.createElement('div');
         const wrap = document.createElement('div');
         wrap.className = 'sf-choices';
         step.choices.forEach(c => {
@@ -302,12 +303,19 @@
             btn.className = 'sf-choice-btn';
             btn.textContent = c;
             btn.addEventListener('click', () => {
-                answers[step.field] = c;
-                advance();
+                btn.classList.add('is-selected');
+                setTimeout(() => {
+                    answers[step.field] = c;
+                    advance();
+                }, 90);
             });
             wrap.appendChild(btn);
         });
-        return wrap;
+        container.appendChild(wrap);
+        if (currentStep > 0) {
+            container.appendChild(createActions());
+        }
+        return container;
     }
 
     /* ── 동적 가격 입력 빌더 ── */
