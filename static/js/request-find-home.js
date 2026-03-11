@@ -617,6 +617,9 @@
             updateProgress();
             root.innerHTML = `
                 <div class="fh-done-screen">
+                    <div class="fh-done-check">
+                        <svg viewBox="0 0 24 24"><polyline points="6 12 10 16 18 8"></polyline></svg>
+                    </div>
                     <div class="fh-done-title">신청이 완료되었습니다!</div>
                     <div class="fh-done-desc">조건에 맞는 매물을 확인해<br>빠르게 연락드리겠습니다.</div>
                 </div>

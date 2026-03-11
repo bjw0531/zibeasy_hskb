@@ -711,6 +711,29 @@
     border-radius: 14px;
     background: #fff;
     padding: 28px 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.fh-done-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    margin-bottom: 10px;
+    border-radius: 50%;
+    background: linear-gradient(140deg, #2fb56f, #22905a);
+    box-shadow: 0 10px 18px rgba(34, 144, 90, 0.28);
+}
+
+.fh-done-check svg {
+    width: 26px;
+    height: 26px;
+    stroke: #fff;
+    fill: none;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 .fh-done-title {
