@@ -195,6 +195,13 @@
         return meta;
     }
 
+    function restartAnimation(element, className) {
+        if (!element) return;
+        element.classList.remove(className);
+        void element.offsetWidth;
+        element.classList.add(className);
+    }
+
     function initDatePicker(input, onChange) {
         if (!input || typeof window.initHouseDatePicker !== 'function') return;
         input.type = 'text';
@@ -364,6 +371,8 @@
                 state.budget_deposit = DEPOSIT_OPTIONS[idx] || DEPOSIT_OPTIONS[0];
                 depositValue.textContent = formatBudgetValue(state.budget_deposit);
                 setRangeProgress(depositRange);
+                restartAnimation(depositValue, 'is-pulsing');
+                restartAnimation(depositRange, 'is-bumping');
             });
             setRangeProgress(depositRange);
             depositWrap.appendChild(depositHead);
@@ -394,6 +403,8 @@
                 state.budget_monthly = MONTHLY_OPTIONS[idx] || MONTHLY_OPTIONS[0];
                 monthlyValue.textContent = formatBudgetValue(state.budget_monthly);
                 setRangeProgress(monthlyRange);
+                restartAnimation(monthlyValue, 'is-pulsing');
+                restartAnimation(monthlyRange, 'is-bumping');
             });
             setRangeProgress(monthlyRange);
             monthlyWrap.appendChild(monthlyHead);
