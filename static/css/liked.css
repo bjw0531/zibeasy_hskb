@@ -1029,7 +1029,8 @@ body.liked-page .panel-recent .btn-clear-all {
   line-height: 1.2;
 }
 
-body.liked-page .liked-grid {
+body.liked-page #liked-list,
+body.liked-page #recent-list {
   grid-template-columns: 1fr 1fr;
   column-gap: 12px;
   row-gap: 22px;
@@ -1037,7 +1038,8 @@ body.liked-page .liked-grid {
   max-width: 644px;
 }
 
-body.liked-page .liked-grid .lv-card {
+body.liked-page #liked-list .lv-card,
+body.liked-page #recent-list .lv-card {
   background: #ffffff;
   border: 1px solid #e8edf3;
   border-radius: 14px;
@@ -1053,56 +1055,66 @@ body.liked-page .liked-grid .lv-card {
     border-color 0.18s ease;
 }
 
-body.liked-page .liked-grid .lv-card:hover {
+body.liked-page #liked-list .lv-card:hover,
+body.liked-page #recent-list .lv-card:hover {
   border-color: #dde4ec;
   box-shadow:
     0 2px 4px rgba(15, 23, 42, 0.04),
     0 10px 24px rgba(15, 23, 42, 0.06);
 }
 
-body.liked-page .liked-grid .lv-card-thumb {
+body.liked-page #liked-list .lv-card-thumb,
+body.liked-page #recent-list .lv-card-thumb {
   border-radius: 0;
 }
 
-body.liked-page .liked-grid .lv-card-thumb::after {
+body.liked-page #liked-list .lv-card-thumb::after,
+body.liked-page #recent-list .lv-card-thumb::after {
   border-radius: 0;
 }
 
-body.liked-page .liked-grid .lv-card-info {
+body.liked-page #liked-list .lv-card-info,
+body.liked-page #recent-list .lv-card-info {
   padding: 12px 12px 16px;
   gap: 6px;
 }
 
-body.liked-page .liked-grid .lv-card-num {
+body.liked-page #liked-list .lv-card-num,
+body.liked-page #recent-list .lv-card-num {
   border-color: #e5e7eb;
   background: #f8fafc;
   color: #6b7280;
   font-weight: 500;
 }
 
-body.liked-page .liked-grid .lv-card-price {
+body.liked-page #liked-list .lv-card-price,
+body.liked-page #recent-list .lv-card-price {
   color: #333333;
   font-weight: 700;
   letter-spacing: -0.01em;
 }
 
-body.liked-page .liked-grid .lv-card-addr {
+body.liked-page #liked-list .lv-card-addr,
+body.liked-page #recent-list .lv-card-addr {
   color: #787878;
   font-weight: 600;
   line-height: 1.35;
 }
 
-body.liked-page .liked-grid .lv-card-time {
+body.liked-page #liked-list .lv-card-time,
+body.liked-page #recent-list .lv-card-time {
   color: #7b8494;
 }
 
-body.liked-page .liked-grid .lv-card-price .lv-price-mgmt {
+body.liked-page #liked-list .lv-card-price .lv-price-mgmt,
+body.liked-page #recent-list .lv-card-price .lv-price-mgmt {
   font-weight: 450;
   color: #8c8c8c;
 }
 
 @media (max-width: 380px) {
-  body.liked-page .liked-grid {
+  body.liked-page #liked-list,
+  body.liked-page #recent-list {
     column-gap: 10px;
     row-gap: 18px;
     padding: 10px 10px 18px;
