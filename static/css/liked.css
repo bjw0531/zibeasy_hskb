@@ -948,12 +948,12 @@ body.liked-page .tab-panel.is-hidden {
 
 body.liked-page.tab-swipe-left .hero-copy:not(.is-hidden),
 body.liked-page.tab-swipe-left .tab-panel:not(.is-hidden) {
-  animation: tab-slide-from-right 0.46s cubic-bezier(0.76, 0.43, 0.91, 0.79) both;
+  animation: tab-slide-from-right 0.46s ease-out both;
 }
 
 body.liked-page.tab-swipe-right .hero-copy:not(.is-hidden),
 body.liked-page.tab-swipe-right .tab-panel:not(.is-hidden) {
-  animation: tab-slide-from-left 0.46s cubic-bezier(0.76, 0.43, 0.91, 0.79) both;
+  animation: tab-slide-from-left 0.46s ease-out both;
 }
 
 body.liked-page .liked-hero-copy {
