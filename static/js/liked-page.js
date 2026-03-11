@@ -89,13 +89,13 @@
 
   function applySwipeAnimClass(dir) {
     if (swipeResetTimer) { clearTimeout(swipeResetTimer); swipeResetTimer = null; }
-    body.classList.remove('tab-swipe-left', 'tab-swipe-right');
+    body.classList.remove('tab-swipe-left', 'tab-swipe-right', 'tab-drag-left', 'tab-drag-right');
     if (dir === 'left')  body.classList.add('tab-swipe-left');
     if (dir === 'right') body.classList.add('tab-swipe-right');
     swipeResetTimer = setTimeout(function () {
-      body.classList.remove('tab-swipe-left', 'tab-swipe-right');
+      body.classList.remove('tab-swipe-left', 'tab-swipe-right', 'tab-drag-left', 'tab-drag-right');
       swipeResetTimer = null;
-    }, 240);
+    }, 420);
   }
 
   function positionIndicator() {
@@ -123,21 +123,30 @@
     var dragging = false;
     var activePointerId = null;
     var suppressClickUntil = 0;
+    var lastX = 0;
+    var lastMoveAt = 0;
+    var velocityX = 0;
 
     function canStart(target) {
       return target && !target.closest('button, input, textarea, select, label, .lv-heart-btn, .recent-delete-btn, .unlike-hidden');
     }
 
     function setDragOffset(dx) {
-      var limited = Math.max(-84, Math.min(84, dx));
+      var limited = dx;
+      if (limited > 110) limited = 110 + ((limited - 110) * 0.18);
+      if (limited < -110) limited = -110 + ((limited + 110) * 0.18);
+      limited = Math.max(-136, Math.min(136, limited));
       body.style.setProperty('--tab-drag-offset', limited + 'px');
+      body.classList.toggle('tab-drag-left', limited < -6);
+      body.classList.toggle('tab-drag-right', limited > 6);
     }
 
     function clearDragState() {
       tracking = false;
       dragging = false;
       activePointerId = null;
-      body.classList.remove('tab-dragging');
+      velocityX = 0;
+      body.classList.remove('tab-dragging', 'tab-drag-left', 'tab-drag-right');
       body.style.removeProperty('--tab-drag-offset');
     }
 
@@ -148,10 +157,11 @@
       var ady = Math.abs(dy);
       var elapsed = Date.now() - startAt;
       var switched = false;
+      var flick = Math.abs(velocityX) >= 0.32 && adx >= 28;
 
       if (dragging && adx > 14) suppressClickUntil = Date.now() + 320;
 
-      if (elapsed <= 650 && adx >= 52 && adx > ady * 1.15) {
+      if (elapsed <= 700 && (flick || adx >= 52) && adx > ady * 1.15) {
         if (dx < 0 && activeTab === 'liked') {
           setActiveTab('recent', { bySwipe: true, swipeDir: 'left' });
           switched = true;
@@ -175,6 +185,9 @@
       tracking = true;
       dragging = false;
       activePointerId = e.pointerId;
+      lastX = e.clientX;
+      lastMoveAt = startAt;
+      velocityX = 0;
 
       try { shell.setPointerCapture(e.pointerId); } catch (err) {}
     });
@@ -186,6 +199,8 @@
       var dy = e.clientY - startY;
       var adx = Math.abs(dx);
       var ady = Math.abs(dy);
+      var now = Date.now();
+      var dt = now - lastMoveAt;
 
       if (!dragging) {
         if (adx < 8) return;
@@ -194,6 +209,9 @@
         body.classList.add('tab-dragging');
       }
 
+      if (dt > 0) velocityX = (e.clientX - lastX) / dt;
+      lastX = e.clientX;
+      lastMoveAt = now;
       setDragOffset(dx);
     });
 
