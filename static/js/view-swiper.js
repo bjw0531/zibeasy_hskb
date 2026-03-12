@@ -22,8 +22,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    /* 계약완료 매물은 사진 클릭 차단 */
+    const isContractCompleted = window.viewData?.contract === '계약완료';
+
     document.querySelectorAll('.mySwiper .swiper-slide img').forEach((imgEl) => {
-        imgEl.style.cursor = 'pointer';
+        imgEl.style.cursor = isContractCompleted ? 'default' : 'pointer';
+        if (isContractCompleted) return; /* 클릭 이벤트 등록 안 함 */
         imgEl.addEventListener('click', () => {
             if (!propertyCode) return;
             window.location.href = `/view/${encodeURIComponent(propertyCode)}/photos`;

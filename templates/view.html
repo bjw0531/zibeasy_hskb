@@ -708,7 +708,8 @@
             dong: {{ property.dong | default ('') | tojson }},
             priceText: {{ property.price_text | default ('') | tojson }},
             picname1: {{ property.picname1 | default ('') | tojson }},
-            kakaoKey: {{ kakao_js_api_key | default ('') | tojson }}
+            kakaoKey: {{ kakao_js_api_key | default ('') | tojson }},
+            contract: {{ property.contract | default ('') | tojson }}
         };
     </script>
     <script src="{{ url_for('static', filename='js/liked.js') }}?v=9"></script>
