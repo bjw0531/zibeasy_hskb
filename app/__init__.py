@@ -37,6 +37,8 @@ _SOCIAL_SOURCES = {'kakao', 'instagram', 'facebook', 'youtube'}
 _AD_MEDIUM_KEYWORDS = ('cpc', 'ppc', 'paid', 'display', 'banner', 'ad', 'ads', 'paid_social')
 _SOCIAL_MEDIUM_KEYWORDS = ('social', 'sns')
 _EMAIL_MEDIUM_KEYWORDS = ('email', 'newsletter', 'mail')
+_IMPORTANT_NON_ENTRY_EXACT = {'/request', '/feedback', '/login', '/signup'}
+_IMPORTANT_NON_ENTRY_PREFIX = ('/view/',)
 
 # ── 블랙리스트 인메모리 캐시 (60초 TTL) ──────────────────────────
 # DB 조회 부하를 줄이기 위해 60초간 캐시 유지
@@ -333,6 +335,15 @@ def _get_request_visitor_id():
     return request.cookies.get('visitor_id', '')
 
 
+def _should_store_access_log(path, traffic):
+    """유입/중요 전환 중심으로만 로그 저장"""
+    if traffic.get('is_entry'):
+        return True
+    if path in _IMPORTANT_NON_ENTRY_EXACT:
+        return True
+    return any(path.startswith(prefix) for prefix in _IMPORTANT_NON_ENTRY_PREFIX)
+
+
 def create_app(config_class=Config):
     """Flask 앱 생성 및 초기화"""
     app = Flask(__name__,
@@ -563,6 +574,8 @@ def create_app(config_class=Config):
             current_host=request.host,
             query_string=query_string,
         )
+        if not _should_store_access_log(path, traffic):
+            return response
 
         # /view/<code> 경로에서 매물 code 추출 (다른 페이지는 NULL)
         code = None
