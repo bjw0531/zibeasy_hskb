@@ -9,7 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentSlideEl = document.getElementById('current-slide');
     const propertyCode = window.viewData?.code;
     const autoplayToggleBtn = document.getElementById('slide-autoplay-toggle');
-    const autoplayIconEl = document.getElementById('slide-autoplay-icon');
+    const autoplayPlayIconEl = document.getElementById('slide-autoplay-play-icon');
+    const autoplayPauseIconEl = document.getElementById('slide-autoplay-pause-icon');
     const autoplayTextEl = document.getElementById('slide-autoplay-text');
     const AUTOPLAY_DELAY = 3000;
     let autoplayTimerId = null;
@@ -40,8 +41,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const isRunning = isAutoplayRunning;
         autoplayToggleBtn.setAttribute('aria-pressed', isRunning ? 'true' : 'false');
         autoplayToggleBtn.setAttribute('aria-label', isRunning ? '자동 슬라이드 일시정지' : '자동 슬라이드 재생');
-        if (autoplayIconEl) autoplayIconEl.textContent = isRunning ? '❚❚' : '▶';
-        if (autoplayTextEl) autoplayTextEl.textContent = isRunning ? '정지' : '재생';
+        if (autoplayPlayIconEl) autoplayPlayIconEl.classList.toggle('hidden', isRunning);
+        if (autoplayPauseIconEl) autoplayPauseIconEl.classList.toggle('hidden', !isRunning);
+        if (autoplayTextEl) autoplayTextEl.textContent = isRunning ? '자동 슬라이드 일시정지' : '자동 슬라이드 재생';
     }
 
     function stopAutoplay(resetToFirstSlide = false) {

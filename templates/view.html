@@ -148,11 +148,19 @@
             <!-- ✅ 계약완료가 아닐 때만 슬라이드 카운터 표시 -->
             {% if property.contract != '계약완료' %}
             <button id="slide-autoplay-toggle"
-                class="z-10 inline-flex items-center gap-1.5 rounded-[2px] bg-[#555] px-[8px] py-[5px] text-[13px] leading-none text-white opacity-70"
+                class="z-10 inline-flex h-[56px] w-[56px] items-center justify-center rounded-full bg-black/88 text-white shadow-[0_10px_24px_rgba(0,0,0,0.28)]"
                 style="position: absolute; left: 14px; bottom: 10px; transform: translateY(6px);" type="button" aria-label="자동 슬라이드 일시정지"
                 aria-pressed="true">
-                <span id="slide-autoplay-icon" aria-hidden="true">❚❚</span>
-                <span id="slide-autoplay-text">정지</span>
+                <span class="sr-only" id="slide-autoplay-text">자동 슬라이드 일시정지</span>
+                <svg id="slide-autoplay-play-icon" aria-hidden="true" class="hidden h-[28px] w-[28px] translate-x-[1px]"
+                    viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5.8v12.4c0 .72.78 1.17 1.4.81l9.69-6.2a.95.95 0 0 0 0-1.6L9.4 4.99A.94.94 0 0 0 8 5.8Z" />
+                </svg>
+                <svg id="slide-autoplay-pause-icon" aria-hidden="true" class="h-[24px] w-[24px]" viewBox="0 0 24 24"
+                    fill="currentColor">
+                    <rect x="6.2" y="5" width="4.1" height="14" rx="1.2"></rect>
+                    <rect x="13.7" y="5" width="4.1" height="14" rx="1.2"></rect>
+                </svg>
             </button>
             <div id="slide-counter"
                 class="absolute bottom-[10px] right-[14px] bg-[#555] rounded-[2px] px-[8px] py-[5px] text-white tracking-[1px] opacity-70 z-10 text-[14px] leading-none whitespace-nowrap inline-block"
@@ -721,7 +729,7 @@
     </script>
     <script src="{{ url_for('static', filename='js/liked.js') }}?v=9"></script>
     <script src="{{ url_for('static', filename='js/view.js') }}?v=1"></script>
-    <script type="module" src="{{ url_for('static', filename='js/view-swiper.js') }}?v=3"></script>
+    <script type="module" src="{{ url_for('static', filename='js/view-swiper.js') }}?v=4"></script>
 </body>
 
 </html>
