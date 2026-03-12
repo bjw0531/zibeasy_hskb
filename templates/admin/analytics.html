@@ -39,17 +39,31 @@
     <!-- 기간 탭 + 날짜 선택기 -->
     <div class="page-header-controls">
       <div class="period-tabs">
-        <button class="period-tab active" data-mode="daily">오늘</button>
-        <button class="period-tab"        data-mode="weekly">주간</button>
-        <button class="period-tab"        data-mode="monthly">월간</button>
-        <button class="period-tab"        data-mode="all">전체</button>
+        <button class="period-tab active" data-mode="day">일별</button>
+        <button class="period-tab"        data-mode="week">주별</button>
+        <button class="period-tab"        data-mode="month">월별</button>
+        <button class="period-tab"        data-mode="year">년도별</button>
+        <button class="period-tab"        data-mode="range">기간지정</button>
       </div>
-      <!-- daily 모드에서만 표시 -->
-      <div class="fp-input-wrap" id="date-picker-wrap">
-        <svg viewBox="0 0 24 24">
-          <path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/>
-        </svg>
-        <input type="text" id="date-select" readonly placeholder="날짜 선택">
+      <div class="period-pickers">
+        <div class="fp-input-wrap" id="date-picker-wrap">
+          <svg viewBox="0 0 24 24">
+            <path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/>
+          </svg>
+          <input type="text" id="date-select" readonly placeholder="날짜 선택">
+        </div>
+        <div class="period-native-wrap" id="month-picker-wrap" hidden>
+          <input type="month" id="month-select" value="{{ analytics_month }}">
+        </div>
+        <div class="period-native-wrap year-picker-wrap" id="year-picker-wrap" hidden>
+          <input type="number" id="year-select" min="2020" max="2100" value="{{ analytics_year }}">
+          <span>년</span>
+        </div>
+        <div class="range-picker-wrap" id="range-picker-wrap" hidden>
+          <input type="date" id="range-start" value="{{ analytics_range_start }}">
+          <span>~</span>
+          <input type="date" id="range-end" value="{{ analytics_range_end }}">
+        </div>
       </div>
       <button type="button" class="page-action-btn" onclick="openCleanupModal()">로그 정리</button>
     </div>
@@ -65,7 +79,7 @@
 
   <!-- ② 일별 추이 라인 차트 -->
   <div class="section-card">
-    <div class="section-title" id="daily-chart-title">일별 방문자 추이 (최근 30일)</div>
+    <div class="section-title" id="daily-chart-title">방문 추이</div>
     <canvas id="chart-daily" style="max-height:240px;"></canvas>
   </div>
 
@@ -155,6 +169,39 @@
     </div>
   </div>
 
+  <div class="top-grid analytics-stat-grid">
+    <div class="top-card">
+      <div class="section-title">매물별 통계</div>
+      <div id="property-stats"><div class="loading">로딩 중…</div></div>
+    </div>
+    <div class="top-card">
+      <div class="section-title">IP별 통계</div>
+      <div id="ip-stats"><div class="loading">로딩 중…</div></div>
+    </div>
+  </div>
+
+  <div class="top-grid analytics-stat-grid">
+    <div class="top-card">
+      <div class="section-title">visitor_id별 통계</div>
+      <div id="visitor-stats"><div class="loading">로딩 중…</div></div>
+    </div>
+    <div class="top-card">
+      <div class="section-title">브라우저별 통계</div>
+      <div id="browser-stats"><div class="loading">로딩 중…</div></div>
+    </div>
+  </div>
+
+  <div class="top-grid analytics-stat-grid">
+    <div class="top-card">
+      <div class="section-title">기기별 통계</div>
+      <div id="device-stats-table"><div class="loading">로딩 중…</div></div>
+    </div>
+    <div class="top-card">
+      <div class="section-title">접속 경로별 통계</div>
+      <div id="source-stats"><div class="loading">로딩 중…</div></div>
+    </div>
+  </div>
+
   <!-- ⑦ 상세 로그 -->
   <div class="section-card">
     <div class="section-title">상세 로그</div>
@@ -210,11 +257,11 @@
           <tr>
             <th>마지막 접속</th><th>첫 접속</th><th>IP</th><th>visitor_id</th>
             <th>유입</th><th>브라우저</th><th>기기</th>
-            <th>진입 페이지</th><th>최근 페이지</th><th>로그 수</th><th>상세</th>
+            <th>진입 페이지</th><th>최근 페이지</th><th>로그 수</th><th>상세</th><th>차단</th>
           </tr>
         </thead>
         <tbody id="log-tbody">
-          <tr><td colspan="11"><div class="loading">로딩 중…</div></td></tr>
+          <tr><td colspan="12"><div class="loading">로딩 중…</div></td></tr>
         </tbody>
       </table>
     </div>
@@ -271,16 +318,19 @@
 </div><!-- /page-wrap -->
 
 <script>
-// ── 전역 상태 ──────────────────────────────────────────────────────
-let currentMode = 'daily';   // daily / weekly / monthly / all
-let currentDate = '';         // YYYY-MM-DD (daily 모드에서만 사용)
+let currentMode = 'day';
+let currentDate = {{ analytics_today|tojson }};
+let currentMonth = {{ analytics_month|tojson }};
+let currentYear = {{ analytics_year|tojson }};
+let rangeStart = {{ analytics_range_start|tojson }};
+let rangeEnd = {{ analytics_range_end|tojson }};
+let currentPeriodLabel = '';
 let currentPage = 1;
-let charts      = {};         // Chart.js 인스턴스 저장
+let charts = {};
 let currentDetailTarget = null;
 const defaultCleanupDays = {{ default_flow_retention_days|tojson }};
 
-// ── Chart.js 기본 설정 ────────────────────────────────────────────
-Chart.defaults.color       = 'rgba(255,255,255,0.45)';
+Chart.defaults.color = 'rgba(255,255,255,0.45)';
 Chart.defaults.borderColor = 'rgba(255,255,255,0.08)';
 Chart.defaults.font.family = "'Apple SD Gothic Neo','Noto Sans KR',sans-serif";
 
@@ -301,52 +351,58 @@ const SOURCE_LABELS = {
   unknown: '기타',
 };
 
-// ── Flatpickr 초기화 ──────────────────────────────────────────────
 const fp = flatpickr('#date-select', {
-  locale:      'ko',
-  dateFormat:  'Y-m-d',
-  maxDate:     'today',
-  defaultDate: 'today',
-  disableMobile: true,  // 네이티브 datepicker 대신 flatpickr 강제
+  locale: 'ko',
+  dateFormat: 'Y-m-d',
+  maxDate: 'today',
+  defaultDate: currentDate,
+  disableMobile: true,
   onChange(selectedDates, dateStr) {
-    currentDate = dateStr;
+    currentDate = dateStr || currentDate;
     currentPage = 1;
     updatePeriodLabel();
     loadAll();
   },
 });
 
-// 초기 날짜 설정
-currentDate = fp.selectedDates[0]
-  ? fp.formatDate(fp.selectedDates[0], 'Y-m-d')
-  : new Date().toISOString().slice(0, 10);
+document.getElementById('month-select').addEventListener('change', event => {
+  currentMonth = event.target.value || currentMonth;
+  currentPage = 1;
+  updatePeriodLabel();
+  loadAll();
+});
 
-// ── 기간 탭 클릭 ─────────────────────────────────────────────────
-document.querySelectorAll('.period-tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.period-tab').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentMode = btn.dataset.mode;
+document.getElementById('year-select').addEventListener('change', event => {
+  currentYear = event.target.value || currentYear;
+  currentPage = 1;
+  updatePeriodLabel();
+  loadAll();
+});
+
+['range-start', 'range-end'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    rangeStart = document.getElementById('range-start').value || rangeStart;
+    rangeEnd = document.getElementById('range-end').value || rangeEnd;
     currentPage = 1;
-
-    // 날짜 선택기: daily 모드에서만 표시
-    const pickerWrap = document.getElementById('date-picker-wrap');
-    pickerWrap.style.display = currentMode === 'daily' ? '' : 'none';
-
-    // 시간대 차트 & browser/OS 레이아웃 전환
-    const isDaily = currentMode === 'daily';
-    document.getElementById('hourly-section').classList.toggle('hidden', !isDaily);
-    document.getElementById('browser-os-section').classList.toggle('hidden', !isDaily);
-    document.getElementById('breakdown-section').style.display = isDaily ? 'none' : '';
-
     updatePeriodLabel();
     loadAll();
   });
 });
 
-// ── 로그 필터 이벤트 ─────────────────────────────────────────────
+document.querySelectorAll('.period-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.period-tab').forEach(node => node.classList.remove('active'));
+    btn.classList.add('active');
+    currentMode = btn.dataset.mode;
+    currentPage = 1;
+    syncPeriodPickers();
+    updatePeriodLabel();
+    loadAll();
+  });
+});
+
 let filterTimer = null;
-['filter-device','filter-browser','filter-source','filter-sort'].forEach(id => {
+['filter-device', 'filter-browser', 'filter-source', 'filter-sort'].forEach(id => {
   document.getElementById(id).addEventListener('change', () => {
     clearTimeout(filterTimer);
     filterTimer = setTimeout(() => { currentPage = 1; loadLogs(); }, 200);
@@ -354,28 +410,18 @@ let filterTimer = null;
 });
 document.getElementById('filter-ip').addEventListener('input', () => {
   clearTimeout(filterTimer);
-  filterTimer = setTimeout(() => { currentPage = 1; loadLogs(); }, 500);
+  filterTimer = setTimeout(() => { currentPage = 1; loadLogs(); }, 400);
 });
 
-// ── 기간 레이블 업데이트 ─────────────────────────────────────────
-function updatePeriodLabel() {
-  const labels = {
-    daily:   currentDate ? `${currentDate} 기준 (KST)` : '오늘 기준 (KST)',
-    weekly:  '최근 7일 (KST)',
-    monthly: '최근 30일 (KST)',
-    all:     '전체 기간 (KST)',
-  };
-  document.getElementById('header-period-label').textContent = labels[currentMode];
-  const titleMap = { daily: '일별 방문자 추이 (최근 30일, KST)', weekly: '일별 방문자 추이 (최근 7일, KST)', monthly: '일별 방문자 추이 (최근 30일, KST)', all: '일별 방문자 추이 (전체, KST)' };
-  document.getElementById('daily-chart-title').textContent = titleMap[currentMode];
+function fmt(n) {
+  return n == null ? '—' : Number(n).toLocaleString('ko-KR');
 }
 
-// ── 유틸 ─────────────────────────────────────────────────────────
-function fmt(n) { return n == null ? '—' : n.toLocaleString('ko-KR'); }
 function shortText(value, limit = 42) {
   const text = String(value || '');
   return text.length > limit ? `${text.slice(0, limit - 1)}…` : text;
 }
+
 function escapeHtml(value) {
   return String(value || '').replace(/[&<>"']/g, ch => ({
     '&': '&amp;',
@@ -385,12 +431,66 @@ function escapeHtml(value) {
     "'": '&#39;',
   }[ch]));
 }
+
 function sourceLabel(name) {
   return SOURCE_LABELS[name] || name || '기타';
 }
+
 function sourceBadgeClass(type) {
   return `source-${type || 'unknown'}`;
 }
+
+function makeOrUpdate(id, config) {
+  if (charts[id]) {
+    charts[id].destroy();
+    delete charts[id];
+  }
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  charts[id] = new Chart(canvas.getContext('2d'), config);
+}
+
+function buildParamObject(extra = {}) {
+  const params = { mode: currentMode, ...extra };
+  if (currentMode === 'day' || currentMode === 'week') {
+    params.date = currentDate;
+  } else if (currentMode === 'month') {
+    params.month = currentMonth;
+  } else if (currentMode === 'year') {
+    params.year = currentYear;
+  } else if (currentMode === 'range') {
+    params.start_date = rangeStart;
+    params.end_date = rangeEnd;
+  }
+  return params;
+}
+
+function buildQuery(extra = {}) {
+  return new URLSearchParams(buildParamObject(extra)).toString();
+}
+
+function syncPeriodPickers() {
+  document.getElementById('date-picker-wrap').hidden = !['day', 'week'].includes(currentMode);
+  document.getElementById('month-picker-wrap').hidden = currentMode !== 'month';
+  document.getElementById('year-picker-wrap').hidden = currentMode !== 'year';
+  document.getElementById('range-picker-wrap').hidden = currentMode !== 'range';
+}
+
+function updatePeriodLabel(serverLabel = '') {
+  const localLabelMap = {
+    day: `${currentDate} 일별 기준 (KST)`,
+    week: `${currentDate} 포함 주간 기준 (KST)`,
+    month: `${currentMonth} 월간 기준 (KST)`,
+    year: `${currentYear} 년도 기준 (KST)`,
+    range: `${rangeStart} ~ ${rangeEnd} (KST)`,
+  };
+  currentPeriodLabel = serverLabel || localLabelMap[currentMode];
+
+  document.getElementById('header-period-label').textContent = serverLabel
+    ? `${serverLabel} (KST)`
+    : localLabelMap[currentMode];
+}
+
 function detailButton(ip, visitorId) {
   return `<button type="button" class="detail-btn"
     data-ip="${escapeHtml(ip || '')}"
@@ -398,198 +498,26 @@ function detailButton(ip, visitorId) {
     onclick="openLogDetailModal(this.dataset.ip, this.dataset.visitor)">상세보기</button>`;
 }
 
-function makeOrUpdate(id, config) {
-  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
-  const canvas = document.getElementById(id);
-  if (!canvas) return;
-  charts[id] = new Chart(canvas.getContext('2d'), config);
-}
-
-function buildParams(extra = {}) {
-  const p = { mode: currentMode, ...extra };
-  if (currentMode === 'daily' && currentDate) p.date = currentDate;
-  return new URLSearchParams(p).toString();
-}
-
-// ── ① 요약 카드 ──────────────────────────────────────────────────
-async function loadSummary() {
-  const res  = await fetch(`/admin/analytics/api/summary?${buildParams()}`);
-  const data = await res.json();
-
-  const cards = [
-    { label:'총 접속 수',  value:data.total,      diff:data.total_diff,
-      icon:'<path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>',
-      color:'linear-gradient(135deg,#3b82f6,#06b6d4)' },
-    { label:'순 방문자',   value:data.visitors,   diff:data.visitors_diff,
-      icon:'<path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>',
-      color:'linear-gradient(135deg,#10b981,#34d399)' },
-    { label:'순 IP',       value:data.ips,         diff:null,
-      icon:'<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>',
-      color:'linear-gradient(135deg,#f59e0b,#f97316)' },
-    { label:'조회 매물',   value:data.properties, diff:null,
-      icon:'<path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>',
-      color:'linear-gradient(135deg,#ec4899,#f43f5e)' },
-  ];
-
-  document.getElementById('summary-grid').innerHTML = cards.map(c => {
-    let diffHtml = '';
-    if (c.diff !== null) {
-      const cls  = c.diff > 0 ? 'up' : c.diff < 0 ? 'down' : 'flat';
-      const sign = c.diff > 0 ? '▲' : c.diff < 0 ? '▼' : '─';
-      diffHtml = `<div class="sc-diff ${cls}">${sign} ${Math.abs(c.diff)}% 전일 대비</div>`;
-    }
-    return `<div class="summary-card">
-      <div class="sc-icon" style="background:${c.color}"><svg viewBox="0 0 24 24">${c.icon}</svg></div>
-      <div class="sc-label">${c.label}</div>
-      <div class="sc-value">${fmt(c.value)}</div>
-      ${diffHtml}
-    </div>`;
-  }).join('');
-}
-
-// ── ② 일별 추이 라인 차트 ────────────────────────────────────────
-async function loadDaily() {
-  const res  = await fetch(`/admin/analytics/api/daily?${buildParams()}`);
-  const rows = await res.json();
-
-  makeOrUpdate('chart-daily', {
-    type: 'line',
-    data: {
-      labels: rows.map(r => r.day.slice(5)),
-      datasets: [
-        { label:'총 접속', data:rows.map(r=>r.total),
-          borderColor:'#60a5fa', backgroundColor:'rgba(96,165,250,.1)',
-          fill:true, tension:.35, pointRadius:3, pointHoverRadius:5 },
-        { label:'순방문자', data:rows.map(r=>r.visitors),
-          borderColor:'#34d399', backgroundColor:'rgba(52,211,153,.08)',
-          fill:true, tension:.35, pointRadius:3, pointHoverRadius:5 },
-      ],
-    },
-    options: {
-      responsive:true,
-      interaction:{ mode:'index', intersect:false },
-      plugins:{ legend:{ position:'top', labels:{ boxWidth:12, padding:14 } },
-                tooltip:{ callbacks:{ label:ctx=>`${ctx.dataset.label}: ${fmt(ctx.raw)}` } } },
-      scales:{
-        x:{ grid:{ color:'rgba(255,255,255,.05)' } },
-        y:{ grid:{ color:'rgba(255,255,255,.05)' }, ticks:{ precision:0 } },
-      },
-    },
-  });
-}
-
-// ── ③ 시간대별 바 차트 ───────────────────────────────────────────
-async function loadHourly() {
-  const res  = await fetch(`/admin/analytics/api/hourly?${buildParams()}`);
-  const rows = await res.json();
-
-  makeOrUpdate('chart-hourly', {
-    type: 'bar',
-    data: {
-      labels: rows.map(r => `${r.hour}시`),
-      datasets:[{ label:'접속 수', data:rows.map(r=>r.cnt),
-        backgroundColor:'rgba(96,165,250,.55)', borderRadius:4 }],
-    },
-    options: {
-      responsive:true,
-      plugins:{ legend:{ display:false } },
-      scales:{
-        x:{ grid:{ display:false } },
-        y:{ grid:{ color:'rgba(255,255,255,.05)' }, ticks:{ precision:0 } },
-      },
-    },
-  });
-}
-
-// ── ④ 도넛 차트 + TOP 10 ─────────────────────────────────────────
-async function loadBreakdown() {
-  const res  = await fetch(`/admin/analytics/api/breakdown?${buildParams()}`);
-  const data = await res.json();
-
-  const dOpts = {
-    responsive:true,
-    plugins:{ legend:{ position:'bottom', labels:{ boxWidth:11, padding:9, font:{ size:11 } } } },
-    cutout:'62%',
-  };
-
-  function makeDoughnut(id, items) {
-    makeOrUpdate(id, {
-      type:'doughnut',
-      data:{
-        labels: items.map(d=>d.label),
-        datasets:[{ data:items.map(d=>d.cnt), backgroundColor:PALETTE, borderWidth:0 }],
-      },
-      options: dOpts,
-    });
-  }
-
-  const isDaily = currentMode === 'daily';
-
-  // daily: 시간대/기기 그리드(왼쪽) + 브라우저/OS 그리드(아래)
-  if (isDaily) {
-    makeDoughnut('chart-device',  data.device);
-    makeDoughnut('chart-browser', data.browser);
-    makeDoughnut('chart-os',      data.os);
-  } else {
-    // 주간/월간/전체: 3열 그리드
-    makeDoughnut('chart-device2',  data.device);
-    makeDoughnut('chart-browser2', data.browser);
-    makeDoughnut('chart-os2',      data.os);
-  }
-
-  makeDoughnut('chart-source', data.sources);
-
-  // TOP 10 목록
-  renderTopList('top-properties', data.properties, item =>
-    `<a href="/view/${item.code}" target="_blank" style="color:inherit; text-decoration:none;">매물 #${item.code}</a>`,
-    item => item.cnt
-  );
-
-  renderTopList('top-referrers', data.top_referrers,
-    item => `<span>${item.host === 'direct' ? '직접접속' : escapeHtml(item.host)}</span>`,
-    item => item.cnt
-  );
-
-  renderTopList('top-landings', data.top_landings,
-    item => `<span title="${escapeHtml(item.landing)}">${escapeHtml(shortText(item.landing, 42))}</span>`,
-    item => item.cnt
-  );
-
-  // IP별 방문 횟수 — visit_cnt(총 방문) + prop_cnt(고유 매물 수) 함께 표시
-  renderTopList('top-ips', data.top_ips,
-    item => `<span style="font-family:monospace;font-size:0.8rem;">${item.ip}</span>
-             <span style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-left:0.4rem;">(${item.prop_cnt}종 매물)</span>`,
-    item => item.visit_cnt
-  );
-
-  renderTopList('top-campaigns', data.top_campaigns,
-    item => `<span title="${escapeHtml(item.campaign)}">${escapeHtml(shortText(item.campaign, 34))}</span>`,
-    item => item.cnt
-  );
-
-  renderTopList('source-conversions', data.source_conversions,
-    item => `<span>${escapeHtml(sourceLabel(item.label))}</span>
-             <span class="top-meta">유입 ${fmt(item.entry_cnt)} / 전환율 ${item.conversion_rate}%</span>`,
-    item => item.detail_cnt
-  );
-
-  renderTopList('landing-conversions', data.landing_conversions,
-    item => `<span title="${escapeHtml(item.landing)}">${escapeHtml(shortText(item.landing, 34))}</span>
-             <span class="top-meta">유입 ${fmt(item.entry_cnt)} / 전환율 ${item.conversion_rate}%</span>`,
-    item => item.detail_cnt
-  );
+function blocklistButton(ip = '', visitorId = '', label = '블랙리스트로 이동') {
+  return `<button type="button" class="inline-action-btn danger"
+    data-ip="${escapeHtml(ip || '')}"
+    data-visitor="${escapeHtml(visitorId || '')}"
+    onclick="addToBlocklist(this.dataset.ip, this.dataset.visitor)">${label}</button>`;
 }
 
 function renderTopList(id, items, labelFn, cntFn) {
   const el = document.getElementById(id);
-  if (!items || !items.length) { el.innerHTML = '<div class="empty-state">데이터 없음</div>'; return; }
+  if (!items || !items.length) {
+    el.innerHTML = '<div class="empty-state">데이터 없음</div>';
+    return;
+  }
   const max = cntFn(items[0]) || 1;
-  const rankCls = ['gold','silver','bronze'];
-  el.innerHTML = items.map((item, i) => {
+  const rankCls = ['gold', 'silver', 'bronze'];
+  el.innerHTML = items.map((item, index) => {
     const cnt = cntFn(item);
-    const pct = Math.round(cnt / max * 100);
+    const pct = Math.round((cnt / max) * 100);
     return `<div class="top-item">
-      <div class="top-rank ${rankCls[i]||''}">${i+1}</div>
+      <div class="top-rank ${rankCls[index] || ''}">${index + 1}</div>
       <div class="top-bar-wrap">
         <div class="top-label">${labelFn(item)}</div>
         <div class="top-bar" style="width:${pct}%"></div>
@@ -599,52 +527,300 @@ function renderTopList(id, items, labelFn, cntFn) {
   }).join('');
 }
 
-// ── ⑤ 로그 목록 ──────────────────────────────────────────────────
-async function loadLogs() {
-  const ip      = document.getElementById('filter-ip').value;
-  const device  = document.getElementById('filter-device').value;
-  const browser = document.getElementById('filter-browser').value;
-  const source  = document.getElementById('filter-source').value;
-  const sort    = document.getElementById('filter-sort').value;
+function renderStatsTable(id, headers, rows) {
+  const el = document.getElementById(id);
+  if (!rows || !rows.length) {
+    el.innerHTML = '<div class="empty-state">데이터 없음</div>';
+    return;
+  }
+  el.innerHTML = `<div class="stats-table-wrap">
+    <table class="stats-table">
+      <thead>
+        <tr>${headers.map(header => `<th>${header}</th>`).join('')}</tr>
+      </thead>
+      <tbody>
+        ${rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
 
-  const params = new URLSearchParams({
-    mode:currentMode, date:currentDate, ip, device, browser, source, sort, page:currentPage,
+async function loadSummary() {
+  const res = await fetch(`/admin/analytics/api/summary?${buildQuery()}`);
+  const data = await res.json();
+  updatePeriodLabel(data.period_label);
+
+  const cards = [
+    { label:'총 접속 수', value:data.total, diff:data.total_diff,
+      icon:'<path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>',
+      color:'linear-gradient(135deg,#3b82f6,#06b6d4)' },
+    { label:'순 방문자', value:data.visitors, diff:data.visitors_diff,
+      icon:'<path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>',
+      color:'linear-gradient(135deg,#10b981,#34d399)' },
+    { label:'순 IP', value:data.ips, diff:null,
+      icon:'<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>',
+      color:'linear-gradient(135deg,#f59e0b,#f97316)' },
+    { label:'조회 매물', value:data.properties, diff:null,
+      icon:'<path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>',
+      color:'linear-gradient(135deg,#ec4899,#f43f5e)' },
+  ];
+
+  document.getElementById('summary-grid').innerHTML = cards.map(card => {
+    let diffHtml = '';
+    if (card.diff !== null) {
+      const cls = card.diff > 0 ? 'up' : card.diff < 0 ? 'down' : 'flat';
+      const sign = card.diff > 0 ? '▲' : card.diff < 0 ? '▼' : '─';
+      diffHtml = `<div class="sc-diff ${cls}">${sign} ${Math.abs(card.diff)}% 직전 기간 대비</div>`;
+    }
+    return `<div class="summary-card">
+      <div class="sc-icon" style="background:${card.color}"><svg viewBox="0 0 24 24">${card.icon}</svg></div>
+      <div class="sc-label">${card.label}</div>
+      <div class="sc-value">${fmt(card.value)}</div>
+      ${diffHtml}
+    </div>`;
+  }).join('');
+}
+
+async function loadTrend() {
+  const res = await fetch(`/admin/analytics/api/trend?${buildQuery()}`);
+  const data = await res.json();
+  const rows = data.rows || [];
+
+  document.getElementById('daily-chart-title').textContent = data.title || '방문 추이';
+
+  makeOrUpdate('chart-daily', {
+    type: currentMode === 'day' ? 'bar' : 'line',
+    data: {
+      labels: rows.map(row => row.label),
+      datasets: [
+        {
+          label:'총 접속',
+          data: rows.map(row => row.total),
+          borderColor:'#60a5fa',
+          backgroundColor:'rgba(96,165,250,.18)',
+          fill: currentMode !== 'day',
+          tension:.35,
+          borderWidth:2,
+          pointRadius: currentMode === 'day' ? 0 : 3,
+          borderRadius: currentMode === 'day' ? 4 : 0,
+        },
+        {
+          label:'순방문자',
+          data: rows.map(row => row.visitors),
+          borderColor:'#34d399',
+          backgroundColor:'rgba(52,211,153,.12)',
+          fill: false,
+          tension:.35,
+          borderWidth:2,
+          pointRadius: currentMode === 'day' ? 0 : 3,
+          borderRadius: currentMode === 'day' ? 4 : 0,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      interaction: { mode:'index', intersect:false },
+      plugins: {
+        legend: { position:'top', labels:{ boxWidth:12, padding:14 } },
+        tooltip: { callbacks:{ label:ctx => `${ctx.dataset.label}: ${fmt(ctx.raw)}` } },
+      },
+      scales: {
+        x: { grid:{ color:'rgba(255,255,255,.05)' } },
+        y: { grid:{ color:'rgba(255,255,255,.05)' }, ticks:{ precision:0 } },
+      },
+    },
   });
-  const res  = await fetch(`/admin/analytics/api/logs?${params}`);
+}
+
+async function loadHourly() {
+  const res = await fetch(`/admin/analytics/api/hourly?${buildQuery()}`);
+  const rows = await res.json();
+  makeOrUpdate('chart-hourly', {
+    type: 'bar',
+    data: {
+      labels: rows.map(row => `${row.hour}시`),
+      datasets: [{
+        label: '접속 수',
+        data: rows.map(row => row.cnt),
+        backgroundColor: 'rgba(96,165,250,.55)',
+        borderRadius: 4,
+      }],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display:false } },
+      scales: {
+        x: { grid:{ display:false } },
+        y: { grid:{ color:'rgba(255,255,255,.05)' }, ticks:{ precision:0 } },
+      },
+    },
+  });
+}
+
+async function loadBreakdown() {
+  const res = await fetch(`/admin/analytics/api/breakdown?${buildQuery()}`);
+  const data = await res.json();
+  const doughnutOptions = {
+    responsive:true,
+    plugins:{ legend:{ position:'bottom', labels:{ boxWidth:11, padding:9, font:{ size:11 } } } },
+    cutout:'62%',
+  };
+
+  function makeDoughnut(id, items) {
+    makeOrUpdate(id, {
+      type:'doughnut',
+      data:{
+        labels: items.map(item => item.label),
+        datasets:[{ data: items.map(item => item.cnt), backgroundColor: PALETTE, borderWidth: 0 }],
+      },
+      options:doughnutOptions,
+    });
+  }
+
+  makeDoughnut('chart-device', data.device || []);
+  makeDoughnut('chart-browser', data.browser || []);
+  makeDoughnut('chart-os', data.os || []);
+  makeDoughnut('chart-source', data.sources || []);
+
+  renderTopList('top-properties', data.properties, item =>
+    `<a href="/view/${item.code}" target="_blank" style="color:inherit;text-decoration:none;">매물 #${item.code}</a>`,
+    item => item.cnt
+  );
+  renderTopList('top-referrers', data.top_referrers,
+    item => `<span>${item.host === 'direct' ? '직접접속' : escapeHtml(item.host)}</span>`,
+    item => item.cnt
+  );
+  renderTopList('top-landings', data.top_landings,
+    item => `<span title="${escapeHtml(item.landing)}">${escapeHtml(shortText(item.landing, 42))}</span>`,
+    item => item.cnt
+  );
+  renderTopList('top-ips', data.top_ips,
+    item => `<span style="font-family:monospace;font-size:0.8rem;">${item.ip}</span>
+      <span style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-left:0.4rem;">(${item.prop_cnt}종 매물)</span>`,
+    item => item.visit_cnt
+  );
+  renderTopList('top-campaigns', data.top_campaigns,
+    item => `<span title="${escapeHtml(item.campaign)}">${escapeHtml(shortText(item.campaign, 34))}</span>`,
+    item => item.cnt
+  );
+  renderTopList('source-conversions', data.source_conversions,
+    item => `<span>${escapeHtml(sourceLabel(item.label))}</span>
+      <span class="top-meta">유입 ${fmt(item.entry_cnt)} / 전환율 ${item.conversion_rate}%</span>`,
+    item => item.detail_cnt
+  );
+  renderTopList('landing-conversions', data.landing_conversions,
+    item => `<span title="${escapeHtml(item.landing)}">${escapeHtml(shortText(item.landing, 34))}</span>
+      <span class="top-meta">유입 ${fmt(item.entry_cnt)} / 전환율 ${item.conversion_rate}%</span>`,
+    item => item.detail_cnt
+  );
+
+  renderStatsTable('property-stats',
+    ['매물', '조회', '순IP', 'visitor', '최근 접속'],
+    (data.property_stats || []).map(item => [
+      `<a href="/view/${item.code}" target="_blank" class="code-mono">#${item.code}</a>`,
+      fmt(item.visit_cnt),
+      fmt(item.ip_cnt),
+      fmt(item.visitor_cnt),
+      escapeHtml(item.last_seen || '—'),
+    ])
+  );
+
+  renderStatsTable('ip-stats',
+    ['IP', '조회', 'visitor', '매물', '최근', '조치'],
+    (data.ip_stats || []).map(item => [
+      `<span class="code-mono">${escapeHtml(item.ip)}</span>`,
+      fmt(item.visit_cnt),
+      fmt(item.visitor_cnt),
+      fmt(item.prop_cnt),
+      escapeHtml(item.last_seen || '—'),
+      blocklistButton(item.ip, '', '블랙리스트로 이동'),
+    ])
+  );
+
+  renderStatsTable('visitor-stats',
+    ['visitor_id', '조회', 'IP', '매물', '최근', '조치'],
+    (data.visitor_stats || []).map(item => [
+      `<span class="code-mono" title="${escapeHtml(item.visitor_id)}">${escapeHtml(shortText(item.visitor_id, 16))}</span>`,
+      fmt(item.visit_cnt),
+      fmt(item.ip_cnt),
+      fmt(item.prop_cnt),
+      escapeHtml(item.last_seen || '—'),
+      blocklistButton('', item.visitor_id, '블랙리스트로 이동'),
+    ])
+  );
+
+  renderStatsTable('browser-stats',
+    ['브라우저', '조회', '순IP', 'visitor'],
+    (data.browser_stats || []).map(item => [
+      escapeHtml(item.label || 'unknown'),
+      fmt(item.visit_cnt),
+      fmt(item.ip_cnt),
+      fmt(item.visitor_cnt),
+    ])
+  );
+
+  renderStatsTable('device-stats-table',
+    ['기기', '조회', '순IP', 'visitor'],
+    (data.device_stats_rows || []).map(item => [
+      escapeHtml(item.label || 'unknown'),
+      fmt(item.visit_cnt),
+      fmt(item.ip_cnt),
+      fmt(item.visitor_cnt),
+    ])
+  );
+
+  renderStatsTable('source-stats',
+    ['유입명', '분류', '조회', '순IP', 'visitor'],
+    (data.source_stats_rows || []).map(item => [
+      escapeHtml(sourceLabel(item.label)),
+      `<span class="source-badge ${sourceBadgeClass(item.source_type)}">${escapeHtml(item.source_type || 'unknown')}</span>`,
+      fmt(item.visit_cnt),
+      fmt(item.ip_cnt),
+      fmt(item.visitor_cnt),
+    ])
+  );
+}
+
+async function loadLogs() {
+  const ip = document.getElementById('filter-ip').value;
+  const device = document.getElementById('filter-device').value;
+  const browser = document.getElementById('filter-browser').value;
+  const source = document.getElementById('filter-source').value;
+  const sort = document.getElementById('filter-sort').value;
+  const res = await fetch(`/admin/analytics/api/logs?${buildQuery({ ip, device, browser, source, sort, page: currentPage })}`);
   const data = await res.json();
 
   document.getElementById('log-total-count').textContent = `총 ${fmt(data.total)}건`;
 
   const tbody = document.getElementById('log-tbody');
   if (!data.logs.length) {
-    tbody.innerHTML = '<tr><td colspan="11"><div class="empty-state">로그 없음</div></td></tr>';
-  } else {
-    const badge = d => {
-      const cls = {mobile:'device-mobile',desktop:'device-desktop',tablet:'device-tablet'}[d]||'';
-      return `<span class="device-badge ${cls}">${d||'—'}</span>`;
-    };
-    const sourceBadge = (name, type) =>
-      `<span class="source-badge ${sourceBadgeClass(type)}">${escapeHtml(sourceLabel(name))}</span>`;
-    tbody.innerHTML = data.logs.map(r => `<tr>
-      <td style="color:rgba(255,255,255,.4);font-size:.72rem;">${r.last_wdate}</td>
-      <td style="color:rgba(255,255,255,.4);font-size:.72rem;">${r.first_wdate}</td>
-      <td class="code-mono">${r.ip||'—'}</td>
-      <td class="code-mono" title="${escapeHtml(r.visitor_id || '')}">${r.visitor_id ? `${escapeHtml(r.visitor_id.slice(0, 8))}…` : '—'}</td>
-      <td>
-        ${sourceBadge(r.source_name, r.source_type)}
-      </td>
-      <td>${r.browser||'—'}</td>
-      <td>${badge(r.device)}</td>
-      <td class="cell-ellipsis" title="${escapeHtml(r.first_landing_page || '')}">
-        ${escapeHtml(shortText(r.first_landing_page || '—', 34))}
-      </td>
-      <td class="cell-ellipsis" title="${escapeHtml(r.last_page || '')}">
-        ${escapeHtml(shortText(r.last_page || '—', 28))}
-      </td>
-      <td>${fmt(r.log_count)}<div class="cell-sub">${fmt(r.page_count)}개 페이지 · ${fmt(r.property_count)}개 매물</div></td>
-      <td>${detailButton(r.ip, r.visitor_id)}</td>
-    </tr>`).join('');
+    tbody.innerHTML = '<tr><td colspan="12"><div class="empty-state">로그 없음</div></td></tr>';
+    renderPagination(data.page, data.pages);
+    return;
   }
+
+  const badge = value => {
+    const cls = { mobile:'device-mobile', desktop:'device-desktop', tablet:'device-tablet' }[value] || '';
+    return `<span class="device-badge ${cls}">${escapeHtml(value || '—')}</span>`;
+  };
+  const sourceBadge = (name, type) =>
+    `<span class="source-badge ${sourceBadgeClass(type)}">${escapeHtml(sourceLabel(name))}</span>`;
+
+  tbody.innerHTML = data.logs.map(row => `<tr>
+    <td style="color:rgba(255,255,255,.4);font-size:.72rem;">${row.last_wdate}</td>
+    <td style="color:rgba(255,255,255,.4);font-size:.72rem;">${row.first_wdate}</td>
+    <td class="code-mono">${escapeHtml(row.ip || '—')}</td>
+    <td class="code-mono" title="${escapeHtml(row.visitor_id || '')}">${row.visitor_id ? `${escapeHtml(row.visitor_id.slice(0, 8))}…` : '—'}</td>
+    <td>${sourceBadge(row.source_name, row.source_type)}</td>
+    <td>${escapeHtml(row.browser || '—')}</td>
+    <td>${badge(row.device)}</td>
+    <td class="cell-ellipsis" title="${escapeHtml(row.first_landing_page || '')}">${escapeHtml(shortText(row.first_landing_page || '—', 34))}</td>
+    <td class="cell-ellipsis" title="${escapeHtml(row.last_page || '')}">${escapeHtml(shortText(row.last_page || '—', 28))}</td>
+    <td>${fmt(row.log_count)}<div class="cell-sub">${fmt(row.page_count)}개 페이지 · ${fmt(row.property_count)}개 매물</div></td>
+    <td>${detailButton(row.ip, row.visitor_id)}</td>
+    <td>${blocklistButton(row.ip, row.visitor_id, '차단')}</td>
+  </tr>`).join('');
+
   renderPagination(data.page, data.pages);
 }
 
@@ -656,66 +832,59 @@ async function openLogDetailModal(ip, visitorId) {
   const deleteBtn = document.getElementById('logDeleteBtn');
 
   currentDetailTarget = { ip, visitorId: visitorId || '' };
-
   title.textContent = `${ip} / ${visitorId || 'visitor_id 없음'}`;
-  meta.textContent = '전체 기간 로그를 불러오는 중…';
+  meta.textContent = `${currentPeriodLabel || '선택 기간'} 로그를 불러오는 중…`;
   body.innerHTML = '<div class="loading">로딩 중…</div>';
   deleteBtn.disabled = false;
   deleteBtn.textContent = '이 방문기록 삭제';
   modal.hidden = false;
   document.body.classList.add('log-modal-open');
 
-  const params = new URLSearchParams({ ip, visitor_id: visitorId || '' });
-  const res = await fetch(`/admin/analytics/api/logs/detail?${params}`);
+  const res = await fetch(`/admin/analytics/api/logs/detail?${buildQuery({ ip, visitor_id: visitorId || '' })}`);
   const data = await res.json();
 
-  meta.textContent = `총 ${fmt(data.total)}건 · 전체 기간 · KST 기준`;
+  meta.textContent = `총 ${fmt(data.total)}건 · ${currentPeriodLabel || '선택 기간'} · KST 기준`;
 
   if (!data.logs.length) {
     body.innerHTML = '<div class="empty-state">상세 로그가 없습니다</div>';
     return;
   }
 
-  body.innerHTML = `<div class="log-detail-list">${
-    data.logs.map(r => `
-      <div class="log-detail-item">
-        <div class="log-detail-top">
-          <span class="log-detail-time">${escapeHtml(r.wdate)}</span>
-          <span class="source-badge ${sourceBadgeClass(r.source_type)}">${escapeHtml(sourceLabel(r.source_name))}</span>
-        </div>
-        <div class="log-detail-main">
-          <div><strong>페이지</strong> ${escapeHtml(r.page || '—')}</div>
-          <div><strong>진입</strong> ${escapeHtml(r.landing_page || '—')}</div>
-          <div><strong>리퍼러</strong> ${escapeHtml(r.referrer || r.source_host || '—')}</div>
-          <div><strong>브라우저</strong> ${escapeHtml(r.browser || '—')} / ${escapeHtml(r.os || '—')} / ${escapeHtml(r.device || '—')}</div>
-          <div><strong>UTM</strong> ${escapeHtml(r.utm_source || '—')} / ${escapeHtml(r.utm_medium || '—')} / ${escapeHtml(r.utm_campaign || '—')}</div>
-          <div><strong>매물</strong> ${r.code ? `<a href="/view/${r.code}" target="_blank" class="code-mono">${r.code}</a>` : '—'}</div>
-        </div>
+  body.innerHTML = `<div class="log-detail-list">${data.logs.map(row => `
+    <div class="log-detail-item">
+      <div class="log-detail-top">
+        <span class="log-detail-time">${escapeHtml(row.wdate)}</span>
+        <span class="source-badge ${sourceBadgeClass(row.source_type)}">${escapeHtml(sourceLabel(row.source_name))}</span>
       </div>
-    `).join('')
-  }</div>`;
+      <div class="log-detail-main">
+        <div><strong>페이지</strong> ${escapeHtml(row.page || '—')}</div>
+        <div><strong>진입</strong> ${escapeHtml(row.landing_page || '—')}</div>
+        <div><strong>리퍼러</strong> ${escapeHtml(row.referrer || row.source_host || '—')}</div>
+        <div><strong>브라우저</strong> ${escapeHtml(row.browser || '—')} / ${escapeHtml(row.os || '—')} / ${escapeHtml(row.device || '—')}</div>
+        <div><strong>UTM</strong> ${escapeHtml(row.utm_source || '—')} / ${escapeHtml(row.utm_medium || '—')} / ${escapeHtml(row.utm_campaign || '—')}</div>
+        <div><strong>매물</strong> ${row.code ? `<a href="/view/${row.code}" target="_blank" class="code-mono">${row.code}</a>` : '—'}</div>
+      </div>
+    </div>
+  `).join('')}</div>`;
 }
 
 function closeLogDetailModal() {
-  const modal = document.getElementById('logDetailModal');
   currentDetailTarget = null;
-  modal.hidden = true;
+  document.getElementById('logDetailModal').hidden = true;
   if (document.getElementById('cleanupModal').hidden) {
     document.body.classList.remove('log-modal-open');
   }
 }
 
 function openCleanupModal() {
-  const modal = document.getElementById('cleanupModal');
   const input = document.getElementById('cleanup-days');
   input.value = input.value || defaultCleanupDays;
-  modal.hidden = false;
+  document.getElementById('cleanupModal').hidden = false;
   document.body.classList.add('log-modal-open');
 }
 
 function closeCleanupModal() {
-  const modal = document.getElementById('cleanupModal');
-  modal.hidden = true;
+  document.getElementById('cleanupModal').hidden = true;
   if (document.getElementById('logDetailModal').hidden) {
     document.body.classList.remove('log-modal-open');
   }
@@ -731,14 +900,12 @@ async function runLogCleanup() {
     input.focus();
     return;
   }
-
   if (!confirm(`${days}일보다 오래된 내부이동 로그만 삭제합니다. 계속하시겠습니까?`)) {
     return;
   }
 
   button.disabled = true;
   button.textContent = '정리 중…';
-
   try {
     const res = await fetch('/admin/analytics/api/logs/cleanup', {
       method: 'POST',
@@ -746,11 +913,9 @@ async function runLogCleanup() {
       body: JSON.stringify({ days }),
     });
     const data = await res.json();
-
     if (!res.ok || !data.success) {
       throw new Error(data.message || '로그 정리에 실패했습니다.');
     }
-
     closeCleanupModal();
     await loadAll();
     alert(`내부이동 로그 ${fmt(data.deleted)}건을 삭제했습니다.`);
@@ -770,14 +935,12 @@ async function deleteCurrentVisitorLogs() {
   const { ip, visitorId } = currentDetailTarget;
   const button = document.getElementById('logDeleteBtn');
   const visitorLabel = visitorId || 'visitor_id 없음';
-
   if (!confirm(`${ip} / ${visitorLabel} 방문기록을 모두 삭제합니다. 계속하시겠습니까?`)) {
     return;
   }
 
   button.disabled = true;
   button.textContent = '삭제 중…';
-
   try {
     const res = await fetch('/admin/analytics/api/logs/delete-visitor', {
       method: 'POST',
@@ -785,11 +948,9 @@ async function deleteCurrentVisitorLogs() {
       body: JSON.stringify({ ip, visitor_id: visitorId }),
     });
     const data = await res.json();
-
     if (!res.ok || !data.success) {
       throw new Error(data.message || '방문기록 삭제에 실패했습니다.');
     }
-
     closeLogDetailModal();
     await loadAll();
     alert(`방문기록 ${fmt(data.deleted)}건을 삭제했습니다.`);
@@ -800,46 +961,73 @@ async function deleteCurrentVisitorLogs() {
   }
 }
 
+async function addToBlocklist(ip, visitorId) {
+  if (!ip && !visitorId) {
+    return;
+  }
+  const targetLabel = [ip || null, visitorId || null].filter(Boolean).join(' / ');
+  if (!confirm(`${targetLabel} 을(를) 블랙리스트로 이동하시겠습니까?`)) {
+    return;
+  }
+
+  try {
+    const res = await fetch('/admin/blocklist/api/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ip,
+        visitor_id: visitorId,
+        reason: `관리자 통계에서 등록 (${currentPeriodLabel || '기간 선택'})`,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || '블랙리스트 등록에 실패했습니다.');
+    }
+    alert(data.created ? '블랙리스트에 등록했습니다.' : '기존 블랙리스트를 다시 활성화했습니다.');
+  } catch (error) {
+    alert(error.message || '블랙리스트 등록에 실패했습니다.');
+  }
+}
+
 function renderPagination(current, total) {
   const el = document.getElementById('pagination');
-  if (total <= 1) { el.innerHTML = ''; return; }
-  let pages = new Set([1, total, current-1, current, current+1, current-2, current+2]);
-  pages = [...pages].filter(p => p >= 1 && p <= total).sort((a,b)=>a-b);
-  let html = `<button class="page-btn" ${current===1?'disabled':''} onclick="goPage(${current-1})">‹</button>`;
-  let prev = null;
-  for (const p of pages) {
-    if (prev !== null && p - prev > 1) html += `<span style="color:rgba(255,255,255,.2);">…</span>`;
-    html += `<button class="page-btn ${p===current?'active':''}" onclick="goPage(${p})">${p}</button>`;
-    prev = p;
+  if (!total || total <= 1) {
+    el.innerHTML = '';
+    return;
   }
-  html += `<button class="page-btn" ${current===total?'disabled':''} onclick="goPage(${current+1})">›</button>`;
+  let pages = new Set([1, total, current - 2, current - 1, current, current + 1, current + 2]);
+  pages = [...pages].filter(page => page >= 1 && page <= total).sort((a, b) => a - b);
+  let html = `<button class="page-btn" ${current === 1 ? 'disabled' : ''} onclick="goPage(${current - 1})">‹</button>`;
+  let previous = null;
+  for (const page of pages) {
+    if (previous !== null && page - previous > 1) {
+      html += `<span style="color:rgba(255,255,255,.2);">…</span>`;
+    }
+    html += `<button class="page-btn ${page === current ? 'active' : ''}" onclick="goPage(${page})">${page}</button>`;
+    previous = page;
+  }
+  html += `<button class="page-btn" ${current === total ? 'disabled' : ''} onclick="goPage(${current + 1})">›</button>`;
   el.innerHTML = html;
 }
 
-function goPage(p) {
-  currentPage = p;
+function goPage(page) {
+  currentPage = page;
   loadLogs();
   document.querySelector('.log-filter').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
-// ── 전체 로드 ─────────────────────────────────────────────────────
 function loadAll() {
-  const isDaily = currentMode === 'daily';
-  // 시간대 차트는 daily 전용
-  document.getElementById('hourly-section').classList.toggle('hidden', !isDaily);
-  document.getElementById('browser-os-section').classList.toggle('hidden', !isDaily);
-  document.getElementById('breakdown-section').style.display = isDaily ? 'none' : '';
-
-  Promise.all([
+  return Promise.all([
     loadSummary(),
-    loadDaily(),
-    isDaily ? loadHourly() : Promise.resolve(),
+    loadTrend(),
+    loadHourly(),
     loadBreakdown(),
     loadLogs(),
   ]);
 }
 
-// 초기 로드
+syncPeriodPickers();
 updatePeriodLabel();
 loadAll();
 </script>

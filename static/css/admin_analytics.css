@@ -64,6 +64,33 @@
   transition: border-color .15s, background .15s;
 }
 #date-select:focus { border-color: #3b82f6; background: rgba(59,130,246,.08); }
+.period-native-wrap,
+.range-picker-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+}
+.period-native-wrap input,
+.range-picker-wrap input {
+  padding: .45rem .7rem;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: .55rem;
+  color: #e8e6e3;
+  font-size: .83rem;
+  font-weight: 600;
+  outline: none;
+}
+.period-native-wrap input:focus,
+.range-picker-wrap input:focus {
+  border-color: #3b82f6;
+  background: rgba(59,130,246,.08);
+}
+.year-picker-wrap span,
+.range-picker-wrap span {
+  font-size: .78rem;
+  color: rgba(255,255,255,.42);
+}
 
 /* ── 기간 탭 ── */
 .period-tabs {
@@ -111,6 +138,7 @@
 }
 .page-header-left { display: flex; align-items: center; gap: .75rem; }
 .page-header-controls { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+.period-pickers { display: flex; align-items: center; gap: .55rem; flex-wrap: wrap; }
 .page-action-btn {
   padding: .44rem .78rem;
   border-radius: .55rem;
@@ -223,6 +251,9 @@
   border: 1px solid rgba(255,255,255,.09);
   border-radius: .8rem; padding: 1.1rem;
 }
+.analytics-stat-grid .top-card {
+  overflow: hidden;
+}
 .top-item {
   display: flex; align-items: center; gap: .6rem;
   padding: .42rem 0;
@@ -330,6 +361,28 @@
 .log-action-btn:hover {
   background: rgba(255,255,255,.13);
 }
+.inline-action-btn {
+  padding: .3rem .55rem;
+  border-radius: .42rem;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.08);
+  color: #e5e7eb;
+  font-size: .69rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.inline-action-btn:hover {
+  background: rgba(255,255,255,.13);
+}
+.inline-action-btn.danger {
+  border-color: rgba(248,113,113,.26);
+  background: rgba(248,113,113,.12);
+  color: #fecaca;
+}
+.inline-action-btn.danger:hover {
+  background: rgba(248,113,113,.18);
+}
 .log-action-btn.danger {
   border-color: rgba(248,113,113,.26);
   background: rgba(248,113,113,.12);
@@ -428,6 +481,35 @@
   line-height: 1.55;
   color: rgba(255,255,255,.46);
 }
+.stats-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .77rem;
+  white-space: nowrap;
+}
+.stats-table th {
+  padding: .45rem .35rem;
+  text-align: left;
+  color: rgba(255,255,255,.36);
+  font-size: .67rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.stats-table td {
+  padding: .52rem .35rem;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  color: #d6d2cb;
+  vertical-align: middle;
+}
+.stats-table tr:last-child td {
+  border-bottom: none;
+}
 .log-detail-list {
   display: flex;
   flex-direction: column;
@@ -487,6 +569,22 @@ body.log-modal-open {
 .empty-state { text-align: center; padding: 2rem; color: rgba(255,255,255,.28); font-size: .82rem; }
 
 @media (max-width: 699px) {
+  .page-header-controls {
+    align-items: stretch;
+  }
+  .period-pickers {
+    width: 100%;
+  }
+  .period-native-wrap,
+  .range-picker-wrap {
+    width: 100%;
+  }
+  .period-native-wrap input,
+  .range-picker-wrap input,
+  #date-select {
+    width: 100%;
+    min-width: 0;
+  }
   .log-modal-header {
     flex-direction: column;
   }

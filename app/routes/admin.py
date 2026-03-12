@@ -9,7 +9,7 @@ import hashlib
 import json
 import os
 import time
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from functools import wraps
 
 from flask import (Blueprint, render_template, request,
@@ -1218,6 +1218,71 @@ def blocklist_add():
     return redirect(url_for('admin.blocklist'))
 
 
+@bp.route('/blocklist/api/add', methods=['POST'])
+@login_required
+def blocklist_add_api():
+    """블랙리스트 항목 추가 JSON API"""
+    payload = request.get_json(silent=True) or {}
+    ip = (payload.get('ip') or '').strip()
+    visitor_id = (payload.get('visitor_id') or '').strip()
+    reason = (payload.get('reason') or '').strip()[:200]
+
+    if not ip and not visitor_id:
+        return jsonify({'success': False, 'message': 'IP 또는 visitor_id 중 하나는 필요합니다.'}), 400
+
+    with engine.connect() as conn:
+        existing = conn.execute(
+            text("""
+                SELECT id, is_active
+                FROM zibeasy_blocklist
+                WHERE COALESCE(ip, '') = :ip
+                  AND COALESCE(visitor_id, '') = :vid
+                ORDER BY id DESC
+                LIMIT 1
+            """),
+            {'ip': ip, 'vid': visitor_id}
+        ).fetchone()
+
+        if existing:
+            conn.execute(
+                text("""
+                    UPDATE zibeasy_blocklist
+                    SET is_active = 1,
+                        reason = CASE
+                            WHEN :reason <> '' THEN :reason
+                            ELSE reason
+                        END
+                    WHERE id = :id
+                """),
+                {'id': existing[0], 'reason': reason}
+            )
+            conn.commit()
+            created = False
+            blocklist_id = existing[0]
+        else:
+            result = conn.execute(
+                text("""
+                    INSERT INTO zibeasy_blocklist (ip, visitor_id, reason, is_active)
+                    VALUES (:ip, :vid, :reason, 1)
+                """),
+                {'ip': ip, 'vid': visitor_id, 'reason': reason}
+            )
+            conn.commit()
+            created = True
+            blocklist_id = result.lastrowid
+
+    from app import invalidate_blocklist_cache
+    invalidate_blocklist_cache()
+
+    return jsonify({
+        'success': True,
+        'created': created,
+        'id': blocklist_id,
+        'ip': ip,
+        'visitor_id': visitor_id,
+    })
+
+
 @bp.route('/blocklist/<int:bl_id>/toggle', methods=['POST'])
 @login_required
 def blocklist_toggle(bl_id):
@@ -1277,40 +1342,146 @@ def _kst_now():
     return "DATE_ADD(UTC_TIMESTAMP(), INTERVAL 9 HOUR)"
 
 
-def _build_date_cond(mode, date, column='wdate'):
-    """
-    mode/date 파라미터로 WHERE 조건과 바인드 파라미터 반환
-      mode=daily  + date=YYYY-MM-DD → 해당 날짜
-      mode=weekly                   → 최근 7일
-      mode=monthly                  → 최근 30일
-      mode=all                      → 전체
-    """
-    # date 유효성 확인
-    if date and not _analytics_re.match(r'^\d{4}-\d{2}-\d{2}$', date):
-        date = ''
+def _current_kst_date():
+    """현재 KST 날짜"""
+    return (datetime.utcnow() + timedelta(hours=9)).date()
 
+
+def _parse_iso_date(value):
+    """YYYY-MM-DD 문자열을 date로 변환"""
+    if not value or not _analytics_re.match(r'^\d{4}-\d{2}-\d{2}$', value):
+        return None
+    try:
+        return datetime.strptime(value, '%Y-%m-%d').date()
+    except ValueError:
+        return None
+
+
+def _parse_month_value(value):
+    """YYYY-MM 문자열을 (year, month)로 변환"""
+    if not value or not _analytics_re.match(r'^\d{4}-\d{2}$', value):
+        return None
+    try:
+        year_str, month_str = value.split('-')
+        year = int(year_str)
+        month = int(month_str)
+        if month < 1 or month > 12:
+            return None
+        return year, month
+    except ValueError:
+        return None
+
+
+def _month_bounds(year, month):
+    """해당 월의 [시작일, 다음달 시작일) 반환"""
+    start = date(year, month, 1)
+    if month == 12:
+        end = date(year + 1, 1, 1)
+    else:
+        end = date(year, month + 1, 1)
+    return start, end
+
+
+def _resolve_period_spec(args=None):
+    """관리자 통계용 기간 파라미터를 해석"""
+    args = args or request.args
+    today = _current_kst_date()
+    mode = (args.get('mode') or 'day').strip().lower()
+    if mode not in {'day', 'week', 'month', 'year', 'range'}:
+        mode = 'day'
+
+    if mode == 'year':
+        try:
+            year = int((args.get('year') or '').strip())
+        except ValueError:
+            year = today.year
+        year = max(2020, min(year, today.year + 1))
+        start_date = date(year, 1, 1)
+        end_date = date(year + 1, 1, 1)
+        label = f'{year}년'
+    elif mode == 'month':
+        ym = _parse_month_value((args.get('month') or '').strip())
+        if not ym:
+            ym = (today.year, today.month)
+        start_date, end_date = _month_bounds(*ym)
+        label = f'{ym[0]}-{ym[1]:02d}'
+    elif mode == 'week':
+        anchor = _parse_iso_date((args.get('date') or '').strip()) or today
+        start_date = anchor - timedelta(days=anchor.weekday())
+        end_date = start_date + timedelta(days=7)
+        label = f'{start_date.isoformat()} ~ {(end_date - timedelta(days=1)).isoformat()}'
+    elif mode == 'range':
+        start_date = _parse_iso_date((args.get('start_date') or '').strip()) or (today - timedelta(days=6))
+        end_inclusive = _parse_iso_date((args.get('end_date') or '').strip()) or today
+        if end_inclusive < start_date:
+            start_date, end_inclusive = end_inclusive, start_date
+        end_date = end_inclusive + timedelta(days=1)
+        label = f'{start_date.isoformat()} ~ {end_inclusive.isoformat()}'
+    else:
+        start_date = _parse_iso_date((args.get('date') or '').strip()) or today
+        end_date = start_date + timedelta(days=1)
+        label = start_date.isoformat()
+
+    start_dt = datetime.combine(start_date, datetime.min.time())
+    end_dt = datetime.combine(end_date, datetime.min.time())
+    days = max(1, (end_dt - start_dt).days)
+
+    return {
+        'mode': mode,
+        'start_date': start_date,
+        'end_date_exclusive': end_date,
+        'end_date_inclusive': end_date - timedelta(days=1),
+        'start_dt': start_dt,
+        'end_dt': end_dt,
+        'days': days,
+        'label': label,
+    }
+
+
+def _build_period_cond(spec, column='wdate', prefix='period'):
+    """기간 스펙으로 WHERE 조건과 바인드 파라미터 반환"""
     local_ts = _kst_ts(column)
-    local_date = _kst_date(column)
+    return (
+        f'{local_ts} >= :{prefix}_start_dt AND {local_ts} < :{prefix}_end_dt',
+        {
+            f'{prefix}_start_dt': spec['start_dt'],
+            f'{prefix}_end_dt': spec['end_dt'],
+        }
+    )
 
-    if mode == 'weekly':
-        return f'{local_ts} >= {_kst_now()} - INTERVAL 7 DAY', {}
-    if mode == 'monthly':
-        return f'{local_ts} >= {_kst_now()} - INTERVAL 30 DAY', {}
-    if mode == 'all':
-        return '1 = 1', {}
-    # daily (기본)
-    if date:
-        return f'{local_date} = :date', {'date': date}
-    return f'{local_date} = DATE({_kst_now()})', {}
+
+def _previous_period_spec(spec):
+    """같은 길이의 직전 기간 계산"""
+    delta = spec['end_dt'] - spec['start_dt']
+    prev_start_dt = spec['start_dt'] - delta
+    prev_end_dt = spec['start_dt']
+    prev_start_date = prev_start_dt.date()
+    prev_end_date = prev_end_dt.date()
+    return {
+        'mode': spec['mode'],
+        'start_date': prev_start_date,
+        'end_date_exclusive': prev_end_date,
+        'end_date_inclusive': prev_end_date - timedelta(days=1),
+        'start_dt': prev_start_dt,
+        'end_dt': prev_end_dt,
+        'days': max(1, (prev_end_dt - prev_start_dt).days),
+        'label': f'{prev_start_date.isoformat()} ~ {(prev_end_date - timedelta(days=1)).isoformat()}',
+    }
 
 
 @bp.route('/analytics')
 @login_required
 def analytics():
     """접속 통계 메인 페이지"""
+    today = _current_kst_date()
     return render_template(
         'admin/analytics.html',
         default_flow_retention_days=current_app.config.get('ACCESS_FLOW_RETENTION_DAYS', 60),
+        analytics_today=today.isoformat(),
+        analytics_month=today.strftime('%Y-%m'),
+        analytics_year=today.year,
+        analytics_range_start=(today - timedelta(days=6)).isoformat(),
+        analytics_range_end=today.isoformat(),
     )
 
 
@@ -1318,29 +1489,18 @@ def analytics():
 @login_required
 def analytics_summary():
     """요약 통계 JSON — 총 접속, 순방문자, 순IP, 조회 매물 수, 전일 대비 증감"""
-    mode = request.args.get('mode', 'daily')
-    date = request.args.get('date', '')
-    date_cond, bind = _build_date_cond(mode, date)
+    period = _resolve_period_spec(request.args)
+    date_cond, bind = _build_period_cond(period)
     local_date = _kst_date('wdate')
-
-    # 비교 기간 조건 (daily만 전일 대비 지원)
-    if mode == 'daily':
-        if date:
-            prev_cond = f'{local_date} = DATE(:date) - INTERVAL 1 DAY'
-            prev_bind = bind
-        else:
-            prev_cond = f'{local_date} = DATE({_kst_now()}) - INTERVAL 1 DAY'
-            prev_bind = {}
-    else:
-        prev_cond = '1 = 0'  # 주간/월간/전체는 전일 비교 없음
-        prev_bind = {}
+    prev_period = _previous_period_spec(period)
+    prev_cond, prev_bind = _build_period_cond(prev_period, prefix='prev_period')
 
     with engine.connect() as conn:
         row = conn.execute(
             text(f"""
                 SELECT
                     COUNT(*)                    AS total,
-                    COUNT(DISTINCT visitor_id)  AS visitors,
+                    COUNT(DISTINCT CASE WHEN visitor_id IS NOT NULL AND visitor_id <> '' THEN visitor_id END) AS visitors,
                     COUNT(DISTINCT ip)          AS ips,
                     COUNT(DISTINCT CASE WHEN code IS NOT NULL
                                    THEN CONCAT(ip, '-', code, '-', {local_date}) END) AS properties
@@ -1352,7 +1512,8 @@ def analytics_summary():
 
         prev_row = conn.execute(
             text(f"""
-                SELECT COUNT(*) AS total, COUNT(DISTINCT visitor_id) AS visitors
+                SELECT COUNT(*) AS total,
+                       COUNT(DISTINCT CASE WHEN visitor_id IS NOT NULL AND visitor_id <> '' THEN visitor_id END) AS visitors
                 FROM zibeasy_access_log
                 WHERE {prev_cond}
             """),
@@ -1370,56 +1531,106 @@ def analytics_summary():
         'visitors':      row[1],
         'ips':           row[2],
         'properties':    row[3],
-        'total_diff':    pct(row[0], prev_row[0]) if mode == 'daily' else None,
-        'visitors_diff': pct(row[1], prev_row[1]) if mode == 'daily' else None,
+        'total_diff':    pct(row[0], prev_row[0]),
+        'visitors_diff': pct(row[1], prev_row[1]),
+        'period_label':  period['label'],
+        'period_mode':   period['mode'],
     })
 
 
-@bp.route('/analytics/api/daily')
+@bp.route('/analytics/api/trend')
 @login_required
-def analytics_daily():
-    """일별 방문자/접속 추이 JSON (mode에 따라 기간 조정)"""
-    mode = request.args.get('mode', 'daily')
-
-    # 기간별 일수 설정
-    interval_map = {'weekly': 7, 'monthly': 30, 'all': 365}
-    interval = interval_map.get(mode, 30)  # daily 선택 시에도 30일 추이 표시
+def analytics_trend():
+    """선택 기간 기준 방문 추이 JSON"""
+    period = _resolve_period_spec(request.args)
+    date_cond, bind = _build_period_cond(period)
     local_ts = _kst_ts('wdate')
     local_date = _kst_date('wdate')
+    local_hour = _kst_hour('wdate')
 
     with engine.connect() as conn:
-        rows = conn.execute(
-            text(f"""
-                SELECT
-                    {local_date}               AS day,
-                    COUNT(*)                    AS total,
-                    COUNT(DISTINCT visitor_id)  AS visitors,
-                    COUNT(DISTINCT ip)          AS ips
-                FROM zibeasy_access_log
-                WHERE {local_ts} >= {_kst_now()} - INTERVAL {interval} DAY
-                GROUP BY day
-                ORDER BY day
-            """)
-        ).fetchall()
+        if period['mode'] == 'year':
+            rows = conn.execute(
+                text(f"""
+                    SELECT
+                        DATE_FORMAT({local_ts}, '%Y-%m') AS bucket,
+                        COUNT(*) AS total,
+                        COUNT(DISTINCT CASE WHEN visitor_id IS NOT NULL AND visitor_id <> '' THEN visitor_id END) AS visitors,
+                        COUNT(DISTINCT ip) AS ips
+                    FROM zibeasy_access_log
+                    WHERE {date_cond}
+                    GROUP BY bucket
+                    ORDER BY bucket
+                """),
+                bind
+            ).fetchall()
+            data = [
+                {'label': str(r[0])[5:], 'total': r[1], 'visitors': r[2], 'ips': r[3]}
+                for r in rows
+            ]
+            title = f"{period['label']} 월별 방문 추이"
+        elif period['mode'] == 'day':
+            rows = conn.execute(
+                text(f"""
+                    SELECT {local_hour} AS bucket,
+                           COUNT(*) AS total,
+                           COUNT(DISTINCT CASE WHEN visitor_id IS NOT NULL AND visitor_id <> '' THEN visitor_id END) AS visitors,
+                           COUNT(DISTINCT ip) AS ips
+                    FROM zibeasy_access_log
+                    WHERE {date_cond}
+                    GROUP BY bucket
+                    ORDER BY bucket
+                """),
+                bind
+            ).fetchall()
+            hour_map = {int(r[0]): {'total': r[1], 'visitors': r[2], 'ips': r[3]} for r in rows}
+            data = [
+                {
+                    'label': f'{hour}시',
+                    'total': hour_map.get(hour, {}).get('total', 0),
+                    'visitors': hour_map.get(hour, {}).get('visitors', 0),
+                    'ips': hour_map.get(hour, {}).get('ips', 0),
+                }
+                for hour in range(24)
+            ]
+            title = f"{period['label']} 시간대별 방문 추이"
+        else:
+            rows = conn.execute(
+                text(f"""
+                    SELECT
+                        {local_date} AS bucket,
+                        COUNT(*) AS total,
+                        COUNT(DISTINCT CASE WHEN visitor_id IS NOT NULL AND visitor_id <> '' THEN visitor_id END) AS visitors,
+                        COUNT(DISTINCT ip) AS ips
+                    FROM zibeasy_access_log
+                    WHERE {date_cond}
+                    GROUP BY bucket
+                    ORDER BY bucket
+                """),
+                bind
+            ).fetchall()
+            data = [
+                {'label': str(r[0]), 'total': r[1], 'visitors': r[2], 'ips': r[3]}
+                for r in rows
+            ]
+            suffix_map = {'week': '일별', 'month': '일별', 'range': '일별'}
+            title = f"{period['label']} {suffix_map.get(period['mode'], '일별')} 방문 추이"
 
-    return jsonify([
-        {'day': str(r[0]), 'total': r[1], 'visitors': r[2], 'ips': r[3]}
-        for r in rows
-    ])
+    return jsonify({
+        'title': title,
+        'mode': period['mode'],
+        'period_label': period['label'],
+        'rows': data,
+    })
 
 
 @bp.route('/analytics/api/hourly')
 @login_required
 def analytics_hourly():
-    """시간대별 접속 분포 JSON (daily 모드 전용)"""
-    date = request.args.get('date', '')
-    if date and not _analytics_re.match(r'^\d{4}-\d{2}-\d{2}$', date):
-        date = ''
-
-    local_date = _kst_date('wdate')
+    """선택 기간 기준 시간대별 접속 분포 JSON"""
+    period = _resolve_period_spec(request.args)
+    date_cond, bind = _build_period_cond(period)
     local_hour = _kst_hour('wdate')
-    date_cond = f'{local_date} = :date' if date else f'{local_date} = DATE({_kst_now()})'
-    bind = {'date': date} if date else {}
 
     with engine.connect() as conn:
         rows = conn.execute(
@@ -1442,19 +1653,17 @@ def analytics_hourly():
 @login_required
 def analytics_breakdown():
     """브라우저/OS/기기 분포 + 유입 출처 + TOP 목록 JSON"""
-    mode = request.args.get('mode', 'daily')
-    date = request.args.get('date', '')
-    date_cond, bind = _build_date_cond(mode, date)
-    entry_cond, entry_bind = _build_date_cond(mode, date, 'e.wdate')
-    local_entry_date = _kst_date('e.wdate')
-    local_view_date = _kst_date('v.wdate')
+    period = _resolve_period_spec(request.args)
+    date_cond, bind = _build_period_cond(period)
+    entry_cond, entry_bind = _build_period_cond(period, 'e.wdate', prefix='entry_period')
+    entry_period_end = entry_bind['entry_period_end_dt']
     detail_conversion_exists = f"""
         EXISTS (
             SELECT 1
             FROM zibeasy_access_log v
             WHERE v.page LIKE '/view/%'
-              AND {local_view_date} = {local_entry_date}
               AND v.wdate >= e.wdate
+              AND {_kst_ts('v.wdate')} < :entry_period_end_dt
               AND (
                   (e.visitor_id IS NOT NULL AND e.visitor_id <> '' AND v.visitor_id = e.visitor_id)
                   OR (
@@ -1526,6 +1735,88 @@ def analytics_breakdown():
             bind
         ).fetchall()
 
+        ip_stats = conn.execute(
+            text(f"""
+                SELECT ip,
+                       COUNT(*) AS visit_cnt,
+                       COUNT(DISTINCT CASE WHEN visitor_id IS NOT NULL AND visitor_id <> '' THEN visitor_id END) AS visitor_cnt,
+                       COUNT(DISTINCT code) AS prop_cnt,
+                       DATE_ADD(MAX(wdate), INTERVAL 9 HOUR) AS last_seen
+                FROM zibeasy_access_log
+                WHERE {date_cond}
+                  AND ip IS NOT NULL
+                  AND ip <> ''
+                GROUP BY ip
+                ORDER BY visit_cnt DESC, last_seen DESC
+                LIMIT 20
+            """),
+            bind
+        ).fetchall()
+
+        visitor_stats = conn.execute(
+            text(f"""
+                SELECT COALESCE(visitor_id, '') AS visitor_id,
+                       COUNT(*) AS visit_cnt,
+                       COUNT(DISTINCT ip) AS ip_cnt,
+                       COUNT(DISTINCT code) AS prop_cnt,
+                       DATE_ADD(MAX(wdate), INTERVAL 9 HOUR) AS last_seen
+                FROM zibeasy_access_log
+                WHERE {date_cond}
+                  AND visitor_id IS NOT NULL
+                  AND visitor_id <> ''
+                GROUP BY visitor_id
+                ORDER BY visit_cnt DESC, last_seen DESC
+                LIMIT 20
+            """),
+            bind
+        ).fetchall()
+
+        browser_stats = conn.execute(
+            text(f"""
+                SELECT COALESCE(NULLIF(browser, ''), 'unknown') AS label,
+                       COUNT(*) AS visit_cnt,
+                       COUNT(DISTINCT ip) AS ip_cnt,
+                       COUNT(DISTINCT CASE WHEN visitor_id IS NOT NULL AND visitor_id <> '' THEN visitor_id END) AS visitor_cnt
+                FROM zibeasy_access_log
+                WHERE {date_cond}
+                GROUP BY label
+                ORDER BY visit_cnt DESC, label ASC
+                LIMIT 20
+            """),
+            bind
+        ).fetchall()
+
+        device_stats_rows = conn.execute(
+            text(f"""
+                SELECT COALESCE(NULLIF(device, ''), 'unknown') AS label,
+                       COUNT(*) AS visit_cnt,
+                       COUNT(DISTINCT ip) AS ip_cnt,
+                       COUNT(DISTINCT CASE WHEN visitor_id IS NOT NULL AND visitor_id <> '' THEN visitor_id END) AS visitor_cnt
+                FROM zibeasy_access_log
+                WHERE {date_cond}
+                GROUP BY label
+                ORDER BY visit_cnt DESC, label ASC
+                LIMIT 20
+            """),
+            bind
+        ).fetchall()
+
+        source_stats_rows = conn.execute(
+            text(f"""
+                SELECT COALESCE(NULLIF(source_name, ''), 'unknown') AS label,
+                       COALESCE(NULLIF(source_type, ''), 'unknown') AS source_type,
+                       COUNT(*) AS visit_cnt,
+                       COUNT(DISTINCT ip) AS ip_cnt,
+                       COUNT(DISTINCT CASE WHEN visitor_id IS NOT NULL AND visitor_id <> '' THEN visitor_id END) AS visitor_cnt
+                FROM zibeasy_access_log
+                WHERE {date_cond}
+                GROUP BY label, source_type
+                ORDER BY visit_cnt DESC, label ASC
+                LIMIT 20
+            """),
+            bind
+        ).fetchall()
+
         top_referrers = conn.execute(
             text(f"""
                 SELECT COALESCE(NULLIF(source_host, ''), 'direct') AS host,
@@ -1563,6 +1854,23 @@ def analytics_breakdown():
                 GROUP BY utm_campaign
                 ORDER BY cnt DESC
                 LIMIT 15
+            """),
+            bind
+        ).fetchall()
+
+        property_stats = conn.execute(
+            text(f"""
+                SELECT code,
+                       COUNT(*) AS visit_cnt,
+                       COUNT(DISTINCT ip) AS ip_cnt,
+                       COUNT(DISTINCT CASE WHEN visitor_id IS NOT NULL AND visitor_id <> '' THEN visitor_id END) AS visitor_cnt,
+                       DATE_ADD(MAX(wdate), INTERVAL 9 HOUR) AS last_seen
+                FROM zibeasy_access_log
+                WHERE {date_cond}
+                  AND code IS NOT NULL
+                GROUP BY code
+                ORDER BY visit_cnt DESC, last_seen DESC
+                LIMIT 20
             """),
             bind
         ).fetchall()
@@ -1605,9 +1913,51 @@ def analytics_breakdown():
         'sources':    [{'label': r[0], 'cnt': r[1]} for r in source_data],
         'properties': [{'code': r[0], 'cnt': r[1]} for r in top_props],
         'top_ips':    [{'ip': r[0], 'visit_cnt': r[1], 'prop_cnt': r[2]} for r in top_ips],
+        'ip_stats': [
+            {
+                'ip': r[0],
+                'visit_cnt': r[1],
+                'visitor_cnt': r[2],
+                'prop_cnt': r[3],
+                'last_seen': r[4].strftime('%m-%d %H:%M:%S') if r[4] else '',
+            }
+            for r in ip_stats
+        ],
+        'visitor_stats': [
+            {
+                'visitor_id': r[0],
+                'visit_cnt': r[1],
+                'ip_cnt': r[2],
+                'prop_cnt': r[3],
+                'last_seen': r[4].strftime('%m-%d %H:%M:%S') if r[4] else '',
+            }
+            for r in visitor_stats
+        ],
+        'browser_stats': [
+            {'label': r[0], 'visit_cnt': r[1], 'ip_cnt': r[2], 'visitor_cnt': r[3]}
+            for r in browser_stats
+        ],
+        'device_stats_rows': [
+            {'label': r[0], 'visit_cnt': r[1], 'ip_cnt': r[2], 'visitor_cnt': r[3]}
+            for r in device_stats_rows
+        ],
+        'source_stats_rows': [
+            {'label': r[0], 'source_type': r[1], 'visit_cnt': r[2], 'ip_cnt': r[3], 'visitor_cnt': r[4]}
+            for r in source_stats_rows
+        ],
         'top_referrers': [{'host': r[0], 'cnt': r[1]} for r in top_referrers],
         'top_landings': [{'landing': r[0], 'cnt': r[1]} for r in top_landings],
         'top_campaigns': [{'campaign': r[0], 'cnt': r[1]} for r in top_campaigns],
+        'property_stats': [
+            {
+                'code': r[0],
+                'visit_cnt': r[1],
+                'ip_cnt': r[2],
+                'visitor_cnt': r[3],
+                'last_seen': r[4].strftime('%m-%d %H:%M:%S') if r[4] else '',
+            }
+            for r in property_stats
+        ],
         'source_conversions': [
             {
                 'label': r[0],
@@ -1634,8 +1984,7 @@ def analytics_breakdown():
 def analytics_logs():
     """IP + visitor_id 기준 상세 로그 그룹 목록 JSON"""
     # 파라미터 수집
-    mode    = request.args.get('mode', 'daily')
-    date    = request.args.get('date', '')
+    period  = _resolve_period_spec(request.args)
     ip      = request.args.get('ip', '').strip()
     device  = request.args.get('device', '').strip()
     browser = request.args.get('browser', '').strip()
@@ -1657,7 +2006,7 @@ def analytics_logs():
     order_by = sort_map.get(sort, 'last_wdate_utc DESC')
 
     # WHERE 조건 동적 생성: 기간 조건은 _build_date_cond() 재사용
-    date_cond, bind = _build_date_cond(mode, date)
+    date_cond, bind = _build_period_cond(period)
     conditions = [date_cond]
 
     if ip:
@@ -1670,7 +2019,7 @@ def analytics_logs():
         conditions.append('browser = :browser')
         bind['browser'] = browser
     if source:
-        conditions.append('source_name = :source')
+        conditions.append('(source_name = :source OR source_type = :source)')
         bind['source'] = source
 
     where = ' AND '.join(conditions)
@@ -1747,6 +2096,8 @@ def analytics_logs():
 @login_required
 def analytics_log_detail():
     """특정 IP + visitor_id의 전체 로그 기록 JSON"""
+    period = _resolve_period_spec(request.args)
+    date_cond, bind = _build_period_cond(period, prefix='detail_period')
     ip = request.args.get('ip', '').strip()
     visitor_id = request.args.get('visitor_id', '').strip()
 
@@ -1755,7 +2106,7 @@ def analytics_log_detail():
 
     with engine.connect() as conn:
         rows = conn.execute(
-            text("""
+            text(f"""
                 SELECT
                     DATE_ADD(wdate, INTERVAL 9 HOUR) AS local_wdate,
                     ip, COALESCE(visitor_id, '') AS visitor_id,
@@ -1766,9 +2117,10 @@ def analytics_log_detail():
                 FROM zibeasy_access_log
                 WHERE ip = :ip
                   AND COALESCE(visitor_id, '') = :visitor_id
+                  AND {date_cond}
                 ORDER BY wdate DESC, id DESC
             """),
-            {'ip': ip, 'visitor_id': visitor_id}
+            {**bind, 'ip': ip, 'visitor_id': visitor_id}
         ).fetchall()
 
     return jsonify({
