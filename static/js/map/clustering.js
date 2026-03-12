@@ -1253,7 +1253,7 @@ class ClusteringManager {
 
             if (listingScope !== 'all_registered') {
                 const ldateRaw = property.ldate;
-                const ldate = ldateRaw ? new Date(String(ldateRaw).replace(' ', 'T')) : null;
+                const ldate = ldateRaw ? new Date(String(ldateRaw)) : null;
                 const threshold = new Date(Date.now() - (30 * 24 * 60 * 60 * 1000));
                 if (!(ldate instanceof Date) || Number.isNaN(ldate.getTime()) || ldate < threshold) {
                     return false;
