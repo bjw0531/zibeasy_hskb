@@ -644,8 +644,8 @@ class ListManager {
             ? 'color: #e53935; font-weight: bold;'
             : '';
         const timeStyle = timeAgo === '확인필요'
-            ? 'font-size: 12px; color: #e53935; font-weight: 500; display: flex; justify-content: flex-end; width: 100%; text-align: right; padding-right: 10px;'
-            : 'font-size: 12px; color: rgb(100, 100, 100); display: flex; justify-content: flex-end; width: 100%; text-align: right; padding-right: 10px;';
+            ? 'font-size: 12px; color: #e53935; font-weight: 500;'
+            : 'font-size: 12px; color: rgb(100, 100, 100);';
 
         // ✅ 계약완료면 end.png 오버레이 표시
         const contractOverlay = isContractCompleted

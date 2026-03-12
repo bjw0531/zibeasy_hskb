@@ -600,7 +600,7 @@ function createPropertyCard(property) {
                 </div>
                 <div class="property-card-address" style="color: rgb(120, 120, 120);">${address}${infoText}</div>
                 <div class="property-card-title" style="color: rgb(50, 50, 50);">${(property.title || '상세 설명이 없습니다.').replace(/\[.*?\]/g, '').trim()}</div>
-                ${(timeAgo || distanceBadge) ? `<div class="property-card-time text-xs font-normal" style="${timeStyle}; display: flex; justify-content: flex-end; align-items: center; width: 100%; text-align: right; gap: 8px; padding-right: 10px;"><span>${timeAgo || ''}</span>${distanceBadge ? `<span>${distanceBadge}</span>` : ''}</div>` : ''}
+                ${(timeAgo || distanceBadge) ? `<div class="property-card-time text-xs font-normal" style="${timeStyle}; display: flex; justify-content: space-between; align-items: center;"><span>${timeAgo || ''}</span>${distanceBadge ? `<span style="margin-right: 10px;">${distanceBadge}</span>` : ''}</div>` : ''}
             </div>
         </div>
     `;
