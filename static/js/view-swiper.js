@@ -19,6 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const swiper = new Swiper('.mySwiper', {
         loop: false,
         lazy: true,
+        speed: 480,
+        lazyPreloadPrevNext: 1,
         on: {
             init() {
                 if (totalSlidesEl) totalSlidesEl.textContent = this.slides.length;

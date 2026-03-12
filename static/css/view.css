@@ -48,6 +48,14 @@ body {
     height: 100%;
     object-fit: cover;
 }
+.mySwiper .swiper-wrapper {
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+}
+.mySwiper .swiper-slide {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
 
 /* ── 전체화면 사진 뷰어 ── */
 .photo-viewer-overlay {
