@@ -191,6 +191,14 @@
         return { valid: true, message: '' };
     }
 
+    function hasInvalidPhonePrefix(phone) {
+        const digits = String(phone || '').replace(/\D/g, '');
+        if (digits.length >= 1 && digits.charAt(0) !== '0') return true;
+        if (digits.length >= 2 && digits.charAt(1) !== '1') return true;
+        if (digits.length >= 3 && digits.charAt(2) !== '0') return true;
+        return false;
+    }
+
     function attachInputState(input, options) {
         if (!window.RequestInputState || typeof window.RequestInputState.attach !== 'function') {
             return {
@@ -666,9 +674,14 @@
             group: phoneField,
             errorEl: phoneError,
             validate(value) {
+                if (hasInvalidPhonePrefix(value)) {
+                    return { valid: false, message: '정확한 연락처를 입력해 주세요.' };
+                }
                 return validatePhoneValue(value);
             },
-            showErrorOnInput: true
+            shouldShowError(context) {
+                return context.reason === 'input' && hasInvalidPhonePrefix(context.value);
+            }
         });
 
         function updateSubmitState() {

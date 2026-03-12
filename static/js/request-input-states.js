@@ -90,7 +90,18 @@
             const validation = validateValue(value);
             const isFocused = document.activeElement === control;
             const allowTypingState = settings.useTypingState !== false;
+            const shouldShowErrorNow = typeof settings.shouldShowError === 'function'
+                ? settings.shouldShowError({
+                    reason: reason,
+                    value: value,
+                    control: control,
+                    filled: filled,
+                    validation: validation,
+                    touched: state.touched
+                })
+                : false;
             const showError = !validation.valid && (
+                shouldShowErrorNow ||
                 reason === 'submit' ||
                 state.touched ||
                 (settings.showErrorOnInput && filled)
