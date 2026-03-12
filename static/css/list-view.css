@@ -472,6 +472,7 @@ body.lv-body {
     margin-top: 1px;
     align-self: flex-end;
     width: 100%;
+    padding-right: 10px;
     text-align: right;
 }
 
