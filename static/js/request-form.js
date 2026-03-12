@@ -1,50 +1,64 @@
-/* ── Step Form: 집 내놓기 (순차 입력) ──
-   한 번에 하나의 입력만 표시하고
-   10칸 진행 막대로 현재 단계를 안내한다. */
-
+/* ── Step Form: 집 내놓기 ── */
 (function () {
     'use strict';
 
-    /* ── 질문 단계 정의 ── */
+    const DEPOSIT_OPTIONS = Array.from({ length: 30 }, (_, i) => String((i + 1) * 100));
+    const MONTHLY_OPTIONS = [
+        ...Array.from({ length: 21 }, (_, i) => String(20 + i)),
+        ...Array.from({ length: 8 }, (_, i) => String(45 + i * 5)),
+        ...Array.from({ length: 4 }, (_, i) => String(90 + i * 10))
+    ];
+    const MAINTENANCE_OPTIONS = Array.from({ length: 31 }, (_, i) => String(i));
+    const NAME_REGEX = /^[A-Za-z가-힣\s]+$/;
+    const JEONSE_NOTICE = '죄송합니다. 전세는 거래를 하지 않고 있습니다.';
+
     const STEPS = [
-        { id: 'name',      label: '이름',        type: 'text',    placeholder: '이름 입력',                           field: 'name' },
-        { id: 'phone',     label: '연락처',      type: 'text',    placeholder: '010-0000-0000',                       field: 'phone' },
-        { id: 'address',   label: '매물 주소',   type: 'text',    placeholder: '예: 천안시 서북구 두정동 000번지',    field: 'property_address' },
-        { id: 'building',  label: '건물명/호실', type: 'dual',    fields: [
+        { id: 'address', label: '내놓으실 집 주소는요?', type: 'text', field: 'property_address', placeholder: '예: 천안시 서북구 두정동 000번지', requiredMessage: '매물 주소를 입력해 주세요.' },
+        { id: 'building', label: '건물이름과 호실은요?', type: 'dual', fields: [
             { label: '건물명', placeholder: '예: OO빌라', field: 'building_name' },
-            { label: '호실',   placeholder: '예: 301호',  field: 'room_number'   }
+            { label: '호실', placeholder: '예: 301호', field: 'room_number' }
         ]},
-        { id: 'prop_type', label: '매물 유형',   type: 'choice',  field: 'property_type',
+        { id: 'prop_type', label: '내놓으실 집은 어떤건가요?', type: 'choice', field: 'property_type',
             choices: ['원룸', '투베이', '투룸', '쓰리룸', '오피스텔', '상가', '기타'] },
-        { id: 'tx_type',   label: '거래 유형',   type: 'choice',  field: 'transaction_type',
+        { id: 'tx_type', label: '거래 유형을 선택해 주세요.', type: 'choice', field: 'transaction_type',
             choices: ['월세', '전세', '매매'] },
-        /* 동적 가격 — 거래유형에 따라 변경 */
-        { id: 'price',     label: '',            type: 'dynamic_price' },
-        { id: 'maint',     label: '고정 관리비', type: 'text',    placeholder: '예: 5만원',      field: 'maintenance_fee' },
-        { id: 'move_date', label: '입주 가능일', type: 'date',    field: 'move_in_date' },
-        { id: 'details',   label: '추가 내용',   type: 'textarea', placeholder: '특이사항, 옵션 등', field: 'details', optional: true },
-        { id: 'confirm',   label: '',            type: 'confirm' }
+        { id: 'price', label: '', type: 'dynamic_price' },
+        { id: 'maint', label: '고정 관리비는 얼마인가요?', type: 'maintenance_range', field: 'maintenance_fee' },
+        { id: 'move_date', label: '입주가 가능한 날짜는 언제부터인가요?', type: 'date', field: 'move_in_date' },
+        { id: 'details', label: '추가로 전달하실 내용이 있으신가요?', type: 'textarea', field: 'details', placeholder: '특이사항, 옵션 등', optional: true },
+        { id: 'contact', label: '이름과 연락처를 알려주세요.', type: 'contact' },
+        { id: 'confirm', label: '', type: 'confirm' }
     ];
 
-    /* ── 상태 ── */
     let currentStep = 0;
-    const answers = {};
-    const csrfToken = document.getElementById('sfCsrfToken')?.value || '';
-    const NAME_REGEX = /^[A-Za-z가-힣\s]+$/;
+    const answers = {
+        property_address: '',
+        building_name: '',
+        room_number: '',
+        property_type: '',
+        transaction_type: '',
+        deposit: '',
+        monthly_rent: '',
+        jeonse_price: '',
+        sale_price: '',
+        maintenance_fee: '',
+        move_in_date: '',
+        details: '',
+        name: '',
+        phone: '',
+        privacy_agree: false
+    };
 
-    /* ── DOM 참조 ── */
+    const csrfToken = document.getElementById('sfCsrfToken')?.value || '';
     const stepsContainer = document.getElementById('sfSteps');
     const progressSegments = document.getElementById('sfProgressSegments');
-    const privacyModal   = document.getElementById('privacyModal');
+    const privacyModal = document.getElementById('privacyModal');
 
     if (!stepsContainer) return;
 
-    /* ── 유틸 ── */
-
-    /* 진행률 칸 생성 */
     function ensureProgressSegments() {
         if (!progressSegments || progressSegments.children.length > 0) return;
-        const total = STEPS.length - 1; /* confirm 제외 */
+        const total = STEPS.length - 1;
         for (let i = 0; i < total; i++) {
             const seg = document.createElement('span');
             seg.className = 'sf-progress-segment';
@@ -52,21 +66,19 @@
         }
     }
 
-    /* 진행률 업데이트 */
     function updateProgress() {
-        const total = STEPS.length - 1; /* confirm 제외 */
+        const total = STEPS.length - 1;
         const completed = Math.min(currentStep, total);
         if (!progressSegments) return;
-        const items = progressSegments.children;
-        for (let i = 0; i < items.length; i++) {
-            items[i].classList.toggle('filled', i < completed);
-            items[i].classList.toggle('current', i === completed && completed < total);
-        }
+        Array.from(progressSegments.children).forEach((item, index) => {
+            item.classList.toggle('filled', index < completed);
+            item.classList.toggle('current', index === completed && completed < total);
+        });
     }
 
     function goPrev() {
         if (currentStep <= 0) return;
-        currentStep--;
+        currentStep -= 1;
         render();
         requestAnimationFrame(() => {
             const active = stepsContainer.querySelector('.sf-active, .sf-confirm');
@@ -74,20 +86,13 @@
         });
     }
 
-    /* 동적 가격 단계의 라벨 결정 */
-    function getPriceLabel() {
-        const tx = answers.transaction_type;
-        if (tx === '월세') return '보증금/월세';
-        if (tx === '전세') return '전세가';
-        return '매매가';
-    }
-
-    /* 동적 가격 단계의 요약값 */
-    function getPriceSummary() {
-        const tx = answers.transaction_type;
-        if (tx === '월세') return `${answers.deposit || '-'} / ${answers.monthly_rent || '-'}`;
-        if (tx === '전세') return answers.jeonse_price || '-';
-        return answers.sale_price || '-';
+    function advance() {
+        currentStep += 1;
+        render();
+        requestAnimationFrame(() => {
+            const active = stepsContainer.querySelector('.sf-active, .sf-confirm');
+            if (active) active.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
     }
 
     function formatPhoneNumber(raw) {
@@ -97,23 +102,83 @@
         return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
     }
 
+    function formatBudgetValue(value) {
+        if (value === '' || value == null) return '';
+        return `${value}만원`;
+    }
+
+    function parseDateValue(value) {
+        const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || '').trim());
+        if (!match) return null;
+        return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+    }
+
+    function isBeforeToday(value) {
+        const selected = parseDateValue(value);
+        if (!selected) return false;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        selected.setHours(0, 0, 0, 0);
+        return selected < today;
+    }
+
+    function isValidName(name) {
+        const trimmed = String(name || '').trim();
+        return !!trimmed && NAME_REGEX.test(trimmed);
+    }
+
+    function isSingleKoreanCharacterName(name) {
+        return /^[가-힣]$/.test(String(name || '').trim());
+    }
+
+    function hasInvalidPhonePrefix(phone) {
+        const digits = String(phone || '').replace(/\D/g, '');
+        if (digits.length >= 1 && digits.charAt(0) !== '0') return true;
+        if (digits.length >= 2 && digits.charAt(1) !== '1') return true;
+        if (digits.length >= 3 && digits.charAt(2) !== '0') return true;
+        return false;
+    }
+
     function validateRequired(value, message) {
-        if (String(value || '').trim()) {
-            return { valid: true, message: '' };
-        }
+        if (String(value || '').trim()) return { valid: true, message: '' };
         return { valid: false, message: message };
     }
 
-    function validateLeaseField(field, value, message, optional) {
+    function validatePhoneValue(phone) {
+        const trimmed = String(phone || '').trim();
+        if (!trimmed) {
+            return { valid: false, message: '연락처를 입력해 주세요.' };
+        }
+        if (hasInvalidPhonePrefix(trimmed)) {
+            return { valid: false, message: '정확한 연락처를 입력해 주세요.' };
+        }
+        if (!/^\d{3}-\d{4}-\d{4}$/.test(trimmed)) {
+            return { valid: false, message: '연락처를 010-0000-0000 형식으로 입력해 주세요.' };
+        }
+        return { valid: true, message: '' };
+    }
+
+    function validateContactName(value) {
         const trimmed = String(value || '').trim();
         if (!trimmed) {
-            return optional ? { valid: true, message: '' } : { valid: false, message: message };
+            return { valid: false, message: '이름을 입력해 주세요.' };
         }
-        if (field === 'name' && !NAME_REGEX.test(trimmed)) {
+        if (isSingleKoreanCharacterName(trimmed)) {
+            return { valid: false, message: '이름을 정확히 입력해 주세요.' };
+        }
+        if (!isValidName(trimmed)) {
             return { valid: false, message: '이름은 한글과 영문만 입력해 주세요.' };
         }
-        if (field === 'phone' && !/^\d{3}-\d{4}-\d{4}$/.test(trimmed)) {
-            return { valid: false, message: '연락처를 010-0000-0000 형식으로 입력해 주세요.' };
+        return { valid: true, message: '' };
+    }
+
+    function validateMoveInDate(value) {
+        const trimmed = String(value || '').trim();
+        if (!trimmed) {
+            return { valid: false, message: '입주가 가능한 날짜를 선택해 주세요.' };
+        }
+        if (isBeforeToday(trimmed)) {
+            return { valid: false, message: '당일 이전 날짜를 선택 할 수 없습니다.' };
         }
         return { valid: true, message: '' };
     }
@@ -128,11 +193,10 @@
         return window.RequestInputState.attach(input, options);
     }
 
-    function handlePhoneInput(input) {
-        const formatted = formatPhoneNumber(input.value);
-        input.value = formatted;
-        answers.phone = formatted;
-        return formatted;
+    function openPrivacyModal() {
+        if (!privacyModal) return;
+        privacyModal.classList.add('active');
+        privacyModal.setAttribute('aria-hidden', 'false');
     }
 
     function initDatePicker(input, onChange) {
@@ -148,429 +212,38 @@
         });
     }
 
-    /* ── 전체 렌더링 ── */
-    function render() {
-        stepsContainer.innerHTML = '';
-        ensureProgressSegments();
-        updateProgress();
-
-        /* 현재 활성 단계만 표시 */
-        if (currentStep < STEPS.length) {
-            const step = STEPS[currentStep];
-            if (step.type === 'confirm') {
-                stepsContainer.appendChild(createConfirmCard());
-            } else {
-                stepsContainer.appendChild(createActiveCard(currentStep));
-            }
-        }
+    function setRangeProgress(input) {
+        const min = Number(input.min || 0);
+        const max = Number(input.max || 0);
+        const value = Number(input.value || 0);
+        const percent = max > min ? ((value - min) / (max - min)) * 100 : 0;
+        input.style.setProperty('--range-progress', `${percent}%`);
     }
 
-    /* ── 현재 활성 입력 카드 ── */
-    function createActiveCard(idx) {
-        const step = STEPS[idx];
-        const card = document.createElement('div');
-        card.className = 'sf-active';
-
-        /* 동적 가격 라벨 결정 */
-        let label = step.label;
-        if (step.type === 'dynamic_price') {
-            const tx = answers.transaction_type;
-            if (tx === '월세') label = '보증금 / 월세';
-            else if (tx === '전세') label = '전세가';
-            else label = '매매가';
-        }
-
-        /* 라벨 */
-        const labelEl = document.createElement('div');
-        labelEl.className = 'sf-active-label';
-        labelEl.textContent = `${label} (${step.optional ? '선택' : '필수'})`;
-        card.appendChild(labelEl);
-
-        /* 입력 UI 타입별 렌더링 */
-        switch (step.type) {
-            case 'text':
-                card.appendChild(buildTextInput(step));
-                break;
-            case 'date':
-                card.appendChild(buildDateInput(step));
-                break;
-            case 'dual':
-                card.appendChild(buildDualInput(step));
-                break;
-            case 'choice':
-                card.appendChild(buildChoices(step));
-                break;
-            case 'dynamic_price':
-                card.appendChild(buildPriceInput());
-                break;
-            case 'textarea':
-                card.appendChild(buildTextareaInput(step));
-                break;
-        }
-
-        /* 자동 포커스 (렌더 후) */
-        requestAnimationFrame(() => {
-            const firstInput = card.querySelector('input, textarea');
-            if (firstInput) firstInput.focus();
-        });
-
-        return card;
+    function restartAnimation(element, className) {
+        if (!element) return;
+        element.classList.remove(className);
+        void element.offsetWidth;
+        element.classList.add(className);
     }
 
-    /* ── 텍스트 입력 빌더 ── */
-    function buildTextInput(step) {
-        const wrap = document.createElement('div');
-        const inp = document.createElement('input');
-        inp.type = 'text';
-        inp.placeholder = step.placeholder || '';
-        inp.autocomplete = 'off';
-        if (step.field === 'name') inp.autocomplete = 'name';
-        if (step.field === 'phone') {
-            inp.type = 'tel';
-            inp.inputMode = 'tel';
-            inp.autocomplete = 'tel';
-            inp.maxLength = 13;
-        }
-        if (step.field === 'maintenance_fee') inp.inputMode = 'numeric';
-        if (answers[step.field]) inp.value = answers[step.field];
-
-        const fieldState = attachInputState(inp, {
-            group: wrap,
-            validate(value) {
-                return validateLeaseField(step.field, value, `${step.label}을 입력해 주세요.`, !!step.optional);
-            },
-            showErrorOnInput: step.field === 'name' || step.field === 'phone'
-        });
-
-        const btn = createNextBtn();
-        btn.disabled = !fieldState.refresh('init');
-        inp.addEventListener('input', () => {
-            if (step.field === 'phone') {
-                handlePhoneInput(inp);
-                btn.disabled = !fieldState.refresh('input');
-                return;
-            }
-            btn.disabled = !fieldState.refresh('input');
-        });
-        inp.addEventListener('keydown', (e) => {
-            if (step.field === 'phone' && e.key.length === 1 && !/\d/.test(e.key)) {
-                e.preventDefault();
-                return;
-            }
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                if (step.field === 'phone') {
-                    handlePhoneInput(inp);
-                }
-                if (!fieldState.validate('submit')) return;
-                answers[step.field] = step.field === 'phone' ? handlePhoneInput(inp) : inp.value.trim();
-                advance();
-            }
-        });
-        btn.addEventListener('click', () => {
-            if (step.field === 'phone') {
-                handlePhoneInput(inp);
-            }
-            if (!fieldState.validate('submit')) return;
-            answers[step.field] = step.field === 'phone' ? handlePhoneInput(inp) : inp.value.trim();
-            advance();
-        });
-
-        wrap.appendChild(inp);
-        wrap.appendChild(createActions(btn));
-        return wrap;
+    function createRangeMeta(minLabel, maxLabel) {
+        const meta = document.createElement('div');
+        meta.className = 'fh-range-meta';
+        const left = document.createElement('span');
+        left.textContent = minLabel;
+        const right = document.createElement('span');
+        right.textContent = maxLabel;
+        meta.appendChild(left);
+        meta.appendChild(right);
+        return meta;
     }
 
-    /* ── 날짜 입력 빌더 ── */
-    function buildDateInput(step) {
-        const wrap = document.createElement('div');
-        const inp = document.createElement('input');
-        inp.type = 'text';
-        inp.className = 'flatpickr-input';
-        inp.placeholder = '날짜를 선택해 주세요';
-        if (answers[step.field]) inp.value = answers[step.field];
-
-        const fieldState = attachInputState(inp, {
-            group: wrap,
-            validate(value) {
-                return validateRequired(value, '입주 가능일을 선택해 주세요.');
-            },
-            useTypingState: false
-        });
-
-        const btn = createNextBtn();
-        btn.disabled = !fieldState.refresh('init');
-        requestAnimationFrame(() => {
-            initDatePicker(inp, (dateStr) => {
-                btn.disabled = !fieldState.refresh('change');
-            });
-        });
-        btn.addEventListener('click', () => {
-            if (!fieldState.validate('submit')) return;
-            answers[step.field] = inp.value;
-            advance();
-        });
-
-        wrap.appendChild(inp);
-        wrap.appendChild(createActions(btn));
-        return wrap;
-    }
-
-    /* ── 2열 입력 빌더 (건물명/호실) ── */
-    function buildDualInput(step) {
-        const wrap = document.createElement('div');
-
-        const grid = document.createElement('div');
-        grid.className = 'sf-dual';
-
-        const inputs = step.fields.map((f, i) => {
-            const col = document.createElement('div');
-            const lbl = document.createElement('div');
-            lbl.className = 'sf-dual-label';
-            lbl.textContent = f.label;
-            const inp = document.createElement('input');
-            inp.type = 'text';
-            inp.placeholder = f.placeholder;
-            inp.autocomplete = 'off';
-            inp.id = 'sfDual' + i;
-            if (answers[f.field]) inp.value = answers[f.field];
-            col.appendChild(lbl);
-            col.appendChild(inp);
-            grid.appendChild(col);
-            return inp;
-        });
-
-        const fieldStates = inputs.map((inp, index) => attachInputState(inp, {
-            group: inp.parentElement,
-            validate(value) {
-                return validateRequired(value, `${step.fields[index].label}을 입력해 주세요.`);
-            }
-        }));
-
-        const btn = createNextBtn();
-        function check(reason) {
-            btn.disabled = fieldStates.some((stateCtrl) => !stateCtrl.refresh(reason || 'input'));
-        }
-        check();
-        inputs.forEach(inp => inp.addEventListener('input', () => check('input')));
-
-        /* Enter로 다음 필드 이동 또는 전송 */
-        inputs[0].addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') { e.preventDefault(); inputs[1].focus(); }
-        });
-        inputs[1].addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                if (fieldStates.some((stateCtrl) => !stateCtrl.validate('submit'))) return;
-                step.fields.forEach((f, i) => { answers[f.field] = inputs[i].value.trim(); });
-                advance();
-            }
-        });
-        btn.addEventListener('click', () => {
-            if (fieldStates.some((stateCtrl) => !stateCtrl.validate('submit'))) return;
-            step.fields.forEach((f, i) => { answers[f.field] = inputs[i].value.trim(); });
-            advance();
-        });
-
-        wrap.appendChild(grid);
-        wrap.appendChild(createActions(btn));
-        return wrap;
-    }
-
-    /* ── 선택지 버튼 빌더 ── */
-    function buildChoices(step) {
-        const container = document.createElement('div');
-        const wrap = document.createElement('div');
-        wrap.className = 'sf-choices';
-        const nextBtn = createNextBtn();
-        nextBtn.disabled = !answers[step.field];
-
-        step.choices.forEach(c => {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'sf-choice-btn';
-            if (answers[step.field] === c) btn.classList.add('is-selected');
-            btn.textContent = c;
-            btn.addEventListener('click', () => {
-                answers[step.field] = c;
-                wrap.querySelectorAll('.sf-choice-btn').forEach((choiceBtn) => {
-                    choiceBtn.classList.toggle('is-selected', choiceBtn === btn);
-                });
-                nextBtn.disabled = false;
-            });
-            wrap.appendChild(btn);
-        });
-
-        container.appendChild(wrap);
-        nextBtn.addEventListener('click', () => {
-            if (!answers[step.field]) return;
-            advance();
-        });
-        container.appendChild(createActions(nextBtn));
-        return container;
-    }
-
-    /* ── 동적 가격 입력 빌더 ── */
-    function buildPriceInput() {
-        const tx = answers.transaction_type;
-        const wrap = document.createElement('div');
-
-        if (tx === '월세') {
-            /* 보증금 + 월세 2열 입력 */
-            const grid = document.createElement('div');
-            grid.className = 'sf-dual';
-
-            const fields = [
-                { label: '보증금', placeholder: '예: 500만원', key: 'deposit' },
-                { label: '월세',   placeholder: '예: 45만원',  key: 'monthly_rent' }
-            ];
-
-            const inputs = fields.map((f, i) => {
-                const col = document.createElement('div');
-                const lbl = document.createElement('div');
-                lbl.className = 'sf-dual-label';
-                lbl.textContent = f.label;
-                const inp = document.createElement('input');
-                inp.type = 'text';
-                inp.placeholder = f.placeholder;
-                inp.autocomplete = 'off';
-                inp.id = 'sfPrice' + i;
-                if (answers[f.key]) inp.value = answers[f.key];
-                col.appendChild(lbl);
-                col.appendChild(inp);
-                grid.appendChild(col);
-                return inp;
-            });
-
-            const fieldStates = inputs.map((inp, index) => attachInputState(inp, {
-                group: inp.parentElement,
-                validate(value) {
-                    return validateRequired(value, `${fields[index].label}을 입력해 주세요.`);
-                }
-            }));
-
-            const btn = createNextBtn();
-            function check(reason) {
-                btn.disabled = fieldStates.some((stateCtrl) => !stateCtrl.refresh(reason || 'input'));
-            }
-            check();
-            inputs.forEach(inp => inp.addEventListener('input', () => check('input')));
-            inputs[0].addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') { e.preventDefault(); inputs[1].focus(); }
-            });
-            inputs[1].addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    if (fieldStates.some((stateCtrl) => !stateCtrl.validate('submit'))) return;
-                    answers.deposit = inputs[0].value.trim();
-                    answers.monthly_rent = inputs[1].value.trim();
-                    advance();
-                }
-            });
-            btn.addEventListener('click', () => {
-                if (fieldStates.some((stateCtrl) => !stateCtrl.validate('submit'))) return;
-                answers.deposit = inputs[0].value.trim();
-                answers.monthly_rent = inputs[1].value.trim();
-                advance();
-            });
-
-            wrap.appendChild(grid);
-            wrap.appendChild(createActions(btn));
-        } else {
-            /* 전세 or 매매 — 단일 입력 */
-            const key = tx === '전세' ? 'jeonse_price' : 'sale_price';
-            const ph  = tx === '전세' ? '예: 1억 2천' : '예: 1억 5천';
-
-            const inp = document.createElement('input');
-            inp.type = 'text';
-            inp.placeholder = ph;
-            inp.autocomplete = 'off';
-            if (answers[key]) inp.value = answers[key];
-
-            const fieldState = attachInputState(inp, {
-                group: wrap,
-                validate(value) {
-                    return validateRequired(value, `${getPriceLabel()}를 입력해 주세요.`);
-                }
-            });
-
-            const btn = createNextBtn();
-            btn.disabled = !fieldState.refresh('init');
-            inp.addEventListener('input', () => { btn.disabled = !fieldState.refresh('input'); });
-            inp.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    if (!fieldState.validate('submit')) return;
-                    answers[key] = inp.value.trim();
-                    advance();
-                }
-            });
-            btn.addEventListener('click', () => {
-                if (!fieldState.validate('submit')) return;
-                answers[key] = inp.value.trim();
-                advance();
-            });
-
-            wrap.appendChild(inp);
-            wrap.appendChild(createActions(btn));
-        }
-
-        return wrap;
-    }
-
-    /* ── textarea 입력 빌더 (건너뛰기 포함) ── */
-    function buildTextareaInput(step) {
-        const wrap = document.createElement('div');
-        const ta = document.createElement('textarea');
-        ta.placeholder = step.placeholder || '';
-        if (answers[step.field]) ta.value = answers[step.field];
-
-        const fieldState = attachInputState(ta, {
-            group: wrap,
-            required: false
-        });
-        fieldState.refresh('init');
-
-        const btn = createNextBtn();
-        btn.disabled = false; /* 선택 항목이므로 항상 활성 */
-
-        ta.addEventListener('input', () => {
-            fieldState.refresh('input');
-        });
-
-        btn.addEventListener('click', () => {
-            answers[step.field] = ta.value.trim();
-            advance();
-        });
-        ta.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                answers[step.field] = ta.value.trim();
-                advance();
-            }
-        });
-
-        /* 건너뛰기 버튼 */
-        const skip = document.createElement('button');
-        skip.type = 'button';
-        skip.className = 'sf-skip-btn';
-        skip.textContent = '건너뛰기';
-        skip.addEventListener('click', () => {
-            answers[step.field] = '';
-            advance();
-        });
-
-        wrap.appendChild(ta);
-        wrap.appendChild(createActions(skip, btn));
-        return wrap;
-    }
-
-    /* ── "다음" 버튼 생성 ── */
-    function createNextBtn() {
+    function createNextBtn(label) {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'sf-next-btn';
-        btn.textContent = '다음';
+        btn.textContent = label || '다음';
         return btn;
     }
 
@@ -583,6 +256,17 @@
         return btn;
     }
 
+    function createExitBtn() {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'fh-exit-btn';
+        btn.textContent = '나가기';
+        btn.addEventListener('click', () => {
+            window.history.back();
+        });
+        return btn;
+    }
+
     function createActions(...buttons) {
         const actions = document.createElement('div');
         actions.className = 'sf-actions';
@@ -591,7 +275,622 @@
         return actions;
     }
 
-    /* ── 확인 카드 ── */
+    function syncTransactionType(value) {
+        answers.transaction_type = value;
+        if (value === '월세') {
+            answers.jeonse_price = '';
+            answers.sale_price = '';
+        } else if (value === '전세') {
+            answers.deposit = '';
+            answers.monthly_rent = '';
+            answers.sale_price = '';
+        } else if (value === '매매') {
+            answers.deposit = '';
+            answers.monthly_rent = '';
+            answers.jeonse_price = '';
+        }
+    }
+
+    function getPriceLabel() {
+        if (answers.transaction_type === '월세') return '보증금 / 월세';
+        if (answers.transaction_type === '전세') return '전세가';
+        return '매매가';
+    }
+
+    function getPriceSummary() {
+        if (answers.transaction_type === '월세') {
+            return `${formatBudgetValue(answers.deposit) || '-'} / ${formatBudgetValue(answers.monthly_rent) || '-'}`;
+        }
+        if (answers.transaction_type === '전세') {
+            return answers.jeonse_price || JEONSE_NOTICE;
+        }
+        return answers.sale_price || '-';
+    }
+
+    function render() {
+        stepsContainer.innerHTML = '';
+        ensureProgressSegments();
+        updateProgress();
+
+        const step = STEPS[currentStep];
+        if (!step) return;
+
+        if (step.type === 'confirm') {
+            stepsContainer.appendChild(createConfirmCard());
+        } else {
+            stepsContainer.appendChild(createActiveCard(step));
+        }
+    }
+
+    function createActiveCard(step) {
+        const card = document.createElement('div');
+        card.className = 'sf-active';
+
+        let label = step.label;
+        if (step.type === 'dynamic_price') {
+            label = '어떤 가격으로 내놓으세요?';
+        }
+
+        const labelEl = document.createElement('div');
+        labelEl.className = 'sf-active-label';
+        labelEl.textContent = `${label} (${step.optional ? '선택' : '필수'})`;
+        card.appendChild(labelEl);
+
+        switch (step.type) {
+            case 'text':
+                card.appendChild(buildTextInput(step));
+                break;
+            case 'dual':
+                card.appendChild(buildDualInput(step));
+                break;
+            case 'choice':
+                card.appendChild(buildChoices(step));
+                break;
+            case 'dynamic_price':
+                card.appendChild(buildPriceInput());
+                break;
+            case 'maintenance_range':
+                card.appendChild(buildMaintenanceRange());
+                break;
+            case 'date':
+                card.appendChild(buildDateInput(step));
+                break;
+            case 'textarea':
+                card.appendChild(buildTextareaInput(step));
+                break;
+            case 'contact':
+                card.appendChild(buildContactStep());
+                break;
+        }
+
+        requestAnimationFrame(() => {
+            const focusTarget = card.querySelector('[data-autofocus], input, textarea, button, select');
+            if (focusTarget && typeof focusTarget.focus === 'function') {
+                focusTarget.focus();
+            }
+        });
+
+        return card;
+    }
+
+    function buildTextInput(step) {
+        const wrap = document.createElement('div');
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = step.placeholder || '';
+        input.autocomplete = 'off';
+        input.value = answers[step.field] || '';
+
+        const fieldState = attachInputState(input, {
+            group: wrap,
+            validate(value) {
+                return validateRequired(value, step.requiredMessage || '입력값을 확인해 주세요.');
+            }
+        });
+
+        const nextBtn = createNextBtn();
+        nextBtn.disabled = !fieldState.refresh('init');
+
+        input.addEventListener('input', () => {
+            nextBtn.disabled = !fieldState.refresh('input');
+        });
+        input.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter') return;
+            event.preventDefault();
+            if (!fieldState.validate('submit')) return;
+            answers[step.field] = input.value.trim();
+            advance();
+        });
+        nextBtn.addEventListener('click', () => {
+            if (!fieldState.validate('submit')) return;
+            answers[step.field] = input.value.trim();
+            advance();
+        });
+
+        wrap.appendChild(input);
+        wrap.appendChild(createActions(nextBtn));
+        return wrap;
+    }
+
+    function buildDualInput(step) {
+        const wrap = document.createElement('div');
+        const grid = document.createElement('div');
+        grid.className = 'sf-dual';
+
+        const inputs = step.fields.map((field, index) => {
+            const col = document.createElement('div');
+            const label = document.createElement('div');
+            label.className = 'sf-dual-label';
+            label.textContent = field.label;
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = field.placeholder;
+            input.autocomplete = 'off';
+            input.value = answers[field.field] || '';
+
+            col.appendChild(label);
+            col.appendChild(input);
+            grid.appendChild(col);
+            return input;
+        });
+
+        const fieldStates = inputs.map((input, index) => attachInputState(input, {
+            group: input.parentElement,
+            validate(value) {
+                return validateRequired(value, `${step.fields[index].label}을 입력해 주세요.`);
+            }
+        }));
+
+        const nextBtn = createNextBtn();
+        function sync(reason) {
+            nextBtn.disabled = fieldStates.some((stateCtrl) => !stateCtrl.refresh(reason || 'input'));
+        }
+        sync('init');
+
+        inputs.forEach((input, index) => {
+            input.addEventListener('input', () => sync('input'));
+            input.addEventListener('keydown', (event) => {
+                if (event.key !== 'Enter') return;
+                event.preventDefault();
+                if (index === 0) {
+                    inputs[1].focus();
+                    return;
+                }
+                if (fieldStates.some((stateCtrl) => !stateCtrl.validate('submit'))) return;
+                step.fields.forEach((field, fieldIndex) => {
+                    answers[field.field] = inputs[fieldIndex].value.trim();
+                });
+                advance();
+            });
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (fieldStates.some((stateCtrl) => !stateCtrl.validate('submit'))) return;
+            step.fields.forEach((field, index) => {
+                answers[field.field] = inputs[index].value.trim();
+            });
+            advance();
+        });
+
+        wrap.appendChild(grid);
+        wrap.appendChild(createActions(nextBtn));
+        return wrap;
+    }
+
+    function buildChoices(step) {
+        const container = document.createElement('div');
+        const wrap = document.createElement('div');
+        wrap.className = 'sf-choices';
+        const nextBtn = createNextBtn();
+        nextBtn.disabled = !answers[step.field];
+
+        step.choices.forEach((choice) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'sf-choice-btn';
+            button.textContent = choice;
+            if (answers[step.field] === choice) button.classList.add('is-selected');
+            button.addEventListener('click', () => {
+                if (step.field === 'transaction_type') {
+                    syncTransactionType(choice);
+                } else {
+                    answers[step.field] = choice;
+                }
+                wrap.querySelectorAll('.sf-choice-btn').forEach((item) => {
+                    item.classList.toggle('is-selected', item === button);
+                });
+                nextBtn.disabled = false;
+            });
+            wrap.appendChild(button);
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (!answers[step.field]) return;
+            advance();
+        });
+
+        container.appendChild(wrap);
+        container.appendChild(createActions(nextBtn));
+        return container;
+    }
+
+    function buildMonthlyRangeField(label, options, answerKey, minLabel, maxLabel, autofocus) {
+        if (!answers[answerKey]) {
+            answers[answerKey] = options[0];
+        }
+
+        const wrap = document.createElement('div');
+        wrap.className = 'fh-range-wrap';
+
+        const head = document.createElement('div');
+        head.className = 'fh-range-head';
+
+        const title = document.createElement('span');
+        title.className = 'fh-range-label';
+        title.textContent = label;
+
+        const value = document.createElement('span');
+        value.className = 'fh-range-value';
+        value.textContent = formatBudgetValue(answers[answerKey]);
+
+        head.appendChild(title);
+        head.appendChild(value);
+
+        const range = document.createElement('input');
+        range.type = 'range';
+        range.className = 'fh-range';
+        range.min = '0';
+        range.max = String(options.length - 1);
+        range.step = '1';
+        range.value = String(Math.max(0, options.indexOf(answers[answerKey])));
+        if (autofocus) {
+            range.setAttribute('data-autofocus', 'true');
+        }
+        range.addEventListener('input', () => {
+            const index = Number(range.value);
+            answers[answerKey] = options[index] || options[0];
+            value.textContent = formatBudgetValue(answers[answerKey]);
+            setRangeProgress(range);
+            restartAnimation(value, 'is-pulsing');
+            restartAnimation(range, 'is-bumping');
+        });
+        setRangeProgress(range);
+
+        wrap.appendChild(head);
+        wrap.appendChild(range);
+        wrap.appendChild(createRangeMeta(minLabel, maxLabel));
+        return wrap;
+    }
+
+    function buildPriceInput() {
+        const wrap = document.createElement('div');
+        const tx = answers.transaction_type;
+
+        if (tx === '전세') {
+            const info = document.createElement('div');
+            info.className = 'fh-info';
+            info.textContent = JEONSE_NOTICE;
+            wrap.appendChild(info);
+            wrap.appendChild(createActions(createExitBtn()));
+            return wrap;
+        }
+
+        if (tx === '월세') {
+            wrap.appendChild(buildMonthlyRangeField('보증금', DEPOSIT_OPTIONS, 'deposit', '100만원', '3000만원+', true));
+            wrap.appendChild(buildMonthlyRangeField('월세', MONTHLY_OPTIONS, 'monthly_rent', '20만원', '120만원', false));
+
+            const nextBtn = createNextBtn();
+            nextBtn.addEventListener('click', () => {
+                advance();
+            });
+            wrap.appendChild(createActions(nextBtn));
+            return wrap;
+        }
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = '예: 1억 5천';
+        input.autocomplete = 'off';
+        input.value = answers.sale_price || '';
+
+        const fieldState = attachInputState(input, {
+            group: wrap,
+            validate(value) {
+                return validateRequired(value, '매매가를 입력해 주세요.');
+            }
+        });
+
+        const nextBtn = createNextBtn();
+        nextBtn.disabled = !fieldState.refresh('init');
+        input.addEventListener('input', () => {
+            nextBtn.disabled = !fieldState.refresh('input');
+        });
+        input.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter') return;
+            event.preventDefault();
+            if (!fieldState.validate('submit')) return;
+            answers.sale_price = input.value.trim();
+            advance();
+        });
+        nextBtn.addEventListener('click', () => {
+            if (!fieldState.validate('submit')) return;
+            answers.sale_price = input.value.trim();
+            advance();
+        });
+
+        wrap.appendChild(input);
+        wrap.appendChild(createActions(nextBtn));
+        return wrap;
+    }
+
+    function buildMaintenanceRange() {
+        if (answers.maintenance_fee === '') {
+            answers.maintenance_fee = MAINTENANCE_OPTIONS[0];
+        }
+
+        const wrap = document.createElement('div');
+        const rangeWrap = document.createElement('div');
+        rangeWrap.className = 'fh-range-wrap';
+
+        const head = document.createElement('div');
+        head.className = 'fh-range-head';
+
+        const label = document.createElement('span');
+        label.className = 'fh-range-label';
+        label.textContent = '관리비';
+
+        const value = document.createElement('span');
+        value.className = 'fh-range-value';
+        value.textContent = formatBudgetValue(answers.maintenance_fee);
+
+        head.appendChild(label);
+        head.appendChild(value);
+
+        const range = document.createElement('input');
+        range.type = 'range';
+        range.className = 'fh-range';
+        range.min = '0';
+        range.max = String(MAINTENANCE_OPTIONS.length - 1);
+        range.step = '1';
+        range.value = String(Math.max(0, MAINTENANCE_OPTIONS.indexOf(answers.maintenance_fee)));
+        range.setAttribute('data-autofocus', 'true');
+        range.addEventListener('input', () => {
+            const index = Number(range.value);
+            answers.maintenance_fee = MAINTENANCE_OPTIONS[index] || MAINTENANCE_OPTIONS[0];
+            value.textContent = formatBudgetValue(answers.maintenance_fee);
+            setRangeProgress(range);
+            restartAnimation(value, 'is-pulsing');
+            restartAnimation(range, 'is-bumping');
+        });
+        setRangeProgress(range);
+
+        rangeWrap.appendChild(head);
+        rangeWrap.appendChild(range);
+        rangeWrap.appendChild(createRangeMeta('0만원', '30만원'));
+
+        const nextBtn = createNextBtn();
+        nextBtn.addEventListener('click', () => {
+            advance();
+        });
+
+        wrap.appendChild(rangeWrap);
+        wrap.appendChild(createActions(nextBtn));
+        return wrap;
+    }
+
+    function buildDateInput(step) {
+        const wrap = document.createElement('div');
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'flatpickr-input';
+        input.placeholder = '날짜를 선택해 주세요';
+        input.value = answers[step.field] || '';
+
+        const fieldState = attachInputState(input, {
+            group: wrap,
+            validate(value) {
+                return validateMoveInDate(value);
+            },
+            useTypingState: false,
+            shouldShowError(context) {
+                return context.reason === 'change' && !!String(context.value || '').trim() && isBeforeToday(context.value);
+            }
+        });
+
+        const nextBtn = createNextBtn();
+        nextBtn.disabled = !fieldState.refresh('init');
+
+        requestAnimationFrame(() => {
+            initDatePicker(input, (dateStr) => {
+                answers[step.field] = dateStr;
+                nextBtn.disabled = !fieldState.refresh('change');
+            });
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (!fieldState.validate('submit')) return;
+            answers[step.field] = input.value;
+            advance();
+        });
+
+        wrap.appendChild(input);
+        wrap.appendChild(createActions(nextBtn));
+        return wrap;
+    }
+
+    function buildTextareaInput(step) {
+        const wrap = document.createElement('div');
+        const textarea = document.createElement('textarea');
+        textarea.placeholder = step.placeholder || '';
+        textarea.value = answers[step.field] || '';
+
+        const fieldState = attachInputState(textarea, {
+            group: wrap,
+            required: false
+        });
+        fieldState.refresh('init');
+
+        const nextBtn = createNextBtn();
+        const skipBtn = document.createElement('button');
+        skipBtn.type = 'button';
+        skipBtn.className = 'sf-skip-btn';
+        skipBtn.textContent = '건너뛰기';
+
+        textarea.addEventListener('input', () => {
+            fieldState.refresh('input');
+        });
+        textarea.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                answers[step.field] = textarea.value.trim();
+                advance();
+            }
+        });
+
+        skipBtn.addEventListener('click', () => {
+            answers[step.field] = '';
+            advance();
+        });
+        nextBtn.addEventListener('click', () => {
+            answers[step.field] = textarea.value.trim();
+            advance();
+        });
+
+        wrap.appendChild(textarea);
+        wrap.appendChild(createActions(skipBtn, nextBtn));
+        return wrap;
+    }
+
+    function buildContactStep() {
+        const wrap = document.createElement('div');
+
+        const grid = document.createElement('div');
+        grid.className = 'fh-contact-grid';
+
+        const nameField = document.createElement('div');
+        nameField.className = 'fh-contact-field';
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.className = 'fh-input';
+        nameInput.placeholder = '이름';
+        nameInput.autocomplete = 'name';
+        nameInput.value = answers.name || '';
+        nameInput.setAttribute('data-autofocus', 'true');
+        const nameError = document.createElement('div');
+        nameError.className = 'fh-error';
+        nameField.appendChild(nameInput);
+        nameField.appendChild(nameError);
+
+        const phoneField = document.createElement('div');
+        phoneField.className = 'fh-contact-field';
+        const phoneInput = document.createElement('input');
+        phoneInput.type = 'tel';
+        phoneInput.className = 'fh-input';
+        phoneInput.placeholder = '010-0000-0000';
+        phoneInput.autocomplete = 'tel';
+        phoneInput.inputMode = 'tel';
+        phoneInput.maxLength = 13;
+        phoneInput.value = formatPhoneNumber(answers.phone || '');
+        const phoneError = document.createElement('div');
+        phoneError.className = 'fh-error';
+        phoneField.appendChild(phoneInput);
+        phoneField.appendChild(phoneError);
+
+        grid.appendChild(nameField);
+        grid.appendChild(phoneField);
+        wrap.appendChild(grid);
+
+        const privacyBox = document.createElement('div');
+        privacyBox.className = 'fh-privacy';
+
+        const label = document.createElement('label');
+        const check = document.createElement('input');
+        check.type = 'checkbox';
+        check.checked = !!answers.privacy_agree;
+        const text = document.createElement('span');
+        text.textContent = '개인정보 활용 동의 (필수)';
+        label.appendChild(check);
+        label.appendChild(text);
+        privacyBox.appendChild(label);
+
+        const privacyLink = document.createElement('button');
+        privacyLink.type = 'button';
+        privacyLink.className = 'fh-privacy-link';
+        privacyLink.textContent = '개인정보 활용 동의 내용 보기';
+        privacyLink.addEventListener('click', openPrivacyModal);
+        privacyBox.appendChild(privacyLink);
+        wrap.appendChild(privacyBox);
+
+        const nameState = attachInputState(nameInput, {
+            group: nameField,
+            errorEl: nameError,
+            validate(value) {
+                return validateContactName(value);
+            },
+            showErrorOnInput: true
+        });
+
+        const phoneState = attachInputState(phoneInput, {
+            group: phoneField,
+            errorEl: phoneError,
+            validate(value) {
+                return validatePhoneValue(value);
+            },
+            shouldShowError(context) {
+                return context.reason === 'input' && hasInvalidPhonePrefix(context.value);
+            }
+        });
+
+        function updateNextState() {
+            const nameValid = validateContactName(answers.name).valid;
+            const phoneValid = validatePhoneValue(answers.phone).valid;
+            nextBtn.disabled = !(nameValid && phoneValid && answers.privacy_agree);
+        }
+
+        const nextBtn = createNextBtn('입력 내용 확인');
+
+        nameInput.addEventListener('input', () => {
+            answers.name = nameInput.value.trim();
+            nameState.refresh('input');
+            updateNextState();
+        });
+        phoneInput.addEventListener('keydown', (event) => {
+            if (event.key.length === 1 && !/\d/.test(event.key)) {
+                event.preventDefault();
+            }
+        });
+        phoneInput.addEventListener('input', () => {
+            const formatted = formatPhoneNumber(phoneInput.value || '');
+            phoneInput.value = formatted;
+            answers.phone = formatted;
+            phoneState.refresh('input');
+            updateNextState();
+        });
+        check.addEventListener('change', () => {
+            answers.privacy_agree = check.checked;
+            updateNextState();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            const nameValid = nameState.validate('submit');
+            const phoneValid = phoneState.validate('submit');
+            updateNextState();
+            if (!nameValid || !phoneValid || !answers.privacy_agree) return;
+            advance();
+        });
+
+        answers.name = nameInput.value.trim();
+        answers.phone = formatPhoneNumber(phoneInput.value || '');
+        phoneInput.value = answers.phone;
+        nameState.refresh('init');
+        phoneState.refresh('init');
+        updateNextState();
+
+        wrap.appendChild(createActions(nextBtn));
+        return wrap;
+    }
+
     function createConfirmCard() {
         const card = document.createElement('div');
         card.className = 'sf-confirm';
@@ -601,113 +900,50 @@
         title.textContent = '입력 내용을 확인해 주세요';
         card.appendChild(title);
 
-        /* 요약 행 */
-        const txType = answers.transaction_type;
         const rows = [
-            ['이름',        answers.name],
-            ['연락처',      answers.phone],
-            ['매물 주소',   answers.property_address],
+            ['매물 주소', answers.property_address],
             ['건물명/호실', `${answers.building_name || '-'} ${answers.room_number || '-'}`],
-            ['매물 유형',   answers.property_type],
-            ['거래 유형',   txType],
+            ['매물 유형', answers.property_type],
+            ['거래 유형', answers.transaction_type],
             [getPriceLabel(), getPriceSummary()],
-            ['고정 관리비', answers.maintenance_fee],
-            ['입주 가능일', answers.move_in_date],
+            ['고정 관리비', formatBudgetValue(answers.maintenance_fee) || '-'],
+            ['입주 가능일', answers.move_in_date || '-'],
+            ['이름', answers.name || '-'],
+            ['연락처', answers.phone || '-']
         ];
-        if (answers.details) rows.push(['추가 내용', answers.details]);
 
-        rows.forEach(([l, v]) => {
+        if (answers.details) {
+            rows.push(['추가 내용', answers.details]);
+        }
+
+        rows.forEach(([labelText, valueText]) => {
             const row = document.createElement('div');
             row.className = 'sf-confirm-row';
 
-            const labelEl = document.createElement('span');
-            labelEl.className = 'sf-confirm-label';
-            labelEl.textContent = l;
+            const label = document.createElement('span');
+            label.className = 'sf-confirm-label';
+            label.textContent = labelText;
 
-            const valueEl = document.createElement('span');
-            valueEl.className = 'sf-confirm-value';
-            valueEl.textContent = v || '-';
+            const value = document.createElement('span');
+            value.className = 'sf-confirm-value';
+            value.textContent = valueText || '-';
 
-            row.appendChild(labelEl);
-            row.appendChild(valueEl);
+            row.appendChild(label);
+            row.appendChild(value);
             card.appendChild(row);
         });
 
-        /* 개인정보 동의 */
-        const agree = document.createElement('div');
-        agree.className = 'sf-agree';
-
-        const agreeHint = document.createElement('div');
-        agreeHint.className = 'sf-agree-hint';
-        agreeHint.textContent = '입력하신 개인정보는 접수 내용 확인 및 연락 목적으로만 사용됩니다.';
-
-        const agreeLabel = document.createElement('label');
-        const agreeCheck = document.createElement('input');
-        agreeCheck.type = 'checkbox';
-        agreeCheck.id = 'sfAgreeCheck';
-
-        const agreeText = document.createElement('span');
-        agreeText.textContent = '개인정보 활용에 동의합니다. (필수)';
-
-        agreeLabel.appendChild(agreeCheck);
-        agreeLabel.appendChild(agreeText);
-
-        const agreeLinkWrap = document.createElement('div');
-        agreeLinkWrap.className = 'sf-agree-link-wrap';
-        const openPrivacyBtn = document.createElement('button');
-        openPrivacyBtn.type = 'button';
-        openPrivacyBtn.className = 'sf-agree-link';
-        openPrivacyBtn.id = 'sfOpenPrivacy';
-        openPrivacyBtn.textContent = '개인정보 활용 동의 내용 보기';
-        agreeLinkWrap.appendChild(openPrivacyBtn);
-
-        agree.appendChild(agreeHint);
-        agree.appendChild(agreeLabel);
-        agree.appendChild(agreeLinkWrap);
-        card.appendChild(agree);
-
-        /* 제출 버튼 */
         const submitBtn = document.createElement('button');
         submitBtn.type = 'button';
         submitBtn.className = 'sf-submit-btn';
         submitBtn.id = 'sfSubmitBtn';
         submitBtn.textContent = '집 내놓기 신청하기';
-        submitBtn.disabled = true;
+        submitBtn.addEventListener('click', handleSubmit);
+
         card.appendChild(createActions(submitBtn));
-
-        /* 이벤트 바인딩 (렌더 후) */
-        requestAnimationFrame(() => {
-            const agreeCheck = document.getElementById('sfAgreeCheck');
-            const openPriv   = document.getElementById('sfOpenPrivacy');
-            const btn        = document.getElementById('sfSubmitBtn');
-
-            if (agreeCheck && btn) {
-                agreeCheck.addEventListener('change', () => { btn.disabled = !agreeCheck.checked; });
-            }
-            if (openPriv && privacyModal) {
-                openPriv.addEventListener('click', () => {
-                    privacyModal.classList.add('active');
-                    privacyModal.setAttribute('aria-hidden', 'false');
-                });
-            }
-            if (btn) btn.addEventListener('click', handleSubmit);
-        });
-
         return card;
     }
 
-    /* ── 다음 단계로 이동 ── */
-    function advance() {
-        currentStep++;
-        render();
-        /* 현재 활성 카드로 스크롤 */
-        requestAnimationFrame(() => {
-            const active = stepsContainer.querySelector('.sf-active, .sf-confirm');
-            if (active) active.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        });
-    }
-
-    /* ── 폼 제출 ── */
     async function handleSubmit() {
         const submitBtn = document.getElementById('sfSubmitBtn');
         if (!submitBtn) return;
@@ -718,8 +954,8 @@
         const payload = {
             request_type: 'lease_out',
             csrf_token: csrfToken,
-            privacy_agree: 'Y',
-            ...answers
+            ...answers,
+            privacy_agree: 'Y'
         };
 
         try {
@@ -729,9 +965,10 @@
                 body: JSON.stringify(payload)
             });
             const data = await res.json();
-            if (!res.ok || !data.success) throw new Error(data.message || '요청 처리에 실패했습니다.');
+            if (!res.ok || !data.success) {
+                throw new Error(data.message || '요청 처리에 실패했습니다.');
+            }
 
-            /* 완료 화면 */
             stepsContainer.innerHTML = `
                 <div class="sf-done-screen">
                     <div class="sf-done-check">
@@ -739,7 +976,8 @@
                     </div>
                     <div class="sf-done-title">신청이 완료되었습니다!</div>
                     <div class="sf-done-desc">접수 내용을 확인 후<br>빠른 시일 내에 연락드리겠습니다.</div>
-                </div>`;
+                </div>
+            `;
         } catch (err) {
             alert(err.message || '요청 중 오류가 발생했습니다.');
             submitBtn.disabled = false;
@@ -747,7 +985,5 @@
         }
     }
 
-    /* ── 시작 ── */
     render();
-
 })();

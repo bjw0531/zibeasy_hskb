@@ -199,6 +199,32 @@
         return false;
     }
 
+    function parseDateValue(value) {
+        const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || '').trim());
+        if (!match) return null;
+        return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+    }
+
+    function isBeforeToday(value) {
+        const selected = parseDateValue(value);
+        if (!selected) return false;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        selected.setHours(0, 0, 0, 0);
+        return selected < today;
+    }
+
+    function validateMoveInDate(value) {
+        const trimmed = String(value || '').trim();
+        if (!trimmed) {
+            return { valid: false, message: '입주 희망일을 선택해 주세요.' };
+        }
+        if (isBeforeToday(trimmed)) {
+            return { valid: false, message: '당일 이전 날짜는 선택할 수 없습니다.' };
+        }
+        return { valid: true, message: '' };
+    }
+
     function attachInputState(input, options) {
         if (!window.RequestInputState || typeof window.RequestInputState.attach !== 'function') {
             return {
@@ -507,9 +533,12 @@
         const moveInState = attachInputState(input, {
             group: field,
             validate(value) {
-                return validateRequired(value, '입주 희망일을 선택해 주세요.');
+                return validateMoveInDate(value);
             },
-            useTypingState: false
+            useTypingState: false,
+            shouldShowError(context) {
+                return context.reason === 'change' && !!String(context.value || '').trim() && isBeforeToday(context.value);
+            }
         });
 
         const actions = document.createElement('div');
