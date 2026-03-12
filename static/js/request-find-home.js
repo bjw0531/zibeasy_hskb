@@ -168,6 +168,11 @@
         return !!trimmed && NAME_REGEX.test(trimmed);
     }
 
+    function isSingleKoreanCharacterName(name) {
+        const trimmed = String(name || '').trim();
+        return /^[가-힣]$/.test(trimmed);
+    }
+
     function validateRequired(value, message) {
         if (String(value || '').trim()) {
             return { valid: true, message: '' };
@@ -645,6 +650,9 @@
                 const trimmed = String(value || '').trim();
                 if (!trimmed) {
                     return { valid: false, message: '이름을 입력해 주세요.' };
+                }
+                if (isSingleKoreanCharacterName(trimmed)) {
+                    return { valid: false, message: '이름을 정확히 입력해 주세요.' };
                 }
                 if (!isValidName(trimmed)) {
                     return { valid: false, message: '이름은 한글과 영문만 입력해 주세요.' };
