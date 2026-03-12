@@ -82,15 +82,52 @@
   var TAB_ROOT_BASE_KEY = '__tabRootBase';
   var TAB_ROOT_GUARD_KEY = '__tabRootGuard';
   var TAB_ROOT_PATH_KEY = '__tabRootPath';
+  var tabRootGuardEnabled = false;
+
+  function getExitInvoker() {
+    if (window.appManager && typeof window.appManager.handleAppExit === 'function') {
+      return function() { window.appManager.handleAppExit(); };
+    }
+
+    if ((window.cordova || window.phonegap) && navigator.app && typeof navigator.app.exitApp === 'function') {
+      return function() { navigator.app.exitApp(); };
+    }
+
+    if (window.Android) {
+      if (typeof window.Android.exitApp === 'function') {
+        return function() { window.Android.exitApp(); };
+      }
+      if (typeof window.Android.closeApp === 'function') {
+        return function() { window.Android.closeApp(); };
+      }
+      if (typeof window.Android.finish === 'function') {
+        return function() { window.Android.finish(); };
+      }
+      if (typeof window.Android.onBackPressed === 'function') {
+        return function() { window.Android.onBackPressed(); };
+      }
+    }
+
+    if (window.webkit && window.webkit.messageHandlers) {
+      if (window.webkit.messageHandlers.exitApp) {
+        return function() { window.webkit.messageHandlers.exitApp.postMessage('exit'); };
+      }
+      if (window.webkit.messageHandlers.closeApp) {
+        return function() { window.webkit.messageHandlers.closeApp.postMessage('exit'); };
+      }
+      if (window.webkit.messageHandlers.closeWindow) {
+        return function() { window.webkit.messageHandlers.closeWindow.postMessage('exit'); };
+      }
+    }
+
+    return null;
+  }
 
   function closeTabRootPage() {
+    var exitInvoker = getExitInvoker();
     try {
-      if (window.appManager && typeof window.appManager.handleAppExit === 'function') {
-        window.appManager.handleAppExit();
-        return;
-      }
-      if (window.cordova || window.phonegap) {
-        navigator.app.exitApp();
+      if (exitInvoker) {
+        exitInvoker();
         return;
       }
       window.close();
@@ -109,6 +146,10 @@
   }
 
   function initTabRootGuard() {
+    var exitInvoker = getExitInvoker();
+    tabRootGuardEnabled = !!exitInvoker;
+    if (!tabRootGuardEnabled) return;
+
     try {
       var currentState = history.state || {};
       var isSamePath = currentState[TAB_ROOT_PATH_KEY] === location.pathname;
@@ -149,6 +190,7 @@
   /* ── 2. 탭 루트 페이지 뒤로가기 = 종료 처리 ── */
   initTabRootGuard();
   window.addEventListener('popstate', function(event) {
+    if (!tabRootGuardEnabled) return;
     var state = event.state || {};
     if (!state[TAB_ROOT_BASE_KEY] || state[TAB_ROOT_PATH_KEY] !== location.pathname) return;
     closeTabRootPage();
