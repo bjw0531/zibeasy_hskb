@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}?v=7">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/heart.css') }}?v=7">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/list.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/property-preview-slider.css') }}?v=1">
 
     <!-- 매물 목록 페이지 전용 CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/property-list-page.css') }}?v=7">
@@ -116,7 +117,8 @@
     <script src="{{ url_for('static', filename='js/liked.js') }}?v=9"></script>
 
     <!-- 매물 목록 페이지 전용 JS -->
-    <script src="{{ url_for('static', filename='js/property-list-page.js') }}?v=9"></script>
+    <script src="{{ url_for('static', filename='js/property-preview-slider.js') }}?v=1"></script>
+    <script src="{{ url_for('static', filename='js/property-list-page.js') }}?v=10"></script>
 
     {# ── 하단 내비게이션 바 (지도 탭 활성 — 지도형에서 진입하는 패널 목록) ── #}
     {% set active_nav = 'map' %}

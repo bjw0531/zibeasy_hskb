@@ -5,6 +5,19 @@
  -메인 컬러: #ff7675(255,118,117), 서브 컬러: 
  */
 
+function buildPanelThumbMarkup(property) {
+    if (window.propertyPreviewSlider && typeof window.propertyPreviewSlider.buildThumbMarkup === 'function') {
+        return window.propertyPreviewSlider.buildThumbMarkup(property);
+    }
+
+    if (!property.picname1) {
+        return `<div class="property-image-placeholder">📷</div>`;
+    }
+
+    return `<img src="/images/maemul/thumb/${property.picname1}" alt="${property.title || '매물 이미지'}" loading="lazy"
+        onerror="this.parentElement.innerHTML='<div class=\\'property-image-placeholder\\'>📷</div>'">`;
+}
+
 
 
 class AppManager {
@@ -387,8 +400,8 @@ class AppManager {
      * 매물 카드 생성 (계약완료 매물 처리 포함)
      */
     createPropertyCard(property) {
-        const imageUrl = property.picname1 ? `/images/maemul/thumb/${property.picname1}` : '/static/images/no-image.png';
         const address = this.formatAddress(property);
+        const thumbInner = buildPanelThumbMarkup(property);
 
         // ✅ 계약완료 여부 확인
         const isContractCompleted = property.contract === '계약완료';
@@ -455,10 +468,7 @@ class AppManager {
                             <path d="M223,57a58.07,58.07,0,0,0-81.92-.1L128,69.05 114.91,56.86A58,58,0,0,0,33,139l89.35,90.66a8,8,0,0,0,11.4,0L223,139a58,58,0,0,0,0-82Z"></path>
                         </svg>
                     </div>
-                    ${imageUrl ?
-                `<img src="${imageUrl}" alt="${property.title || '매물 이미지'}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'property-image-placeholder\\'>📷</div>'">` :
-                `<div class="property-image-placeholder">📷</div>`
-            }
+                    ${thumbInner}
                     ${contractOverlay}
                     ${!isContractCompleted && property.movie && property.movie.trim() !== ''
                 ? `<div class="absolute bottom-[6%] left-[6%] z-[6] flex items-center justify-center" style="width: clamp(20px, 16%, 44px); height: clamp(20px, 16%, 44px);" title="영상 있음">
@@ -580,6 +590,11 @@ class AppManager {
      * 패널 카드 이벤트 추가
      */
     attachPanelCardEvents() {
+        const listContent = document.getElementById('listContent');
+        if (listContent && window.propertyPreviewSlider && typeof window.propertyPreviewSlider.init === 'function') {
+            window.propertyPreviewSlider.init(listContent);
+        }
+
         const cards = document.querySelectorAll('#listContent .property-card');
         cards.forEach(card => {
             card.addEventListener('click', (e) => {

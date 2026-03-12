@@ -1,0 +1,51 @@
+.property-card.property-card--swiping {
+    transform: none;
+}
+
+.property-image-slider {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    touch-action: pan-y;
+    user-select: none;
+}
+
+.property-image-track {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
+}
+
+.property-image-slide {
+    flex: 0 0 100%;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--background-gray);
+}
+
+.property-image-dots {
+    position: absolute;
+    left: 50%;
+    bottom: 10px;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    z-index: 8;
+}
+
+.property-image-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.42);
+    transition: transform 0.2s ease, background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.property-image-dot.is-active {
+    background: #fff;
+    transform: scale(1.2);
+}

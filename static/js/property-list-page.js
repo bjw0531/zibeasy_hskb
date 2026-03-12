@@ -437,6 +437,10 @@ function renderCards(contentEl, properties, append = false) {
         restoreLikedState();
     }
 
+    if (window.propertyPreviewSlider && typeof window.propertyPreviewSlider.init === 'function') {
+        window.propertyPreviewSlider.init(contentEl);
+    }
+
     // 무한 스크롤 설정
     setupInfiniteScroll(contentEl);
 }
@@ -501,8 +505,12 @@ function showEmpty(contentEl) {
  * ✅ 매물 카드 HTML 생성 (main.js createPropertyCard 복사)
  */
 function createPropertyCard(property) {
-    const imageUrl = property.picname1 ? `/images/maemul/thumb/${property.picname1}` : '/static/images/no-image.png';
     const address = formatAddress(property);
+    const thumbInner = (window.propertyPreviewSlider && typeof window.propertyPreviewSlider.buildThumbMarkup === 'function')
+        ? window.propertyPreviewSlider.buildThumbMarkup(property)
+        : (property.picname1
+            ? `<img src="/images/maemul/thumb/${property.picname1}" alt="${property.title || '매물 이미지'}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'property-image-placeholder\\'>📷</div>'">`
+            : `<div class="property-image-placeholder">📷</div>`);
 
     // 계약완료 여부 확인
     const isContractCompleted = property.contract === '계약완료';
@@ -574,10 +582,7 @@ function createPropertyCard(property) {
                         <path d="M223,57a58.07,58.07,0,0,0-81.92-.1L128,69.05 114.91,56.86A58,58,0,0,0,33,139l89.35,90.66a8,8,0,0,0,11.4,0L223,139a58,58,0,0,0,0-82Z"></path>
                     </svg>
                 </div>
-                ${imageUrl ?
-            `<img src="${imageUrl}" alt="${property.title || '매물 이미지'}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'property-image-placeholder\\'>📷</div>'">` :
-            `<div class="property-image-placeholder">📷</div>`
-        }
+                ${thumbInner}
                 ${contractOverlay}
                 ${!isContractCompleted && property.movie && property.movie.trim() !== ''
             ? `<div class="absolute bottom-[6%] left-[6%] z-[6] flex items-center justify-center" style="width: clamp(20px, 16%, 44px); height: clamp(20px, 16%, 44px);" title="영상 있음">
@@ -809,6 +814,10 @@ function tryRestoreState() {
         // ✅ 찜하기 상태 복원
         if (typeof restoreLikedState === 'function') {
             restoreLikedState();
+        }
+
+        if (window.propertyPreviewSlider && typeof window.propertyPreviewSlider.init === 'function') {
+            window.propertyPreviewSlider.init(contentEl);
         }
 
         // ✅ 무한 스크롤 재설정
