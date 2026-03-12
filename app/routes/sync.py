@@ -50,7 +50,11 @@ def sync_property():
         saved_images = _save_property_images(data, files)
         
         logging.info(f"🎉 매물 동기화 성공: code={data.get('code')}")
-        logging.info(f"📊 동기화 결과: 매물 데이터 ✅, 이미지 big={len(saved_images.get('big', []))}장")
+        logging.info(
+            "📊 동기화 결과: 매물 데이터 ✅, 이미지 big=%s장, thumb=%s장",
+            len(saved_images.get('big', [])),
+            len(saved_images.get('thumb', [])),
+        )
         
         return jsonify({
             'success': True,
@@ -218,7 +222,7 @@ def _save_property_images(data, files):
 
                 saved_images['big'].append(saved_name)
                 saved_images['thumb'].append(saved_name)
-                logging.info(f"✅ Multipart 이미지 저장 성공: {saved_name}")
+                logging.info(f"✅ Multipart 이미지 저장 성공 (big/thumb): {saved_name}")
     
     # Base64 이미지 처리 (big만)
     if 'encoded_images' in data and data['encoded_images']:
@@ -268,7 +272,7 @@ def _save_property_images(data, files):
 
                         saved_images['big'].append(saved_name)
                         saved_images['thumb'].append(saved_name)
-                        logging.info(f"✅ 이미지 저장 성공 (big/thumb): {saved_name}")
+                        logging.info(f"✅ Base64 이미지 저장 성공 (big/thumb): {saved_name}")
 
                 except Exception as e:
                     logging.error(f"❌ 이미지 저장 실패 ({pic_key}): {str(e)}")

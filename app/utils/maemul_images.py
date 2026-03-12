@@ -2,6 +2,7 @@
 매물 이미지 저장/삭제 공통 헬퍼
 """
 from io import BytesIO
+import logging
 from pathlib import Path
 
 from PIL import Image, ImageOps
@@ -88,6 +89,13 @@ def save_synced_image_variants(filename: str, image_bytes: bytes) -> str | None:
     big_path = get_maemul_image_path('big', safe_filename)
     big_path.write_bytes(image_bytes)
     create_thumb_from_bytes(safe_filename, image_bytes)
+    thumb_path = get_maemul_image_path('thumb', safe_filename)
+    logging.info(
+        "🖼️ 동기화 이미지 변환 완료: file=%s, big=%s, thumb=%s",
+        safe_filename,
+        big_path,
+        thumb_path,
+    )
     return safe_filename
 
 
