@@ -111,6 +111,21 @@
 }
 .page-header-left { display: flex; align-items: center; gap: .75rem; }
 .page-header-controls { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+.page-action-btn {
+  padding: .44rem .78rem;
+  border-radius: .55rem;
+  border: 1px solid rgba(248,113,113,.2);
+  background: rgba(248,113,113,.1);
+  color: #fecaca;
+  font-size: .78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.page-action-btn:hover {
+  background: rgba(248,113,113,.16);
+  border-color: rgba(248,113,113,.34);
+}
 
 .page-header-icon {
   width: 40px; height: 40px;
@@ -302,6 +317,33 @@
 .log-close-btn:hover {
   background: rgba(59,130,246,.22);
 }
+.log-action-btn {
+  padding: .38rem .72rem;
+  border-radius: .5rem;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.08);
+  color: #f3f4f6;
+  font-size: .73rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.log-action-btn:hover {
+  background: rgba(255,255,255,.13);
+}
+.log-action-btn.danger {
+  border-color: rgba(248,113,113,.26);
+  background: rgba(248,113,113,.12);
+  color: #fecaca;
+}
+.log-action-btn.danger:hover {
+  background: rgba(248,113,113,.18);
+}
+.log-action-btn:disabled,
+.log-close-btn:disabled,
+.page-action-btn:disabled {
+  opacity: .55;
+  cursor: default;
+}
 
 .log-modal {
   position: fixed;
@@ -345,9 +387,46 @@
   font-size: .75rem;
   color: rgba(255,255,255,.42);
 }
+.log-modal-actions {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
 .log-modal-body {
   padding: .85rem 1rem 1rem;
   overflow-y: auto;
+}
+.cleanup-modal-panel {
+  width: min(560px, calc(100vw - 24px));
+}
+.cleanup-form {
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+}
+.cleanup-label {
+  font-size: .78rem;
+  font-weight: 700;
+  color: rgba(255,255,255,.64);
+}
+.cleanup-row {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+}
+.cleanup-input {
+  width: 120px;
+}
+.cleanup-suffix {
+  font-size: .8rem;
+  color: rgba(255,255,255,.45);
+}
+.cleanup-help {
+  font-size: .76rem;
+  line-height: 1.55;
+  color: rgba(255,255,255,.46);
 }
 .log-detail-list {
   display: flex;
@@ -406,3 +485,20 @@ body.log-modal-open {
 /* ── 로딩/빈 상태 ── */
 .loading    { text-align: center; padding: 2rem; color: rgba(255,255,255,.3); font-size: .85rem; }
 .empty-state { text-align: center; padding: 2rem; color: rgba(255,255,255,.28); font-size: .82rem; }
+
+@media (max-width: 699px) {
+  .log-modal-header {
+    flex-direction: column;
+  }
+  .log-modal-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+  .log-modal-actions .log-action-btn,
+  .log-modal-actions .log-close-btn {
+    flex: 1;
+  }
+  .cleanup-row {
+    align-items: stretch;
+  }
+}

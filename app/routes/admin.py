@@ -9,6 +9,7 @@ import hashlib
 import json
 import os
 import time
+from datetime import datetime, timedelta
 from functools import wraps
 
 from flask import (Blueprint, render_template, request,
@@ -1307,7 +1308,10 @@ def _build_date_cond(mode, date, column='wdate'):
 @login_required
 def analytics():
     """접속 통계 메인 페이지"""
-    return render_template('admin/analytics.html')
+    return render_template(
+        'admin/analytics.html',
+        default_flow_retention_days=current_app.config.get('ACCESS_FLOW_RETENTION_DAYS', 60),
+    )
 
 
 @bp.route('/analytics/api/summary')
@@ -1792,6 +1796,70 @@ def analytics_log_detail():
             }
             for r in rows
         ],
+    })
+
+
+@bp.route('/analytics/api/logs/cleanup', methods=['POST'])
+@login_required
+def analytics_logs_cleanup():
+    """오래된 내부이동 로그 일괄 삭제"""
+    payload = request.get_json(silent=True) or {}
+
+    try:
+        days = int(payload.get('days', current_app.config.get('ACCESS_FLOW_RETENTION_DAYS', 60)))
+    except (TypeError, ValueError):
+        return jsonify({'success': False, 'message': '보관 일수 값이 올바르지 않습니다.'}), 400
+
+    if days < 1 or days > 3650:
+        return jsonify({'success': False, 'message': '보관 일수는 1일 이상 3650일 이하만 가능합니다.'}), 400
+
+    cutoff = datetime.utcnow() - timedelta(days=days)
+
+    with engine.connect() as conn:
+        result = conn.execute(
+            text("""
+                DELETE FROM zibeasy_access_log
+                WHERE is_entry = 0
+                  AND wdate < :cutoff
+            """),
+            {'cutoff': cutoff}
+        )
+        conn.commit()
+
+    return jsonify({
+        'success': True,
+        'deleted': result.rowcount or 0,
+        'days': days,
+    })
+
+
+@bp.route('/analytics/api/logs/delete-visitor', methods=['POST'])
+@login_required
+def analytics_logs_delete_visitor():
+    """특정 IP + visitor_id 방문기록 삭제"""
+    payload = request.get_json(silent=True) or {}
+    ip = (payload.get('ip') or '').strip()
+    visitor_id = (payload.get('visitor_id') or '').strip()
+
+    if not ip:
+        return jsonify({'success': False, 'message': '삭제할 IP가 필요합니다.'}), 400
+
+    with engine.connect() as conn:
+        result = conn.execute(
+            text("""
+                DELETE FROM zibeasy_access_log
+                WHERE ip = :ip
+                  AND COALESCE(visitor_id, '') = :visitor_id
+            """),
+            {'ip': ip, 'visitor_id': visitor_id}
+        )
+        conn.commit()
+
+    return jsonify({
+        'success': True,
+        'deleted': result.rowcount or 0,
+        'ip': ip,
+        'visitor_id': visitor_id,
     })
 
 
