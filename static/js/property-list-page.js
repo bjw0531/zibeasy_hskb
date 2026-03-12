@@ -501,7 +501,7 @@ function showEmpty(contentEl) {
  * ✅ 매물 카드 HTML 생성 (main.js createPropertyCard 복사)
  */
 function createPropertyCard(property) {
-    const imageUrl = property.picname1 ? `/images/maemul/big/${property.picname1}` : '/static/images/no-image.png';
+    const imageUrl = property.picname1 ? `/images/maemul/thumb/${property.picname1}` : '/static/images/no-image.png';
     const address = formatAddress(property);
 
     // 계약완료 여부 확인

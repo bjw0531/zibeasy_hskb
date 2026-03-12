@@ -583,7 +583,7 @@ class ListManager {
      * ✅ 검색용 매물 카드 생성 (계약완료 매물 처리 포함)
      */
     createSearchPropertyCard(property) {
-        const imageUrl = property.picname1 ? `/images/maemul/big/${property.picname1}` : '/static/images/no-image.png';
+        const imageUrl = property.picname1 ? `/images/maemul/thumb/${property.picname1}` : '/static/images/no-image.png';
         const address = window.appManager.formatAddress(property);
 
         // ✅ 계약완료 여부 확인

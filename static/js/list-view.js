@@ -282,8 +282,8 @@ function lvCreateCard(p) {
     /* 계약완료 여부 — API 필드: contract */
     const isContractDone = (p.contract === '계약완료');
 
-    /* 이미지 URL — API 응답 필드: picname1, 경로: /images/maemul/big/ */
-    const imageUrl = p.picname1 ? `/images/maemul/big/${p.picname1}` : '';
+    /* 이미지 URL — 리스트 카드는 thumb 사용 */
+    const imageUrl = p.picname1 ? `/images/maemul/thumb/${p.picname1}` : '';
 
     /* 가격 */
     const price = isContractDone ? '계약완료' : lvFormatPrice(p);

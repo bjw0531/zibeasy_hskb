@@ -89,7 +89,7 @@
         <a href="/view/{{ p.code }}" class="lv-card {{ 'recent-card--contracted' if p.is_contracted else '' }}" style="animation-delay: {{ loop.index0 * 0.04 }}s">
           <div class="lv-card-thumb">
             {% if p.picname1 %}
-              <img src="/images/maemul/big/{{ p.picname1 }}"
+              <img src="/images/maemul/thumb/{{ p.picname1 }}"
                    alt="{{ p.title or '매물 사진' }}"
                    loading="lazy"
                    onerror="this.style.display='none'">
