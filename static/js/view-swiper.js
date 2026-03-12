@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const autoplayToggleBtn = document.getElementById('slide-autoplay-toggle');
     const autoplayIconEl = document.getElementById('slide-autoplay-icon');
     const autoplayTextEl = document.getElementById('slide-autoplay-text');
-    const AUTOPLAY_DELAY = 2000;
+    const AUTOPLAY_DELAY = 3000;
     let autoplayTimerId = null;
     let isAutoplayRunning = false;
 
