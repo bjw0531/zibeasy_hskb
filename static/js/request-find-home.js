@@ -168,6 +168,34 @@
         return !!trimmed && NAME_REGEX.test(trimmed);
     }
 
+    function validateRequired(value, message) {
+        if (String(value || '').trim()) {
+            return { valid: true, message: '' };
+        }
+        return { valid: false, message: message };
+    }
+
+    function validatePhoneValue(phone) {
+        const trimmed = String(phone || '').trim();
+        if (!trimmed) {
+            return { valid: false, message: '연락처를 입력해 주세요.' };
+        }
+        if (!/^\d{3}-\d{4}-\d{4}$/.test(trimmed)) {
+            return { valid: false, message: '연락처를 010-0000-0000 형식으로 입력해 주세요.' };
+        }
+        return { valid: true, message: '' };
+    }
+
+    function attachInputState(input, options) {
+        if (!window.RequestInputState || typeof window.RequestInputState.attach !== 'function') {
+            return {
+                refresh() { return true; },
+                validate() { return true; }
+            };
+        }
+        return window.RequestInputState.attach(input, options);
+    }
+
     function formatBudgetValue(value) {
         if (!value || value === '기타') return value || '';
         return `${value}만원`;
@@ -288,19 +316,27 @@
         field.appendChild(select);
         card.appendChild(field);
 
+        const selectState = attachInputState(select, {
+            group: field,
+            validate(value) {
+                return validateRequired(value, '원하시는 집 유형을 선택해 주세요.');
+            },
+            useTypingState: false
+        });
+
         const actions = document.createElement('div');
         actions.className = 'fh-actions';
         actions.appendChild(createPrevButton());
         const nextBtn = createNextButton();
-        nextBtn.disabled = !state.preferred_type;
+        nextBtn.disabled = !selectState.refresh('init');
 
         select.addEventListener('change', () => {
             state.preferred_type = select.value;
-            nextBtn.disabled = !state.preferred_type;
+            nextBtn.disabled = !selectState.refresh('change');
         });
 
         nextBtn.addEventListener('click', () => {
-            if (!state.preferred_type) return;
+            if (!selectState.validate('submit')) return;
             goNext();
         });
 
@@ -455,21 +491,29 @@
         field.appendChild(input);
         card.appendChild(field);
 
+        const moveInState = attachInputState(input, {
+            group: field,
+            validate(value) {
+                return validateRequired(value, '입주 희망일을 선택해 주세요.');
+            },
+            useTypingState: false
+        });
+
         const actions = document.createElement('div');
         actions.className = 'fh-actions';
         actions.appendChild(createPrevButton());
         const nextBtn = createNextButton();
-        nextBtn.disabled = !state.move_in_date;
+        nextBtn.disabled = !moveInState.refresh('init');
 
         requestAnimationFrame(() => {
             initDatePicker(input, (dateStr) => {
                 state.move_in_date = dateStr;
-                nextBtn.disabled = !state.move_in_date;
+                nextBtn.disabled = !moveInState.refresh('change');
             });
         });
 
         nextBtn.addEventListener('click', () => {
-            if (!state.move_in_date) return;
+            if (!moveInState.validate('submit')) return;
             goNext();
         });
 
@@ -490,6 +534,15 @@
         textarea.setAttribute('data-autofocus', 'true');
         field.appendChild(textarea);
         card.appendChild(field);
+
+        const detailsState = attachInputState(textarea, {
+            group: field,
+            required: false
+        });
+        detailsState.refresh('init');
+        textarea.addEventListener('input', () => {
+            detailsState.refresh('input');
+        });
 
         const actions = document.createElement('div');
         actions.className = 'fh-actions';
@@ -585,32 +638,42 @@
         actions.appendChild(submitBtn);
         card.appendChild(actions);
 
-        function isValidPhone(phone) {
-            return /^\d{3}-\d{4}-\d{4}$/.test(phone || '');
-        }
+        const nameState = attachInputState(nameInput, {
+            group: nameField,
+            errorEl: nameError,
+            validate(value) {
+                const trimmed = String(value || '').trim();
+                if (!trimmed) {
+                    return { valid: false, message: '이름을 입력해 주세요.' };
+                }
+                if (!isValidName(trimmed)) {
+                    return { valid: false, message: '이름은 한글과 영문만 입력해 주세요.' };
+                }
+                return { valid: true, message: '' };
+            },
+            showErrorOnInput: true
+        });
 
-        function syncName() {
-            state.name = nameInput.value.trim();
-            if (!state.name) {
-                nameError.textContent = '';
-                return;
-            }
-            nameError.textContent = isValidName(state.name) ? '' : '한글과 영문만 입력 가능합니다.';
-        }
-
-        function syncPhone() {
-            const formatted = formatPhoneNumber(phoneInput.value || '');
-            phoneInput.value = formatted;
-            state.phone = formatted;
-            phoneError.textContent = '';
-        }
+        const phoneState = attachInputState(phoneInput, {
+            group: phoneField,
+            errorEl: phoneError,
+            validate(value) {
+                return validatePhoneValue(value);
+            },
+            showErrorOnInput: true
+        });
 
         function updateSubmitState() {
-            submitBtn.disabled = !(isValidName(state.name) && isValidPhone(state.phone) && state.privacy_agree);
+            submitBtn.disabled = !(
+                isValidName(state.name) &&
+                validatePhoneValue(state.phone).valid &&
+                state.privacy_agree
+            );
         }
 
         nameInput.addEventListener('input', () => {
-            syncName();
+            state.name = nameInput.value.trim();
+            nameState.refresh('input');
             updateSubmitState();
         });
         phoneInput.addEventListener('keydown', (e) => {
@@ -619,7 +682,10 @@
             }
         });
         phoneInput.addEventListener('input', () => {
-            syncPhone();
+            const formatted = formatPhoneNumber(phoneInput.value || '');
+            phoneInput.value = formatted;
+            state.phone = formatted;
+            phoneState.refresh('input');
             updateSubmitState();
         });
         check.addEventListener('change', () => {
@@ -627,10 +693,19 @@
             updateSubmitState();
         });
 
-        submitBtn.addEventListener('click', () => submitFindHome(submitBtn));
+        submitBtn.addEventListener('click', () => {
+            const isNameValid = nameState.validate('submit');
+            const isPhoneValid = phoneState.validate('submit');
+            updateSubmitState();
+            if (!isNameValid || !isPhoneValid || !state.privacy_agree) return;
+            submitFindHome(submitBtn);
+        });
 
-        syncName();
-        syncPhone();
+        state.name = nameInput.value.trim();
+        state.phone = formatPhoneNumber(phoneInput.value || '');
+        phoneInput.value = state.phone;
+        nameState.refresh('init');
+        phoneState.refresh('init');
         updateSubmitState();
         return card;
     }

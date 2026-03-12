@@ -156,6 +156,70 @@
     resize: vertical;
 }
 
+.request-page .rq-control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.request-page .rq-control-group .rq-control {
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease, color 0.18s ease;
+}
+
+.request-page .rq-control-group.rq-state-focus .rq-control {
+    border-color: var(--rq-accent, #e65b79);
+    box-shadow: 0 0 0 3px var(--rq-accent-soft, rgba(230, 91, 121, 0.14));
+}
+
+.request-page .rq-control-group.rq-state-typing .rq-control {
+    border-color: var(--rq-accent, #e65b79);
+    background: var(--rq-surface-soft, #f8fafc);
+    box-shadow: 0 0 0 4px var(--rq-accent-soft, rgba(230, 91, 121, 0.14));
+}
+
+.request-page .rq-control-group.rq-state-error .rq-control {
+    border-color: var(--rq-error, #dc2626);
+    background: #fff6f6;
+    box-shadow: 0 0 0 3px var(--rq-error-soft, rgba(220, 38, 38, 0.12));
+}
+
+.request-page .rq-control-group.rq-state-success .rq-control {
+    border-color: var(--rq-success, #16a34a);
+    background: #f5fff7;
+    box-shadow: 0 0 0 3px var(--rq-success-soft, rgba(22, 163, 74, 0.12));
+}
+
+.request-page .rq-control-error {
+    min-height: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    color: var(--rq-error, #dc2626);
+    font-size: 12px;
+    line-height: 1.4;
+    font-weight: 620;
+}
+
+.request-page .rq-control-error[hidden] {
+    display: none;
+}
+
+.request-page .rq-control-error::before {
+    content: "!";
+    width: 16px;
+    height: 16px;
+    margin-top: 1px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: currentColor;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
 .sf-dual {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -841,11 +905,7 @@
 }
 
 .fh-error {
-    min-height: 16px;
-    font-size: 12px;
-    line-height: 1.3;
-    color: #dc2626;
-    font-weight: 620;
+    min-height: 0;
 }
 
 .fh-privacy {

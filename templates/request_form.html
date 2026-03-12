@@ -23,6 +23,12 @@
             --rq-blue-soft: #eef6ff;
             --rq-rose: #e65b79;
             --rq-rose-soft: #fff1f4;
+            --rq-accent: #e65b79;
+            --rq-accent-soft: rgba(230, 91, 121, 0.14);
+            --rq-success: #16a34a;
+            --rq-success-soft: rgba(22, 163, 74, 0.12);
+            --rq-error: #dc2626;
+            --rq-error-soft: rgba(220, 38, 38, 0.12);
         }
         body.request-page {
             margin: 0;
@@ -37,6 +43,8 @@
         }
         body.request-page[data-active-tab="find_home"] {
             background: var(--rq-bg);
+            --rq-accent: #1d6fdb;
+            --rq-accent-soft: rgba(29, 111, 219, 0.14);
         }
         body.request-page::before {
             display: none;
@@ -321,7 +329,7 @@
         }
     </style>
     <!-- Conversational UI 스타일 -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/request-form.css') }}?v=20260311n">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/request-form.css') }}?v=20260312a">
 </head>
 <body class="request-page" data-active-tab="lease_out">
     <main class="page">
@@ -439,7 +447,8 @@
         });
     </script>
     <!-- Conversational UI: 집 내놓기 -->
-    <script src="{{ url_for('static', filename='js/request-form.js') }}?v=20260311n"></script>
-    <script src="{{ url_for('static', filename='js/request-find-home.js') }}?v=20260311n"></script>
+    <script src="{{ url_for('static', filename='js/request-input-states.js') }}?v=20260312a"></script>
+    <script src="{{ url_for('static', filename='js/request-form.js') }}?v=20260312a"></script>
+    <script src="{{ url_for('static', filename='js/request-find-home.js') }}?v=20260312a"></script>
 </body>
 </html>

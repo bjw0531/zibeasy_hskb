@@ -30,6 +30,7 @@
     let currentStep = 0;
     const answers = {};
     const csrfToken = document.getElementById('sfCsrfToken')?.value || '';
+    const NAME_REGEX = /^[A-Za-z가-힣\s]+$/;
 
     /* ── DOM 참조 ── */
     const stepsContainer = document.getElementById('sfSteps');
@@ -94,6 +95,37 @@
         if (digits.length <= 3) return digits;
         if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
         return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+    }
+
+    function validateRequired(value, message) {
+        if (String(value || '').trim()) {
+            return { valid: true, message: '' };
+        }
+        return { valid: false, message: message };
+    }
+
+    function validateLeaseField(field, value, message, optional) {
+        const trimmed = String(value || '').trim();
+        if (!trimmed) {
+            return optional ? { valid: true, message: '' } : { valid: false, message: message };
+        }
+        if (field === 'name' && !NAME_REGEX.test(trimmed)) {
+            return { valid: false, message: '이름은 한글과 영문만 입력해 주세요.' };
+        }
+        if (field === 'phone' && !/^\d{3}-\d{4}-\d{4}$/.test(trimmed)) {
+            return { valid: false, message: '연락처를 010-0000-0000 형식으로 입력해 주세요.' };
+        }
+        return { valid: true, message: '' };
+    }
+
+    function attachInputState(input, options) {
+        if (!window.RequestInputState || typeof window.RequestInputState.attach !== 'function') {
+            return {
+                refresh() { return true; },
+                validate() { return true; }
+            };
+        }
+        return window.RequestInputState.attach(input, options);
     }
 
     function handlePhoneInput(input) {
@@ -202,28 +234,44 @@
         if (step.field === 'maintenance_fee') inp.inputMode = 'numeric';
         if (answers[step.field]) inp.value = answers[step.field];
 
+        const fieldState = attachInputState(inp, {
+            group: wrap,
+            validate(value) {
+                return validateLeaseField(step.field, value, `${step.label}을 입력해 주세요.`, !!step.optional);
+            },
+            showErrorOnInput: step.field === 'name' || step.field === 'phone'
+        });
+
         const btn = createNextBtn();
-        btn.disabled = !inp.value.trim();
+        btn.disabled = !fieldState.refresh('init');
         inp.addEventListener('input', () => {
             if (step.field === 'phone') {
-                btn.disabled = !handlePhoneInput(inp).trim();
+                handlePhoneInput(inp);
+                btn.disabled = !fieldState.refresh('input');
                 return;
             }
-            btn.disabled = !inp.value.trim();
+            btn.disabled = !fieldState.refresh('input');
         });
         inp.addEventListener('keydown', (e) => {
             if (step.field === 'phone' && e.key.length === 1 && !/\d/.test(e.key)) {
                 e.preventDefault();
                 return;
             }
-            if (e.key === 'Enter' && inp.value.trim()) {
+            if (e.key === 'Enter') {
                 e.preventDefault();
+                if (step.field === 'phone') {
+                    handlePhoneInput(inp);
+                }
+                if (!fieldState.validate('submit')) return;
                 answers[step.field] = step.field === 'phone' ? handlePhoneInput(inp) : inp.value.trim();
                 advance();
             }
         });
         btn.addEventListener('click', () => {
-            if (!inp.value.trim()) return;
+            if (step.field === 'phone') {
+                handlePhoneInput(inp);
+            }
+            if (!fieldState.validate('submit')) return;
             answers[step.field] = step.field === 'phone' ? handlePhoneInput(inp) : inp.value.trim();
             advance();
         });
@@ -242,15 +290,23 @@
         inp.placeholder = '날짜를 선택해 주세요';
         if (answers[step.field]) inp.value = answers[step.field];
 
+        const fieldState = attachInputState(inp, {
+            group: wrap,
+            validate(value) {
+                return validateRequired(value, '입주 가능일을 선택해 주세요.');
+            },
+            useTypingState: false
+        });
+
         const btn = createNextBtn();
-        btn.disabled = !inp.value;
+        btn.disabled = !fieldState.refresh('init');
         requestAnimationFrame(() => {
             initDatePicker(inp, (dateStr) => {
-                btn.disabled = !dateStr;
+                btn.disabled = !fieldState.refresh('change');
             });
         });
         btn.addEventListener('click', () => {
-            if (!inp.value) return;
+            if (!fieldState.validate('submit')) return;
             answers[step.field] = inp.value;
             advance();
         });
@@ -284,24 +340,34 @@
             return inp;
         });
 
+        const fieldStates = inputs.map((inp, index) => attachInputState(inp, {
+            group: inp.parentElement,
+            validate(value) {
+                return validateRequired(value, `${step.fields[index].label}을 입력해 주세요.`);
+            }
+        }));
+
         const btn = createNextBtn();
-        function check() { btn.disabled = inputs.some(inp => !inp.value.trim()); }
+        function check(reason) {
+            btn.disabled = fieldStates.some((stateCtrl) => !stateCtrl.refresh(reason || 'input'));
+        }
         check();
-        inputs.forEach(inp => inp.addEventListener('input', check));
+        inputs.forEach(inp => inp.addEventListener('input', () => check('input')));
 
         /* Enter로 다음 필드 이동 또는 전송 */
         inputs[0].addEventListener('keydown', (e) => {
             if (e.key === 'Enter') { e.preventDefault(); inputs[1].focus(); }
         });
         inputs[1].addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && inputs.every(inp => inp.value.trim())) {
+            if (e.key === 'Enter') {
                 e.preventDefault();
+                if (fieldStates.some((stateCtrl) => !stateCtrl.validate('submit'))) return;
                 step.fields.forEach((f, i) => { answers[f.field] = inputs[i].value.trim(); });
                 advance();
             }
         });
         btn.addEventListener('click', () => {
-            if (inputs.some(inp => !inp.value.trim())) return;
+            if (fieldStates.some((stateCtrl) => !stateCtrl.validate('submit'))) return;
             step.fields.forEach((f, i) => { answers[f.field] = inputs[i].value.trim(); });
             advance();
         });
@@ -376,23 +442,33 @@
                 return inp;
             });
 
+            const fieldStates = inputs.map((inp, index) => attachInputState(inp, {
+                group: inp.parentElement,
+                validate(value) {
+                    return validateRequired(value, `${fields[index].label}을 입력해 주세요.`);
+                }
+            }));
+
             const btn = createNextBtn();
-            function check() { btn.disabled = inputs.some(inp => !inp.value.trim()); }
+            function check(reason) {
+                btn.disabled = fieldStates.some((stateCtrl) => !stateCtrl.refresh(reason || 'input'));
+            }
             check();
-            inputs.forEach(inp => inp.addEventListener('input', check));
+            inputs.forEach(inp => inp.addEventListener('input', () => check('input')));
             inputs[0].addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') { e.preventDefault(); inputs[1].focus(); }
             });
             inputs[1].addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && inputs.every(inp => inp.value.trim())) {
+                if (e.key === 'Enter') {
                     e.preventDefault();
+                    if (fieldStates.some((stateCtrl) => !stateCtrl.validate('submit'))) return;
                     answers.deposit = inputs[0].value.trim();
                     answers.monthly_rent = inputs[1].value.trim();
                     advance();
                 }
             });
             btn.addEventListener('click', () => {
-                if (inputs.some(inp => !inp.value.trim())) return;
+                if (fieldStates.some((stateCtrl) => !stateCtrl.validate('submit'))) return;
                 answers.deposit = inputs[0].value.trim();
                 answers.monthly_rent = inputs[1].value.trim();
                 advance();
@@ -411,18 +487,26 @@
             inp.autocomplete = 'off';
             if (answers[key]) inp.value = answers[key];
 
+            const fieldState = attachInputState(inp, {
+                group: wrap,
+                validate(value) {
+                    return validateRequired(value, `${getPriceLabel()}를 입력해 주세요.`);
+                }
+            });
+
             const btn = createNextBtn();
-            btn.disabled = !inp.value.trim();
-            inp.addEventListener('input', () => { btn.disabled = !inp.value.trim(); });
+            btn.disabled = !fieldState.refresh('init');
+            inp.addEventListener('input', () => { btn.disabled = !fieldState.refresh('input'); });
             inp.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && inp.value.trim()) {
+                if (e.key === 'Enter') {
                     e.preventDefault();
+                    if (!fieldState.validate('submit')) return;
                     answers[key] = inp.value.trim();
                     advance();
                 }
             });
             btn.addEventListener('click', () => {
-                if (!inp.value.trim()) return;
+                if (!fieldState.validate('submit')) return;
                 answers[key] = inp.value.trim();
                 advance();
             });
@@ -441,8 +525,18 @@
         ta.placeholder = step.placeholder || '';
         if (answers[step.field]) ta.value = answers[step.field];
 
+        const fieldState = attachInputState(ta, {
+            group: wrap,
+            required: false
+        });
+        fieldState.refresh('init');
+
         const btn = createNextBtn();
         btn.disabled = false; /* 선택 항목이므로 항상 활성 */
+
+        ta.addEventListener('input', () => {
+            fieldState.refresh('input');
+        });
 
         btn.addEventListener('click', () => {
             answers[step.field] = ta.value.trim();
