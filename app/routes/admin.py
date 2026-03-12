@@ -15,16 +15,16 @@ from functools import wraps
 from flask import (Blueprint, render_template, request,
                    session, redirect, url_for, jsonify, send_from_directory, abort, current_app)
 from sqlalchemy import text
-from PIL import Image
 
 from app.models import engine
 from app.security import check_rate_limit, client_ip
+from app.utils.maemul_images import (
+    delete_maemul_image_variants,
+    save_admin_image_variants,
+)
 
 bp = Blueprint('admin', __name__, url_prefix='/admin')
 
-# big 이미지 저장 경로 (app/routes 기준 2단계 상위 → housekb/data/maemul/big)
-BIG_DIR = os.path.join(os.path.dirname(__file__), '../../data/maemul/big')
-BIG_W, BIG_H = 770, 513  # PHP 원본 big 사이즈
 FEEDBACK_UPLOAD_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), '../../data/feedback_uploads'))
 
 
@@ -71,45 +71,24 @@ def login_required(f):
 
 def save_image_big(file_storage) -> str:
     """
-    업로드된 이미지를 big 폴더에 770×513으로 리사이징 후 저장.
+    업로드된 이미지를 big/thumb 폴더에 함께 저장.
     저장된 파일명(확장자 포함)을 반환.
     실패 시 None 반환.
     """
     try:
         # PHP microtime() 방식과 유사한 고유 파일명 생성
         filename = str(time.time()).replace('.', '') + '.jpg'
-        save_path = os.path.normpath(os.path.join(
-            os.path.dirname(__file__), '../../data/maemul/big', filename
-        ))
-
-        img = Image.open(file_storage.stream)
-        img = img.convert('RGB')  # PNG/WEBP 등 알파채널 제거
-
-        # 원본 비율 유지하며 big 사이즈 내에 맞춤 (contain)
-        img.thumbnail((BIG_W, BIG_H), Image.LANCZOS)
-
-        # 배경(흰색) 캔버스에 중앙 배치
-        canvas = Image.new('RGB', (BIG_W, BIG_H), (255, 255, 255))
-        offset_x = (BIG_W - img.width) // 2
-        offset_y = (BIG_H - img.height) // 2
-        canvas.paste(img, (offset_x, offset_y))
-        canvas.save(save_path, 'JPEG', quality=88)
-
-        return filename
+        return save_admin_image_variants(file_storage, filename)
     except Exception as e:
         return None
 
 
 def delete_image_file(filename: str):
-    """big 폴더에서 이미지 파일 삭제"""
+    """big/thumb 폴더에서 이미지 파일 삭제"""
     if not filename:
         return
-    path = os.path.normpath(os.path.join(
-        os.path.dirname(__file__), '../../data/maemul/big', filename
-    ))
     try:
-        if os.path.exists(path):
-            os.remove(path)
+        delete_maemul_image_variants(filename)
     except Exception:
         pass
 

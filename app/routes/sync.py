@@ -9,6 +9,7 @@ import base64
 import json
 from app.models import engine
 from app.utils.geohash import generate_geohash
+from app.utils.maemul_images import save_synced_image_variants
 from werkzeug.utils import secure_filename
 
 bp = Blueprint('sync', __name__)
@@ -197,11 +198,7 @@ def _save_property_data(data):
 
 def _save_property_images(data, files):
     """매물 이미지 저장"""
-    saved_images = {'big': []}
-    
-    # Multipart 파일 수신 (big만)
-    big_dir = 'data/maemul/big'
-    os.makedirs(big_dir, exist_ok=True)
+    saved_images = {'big': [], 'thumb': []}
     
     for i in range(1, 21):  # 최대 20장
         file_key = f'image_big_{i}'
@@ -213,11 +210,15 @@ def _save_property_images(data, files):
                 safe_filename = secure_filename(filename)
                 if not safe_filename:
                     continue
-                    
-                filepath = os.path.join(big_dir, safe_filename)
-                file.save(filepath)
-                saved_images['big'].append(filename)
-                logging.info(f"✅ Multipart 이미지 저장 성공: {filename}")
+
+                image_bytes = file.read()
+                saved_name = save_synced_image_variants(safe_filename, image_bytes)
+                if not saved_name:
+                    continue
+
+                saved_images['big'].append(saved_name)
+                saved_images['thumb'].append(saved_name)
+                logging.info(f"✅ Multipart 이미지 저장 성공: {saved_name}")
     
     # Base64 이미지 처리 (big만)
     if 'encoded_images' in data and data['encoded_images']:
@@ -261,13 +262,13 @@ def _save_property_images(data, files):
                         if not safe_filename:
                             continue
 
-                        filepath = os.path.join(big_dir, safe_filename)
+                        saved_name = save_synced_image_variants(safe_filename, image_data)
+                        if not saved_name:
+                            continue
 
-                        with open(filepath, 'wb') as f:
-                            f.write(image_data)
-
-                        saved_images['big'].append(filename)
-                        logging.info(f"✅ 이미지 저장 성공 (big): {filename}")
+                        saved_images['big'].append(saved_name)
+                        saved_images['thumb'].append(saved_name)
+                        logging.info(f"✅ 이미지 저장 성공 (big/thumb): {saved_name}")
 
                 except Exception as e:
                     logging.error(f"❌ 이미지 저장 실패 ({pic_key}): {str(e)}")
