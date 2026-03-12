@@ -41,8 +41,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const isRunning = isAutoplayRunning;
         autoplayToggleBtn.setAttribute('aria-pressed', isRunning ? 'true' : 'false');
         autoplayToggleBtn.setAttribute('aria-label', isRunning ? '자동 슬라이드 일시정지' : '자동 슬라이드 재생');
-        if (autoplayPlayIconEl) autoplayPlayIconEl.hidden = isRunning;
-        if (autoplayPauseIconEl) autoplayPauseIconEl.hidden = !isRunning;
+        if (autoplayPlayIconEl) autoplayPlayIconEl.style.display = isRunning ? 'none' : 'block';
+        if (autoplayPauseIconEl) autoplayPauseIconEl.style.display = isRunning ? 'block' : 'none';
         if (autoplayTextEl) autoplayTextEl.textContent = isRunning ? '자동 슬라이드 일시정지' : '자동 슬라이드 재생';
     }
 
