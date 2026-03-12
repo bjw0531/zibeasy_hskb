@@ -359,7 +359,10 @@ function sourceBadgeClass(type) {
   return `source-${type || 'unknown'}`;
 }
 function detailButton(ip, visitorId) {
-  return `<button type="button" class="detail-btn" onclick="openLogDetailModal(${JSON.stringify(ip)}, ${JSON.stringify(visitorId || '')})">상세보기</button>`;
+  return `<button type="button" class="detail-btn"
+    data-ip="${escapeHtml(ip || '')}"
+    data-visitor="${escapeHtml(visitorId || '')}"
+    onclick="openLogDetailModal(this.dataset.ip, this.dataset.visitor)">상세보기</button>`;
 }
 
 function makeOrUpdate(id, config) {
