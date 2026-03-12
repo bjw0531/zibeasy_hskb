@@ -446,8 +446,8 @@ class AppManager {
 
         // ✅ 확인필요면 빨간색 스타일
         const timeStyle = timeAgo === '확인필요'
-            ? 'font-size: 12px; color: #e53935; font-weight: 500;'
-            : 'font-size: 12px; color: rgb(100, 100, 100);';
+            ? 'font-size: 12px; color: #e53935; font-weight: 500; display: flex; justify-content: flex-end; width: 100%; text-align: right;'
+            : 'font-size: 12px; color: rgb(100, 100, 100); display: flex; justify-content: flex-end; width: 100%; text-align: right;';
 
         // ✅ 계약완료면 end.png 오버레이 표시
         const contractOverlay = isContractCompleted
