@@ -17,162 +17,77 @@
     gap: 1rem;
   }
 
-  .overview {
-    display: grid;
-    gap: 1rem;
-  }
-
-  .welcome-card,
-  .workspace {
+  .hero-card,
+  .workspace-shell {
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 1.1rem;
     box-shadow: 0 18px 32px rgba(7, 5, 10, 0.18);
   }
 
-  .welcome-card {
+  .hero-card {
     padding: 1.15rem;
   }
 
-  .welcome-card h2 {
+  .hero-top h2 {
     font-size: 1.3rem;
     font-weight: 700;
     color: #fff;
   }
 
-  .welcome-card p {
+  .hero-top p {
     margin-top: 0.35rem;
     font-size: 0.88rem;
     line-height: 1.5;
     color: rgba(255, 255, 255, 0.62);
   }
 
-  .overview-pills {
+  .summary-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.65rem;
     margin-top: 1rem;
   }
 
-  .overview-pill {
-    min-height: 68px;
-    padding: 0.75rem 0.85rem;
+  .summary-pill {
+    min-height: 72px;
+    padding: 0.8rem 0.9rem;
     background: rgba(17, 24, 39, 0.32);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 0.95rem;
   }
 
-  .overview-pill strong {
+  .summary-pill strong {
     display: block;
     font-size: 0.95rem;
     font-weight: 700;
     color: #fff;
   }
 
-  .overview-pill span {
+  .summary-pill span {
     display: block;
-    margin-top: 0.18rem;
+    margin-top: 0.2rem;
     font-size: 0.78rem;
-    color: rgba(255, 255, 255, 0.48);
-  }
-
-  .quick-strip {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.75rem;
-  }
-
-  .quick-link {
-    min-height: 104px;
-    padding: 0.95rem;
-    border-radius: 1rem;
-    text-decoration: none;
-    color: inherit;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    background: rgba(255, 255, 255, 0.08);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 0.7rem;
-    transition: background 0.15s ease, transform 0.15s ease;
-  }
-
-  .quick-link:active,
-  .card:active {
-    transform: scale(0.98);
-  }
-
-  .quick-link--wide {
-    grid-column: 1 / -1;
-  }
-
-  .quick-link-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-  }
-
-  .quick-link-label {
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: #fff;
-  }
-
-  .quick-link-desc {
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.58);
     line-height: 1.45;
+    color: rgba(255, 255, 255, 0.5);
   }
 
-  .quick-link-arrow,
-  .card-arrow {
-    color: rgba(255, 255, 255, 0.4);
-    font-size: 1rem;
-    font-weight: 700;
-  }
-
-  .workspace {
-    padding: 1rem;
-  }
-
-  .workspace-head {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .workspace-title strong {
-    display: block;
-    font-size: 1rem;
-    font-weight: 700;
-    color: #fff;
-  }
-
-  .workspace-title span {
-    display: block;
-    margin-top: 0.25rem;
-    font-size: 0.82rem;
-    color: rgba(255, 255, 255, 0.52);
-    line-height: 1.45;
-  }
-
-  .section-switcher {
+  .category-nav {
     display: flex;
     gap: 0.55rem;
     overflow-x: auto;
-    padding-bottom: 0.15rem;
+    padding: 0.95rem 0 0.1rem;
     scrollbar-width: none;
   }
 
-  .section-switcher::-webkit-scrollbar {
+  .category-nav::-webkit-scrollbar {
     display: none;
   }
 
-  .switch-btn {
+  .category-btn {
     flex: 0 0 auto;
-    min-width: 92px;
-    padding: 0.7rem 0.95rem;
+    min-width: 94px;
+    padding: 0.74rem 0.95rem;
     border-radius: 999px;
     border: 1px solid rgba(255, 255, 255, 0.12);
     background: rgba(255, 255, 255, 0.05);
@@ -183,27 +98,46 @@
     transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
   }
 
-  .switch-btn.is-active {
+  .category-btn.is-active {
     background: rgba(255, 112, 117, 0.16);
     border-color: rgba(255, 112, 117, 0.42);
     color: #fff;
   }
 
-  .panel {
+  .workspace-shell {
+    padding: 1rem;
+  }
+
+  .workspace-head strong {
+    display: block;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .workspace-head span {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.82rem;
+    line-height: 1.45;
+    color: rgba(255, 255, 255, 0.52);
+  }
+
+  .workspace-panel {
     display: none;
     margin-top: 1rem;
   }
 
-  .panel.is-active {
+  .workspace-panel.is-active {
     display: block;
   }
 
   .panel-head {
-    margin-bottom: 0.85rem;
+    margin-bottom: 0.9rem;
   }
 
   .panel-head h3 {
-    font-size: 0.95rem;
+    font-size: 0.96rem;
     font-weight: 700;
     color: #fff;
   }
@@ -211,7 +145,8 @@
   .panel-head p {
     margin-top: 0.18rem;
     font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.46);
+    line-height: 1.45;
+    color: rgba(255, 255, 255, 0.48);
   }
 
   .panel-grid {
@@ -220,21 +155,25 @@
     gap: 0.75rem;
   }
 
-  .card {
-    min-height: 124px;
+  .menu-card {
+    min-height: 126px;
     padding: 0.95rem;
+    border-radius: 1rem;
     text-decoration: none;
     color: inherit;
     background: rgba(17, 24, 39, 0.28);
     border: 1px solid rgba(255, 255, 255, 0.09);
-    border-radius: 1rem;
     display: flex;
     flex-direction: column;
     gap: 0.8rem;
-    transition: background 0.15s ease, transform 0.15s ease;
+    transition: transform 0.15s ease, background 0.15s ease;
   }
 
-  .card-top {
+  .menu-card:active {
+    transform: scale(0.98);
+  }
+
+  .menu-card-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -257,14 +196,20 @@
     fill: white;
   }
 
-  .card-copy strong {
+  .card-arrow {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .menu-card strong {
     display: block;
     font-size: 0.92rem;
     font-weight: 700;
     color: #fff;
   }
 
-  .card-copy span {
+  .menu-card span {
     display: block;
     margin-top: 0.2rem;
     font-size: 0.78rem;
@@ -286,17 +231,8 @@
       gap: 1.2rem;
     }
 
-    .overview {
-      grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.95fr);
-      align-items: stretch;
-    }
-
-    .quick-strip {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .quick-link--wide {
-      grid-column: auto;
+    .summary-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 
     .panel-grid {
@@ -308,219 +244,235 @@
 
 {% block body %}
 <main class="main">
-  <section class="overview">
-    <div class="welcome-card">
+  <section class="hero-card">
+    <div class="hero-top">
       <h2>안녕하세요, {{ admin_name }}님</h2>
-      <p>자주 쓰는 작업은 위에 두고, 나머지 메뉴는 아래 섹션 전환으로 바로 바꿔 볼 수 있게 정리했습니다.</p>
-      <div class="overview-pills">
-        <div class="overview-pill">
-          <strong>빠른 등록</strong>
-          <span>새 매물을 바로 추가</span>
-        </div>
-        <div class="overview-pill">
-          <strong>요청 확인</strong>
-          <span>구하기·내놓기 문의 확인</span>
-        </div>
-        <div class="overview-pill">
-          <strong>보안 점검</strong>
-          <span>제보와 차단 목록 확인</span>
-        </div>
-        <div class="overview-pill">
-          <strong>운영 관리</strong>
-          <span>회원과 통계 메뉴 이동</span>
-        </div>
+      <p>상단 카테고리에서 필요한 업무만 바로 열어 볼 수 있게 바꿨습니다. 통계도 별도 탭으로 분리했습니다.</p>
+    </div>
+
+    <div class="summary-grid">
+      <div class="summary-pill">
+        <strong>빠른 작업</strong>
+        <span>매물 등록과 요청 확인을 먼저 처리</span>
+      </div>
+      <div class="summary-pill">
+        <strong>매물 카테고리</strong>
+        <span>매물 목록, 등록, 지도 확인 이동</span>
+      </div>
+      <div class="summary-pill">
+        <strong>통계 카테고리</strong>
+        <span>접속 통계와 운영 현황 메뉴 분리</span>
+      </div>
+      <div class="summary-pill">
+        <strong>운영 카테고리</strong>
+        <span>문의, 제보, 차단 업무만 따로 확인</span>
       </div>
     </div>
 
-    <div class="quick-strip" aria-label="빠른 작업">
-      <a href="{{ url_for('admin.maemul_list') }}" class="quick-link">
-        <div class="quick-link-top">
-          <div class="card-icon ic-purple">
-            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-          </div>
-          <span class="quick-link-arrow">→</span>
-        </div>
-        <div>
-          <div class="quick-link-label">매물 관리</div>
-          <div class="quick-link-desc">등록된 매물을 빠르게 수정하거나 정리합니다.</div>
-        </div>
-      </a>
-
-      <a href="{{ url_for('admin.maemul_new') }}" class="quick-link">
-        <div class="quick-link-top">
-          <div class="card-icon ic-green">
-            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-          </div>
-          <span class="quick-link-arrow">→</span>
-        </div>
-        <div>
-          <div class="quick-link-label">매물 등록</div>
-          <div class="quick-link-desc">사진과 정보 입력이 필요한 새 매물을 추가합니다.</div>
-        </div>
-      </a>
-
-      <a href="{{ url_for('admin.house_requests') }}" class="quick-link quick-link--wide">
-        <div class="quick-link-top">
-          <div class="card-icon ic-orange">
-            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 4h5v2h-5V7zm0 4h5v2h-5v-2zM7 7h3v3H7V7zm0 4h3v3H7v-3z"/></svg>
-          </div>
-          <span class="quick-link-arrow">→</span>
-        </div>
-        <div>
-          <div class="quick-link-label">집 요청 접수</div>
-          <div class="quick-link-desc">집 구하기와 내놓기 문의를 먼저 확인할 수 있습니다.</div>
-        </div>
-      </a>
+    <div class="category-nav" role="tablist" aria-label="관리자 카테고리">
+      <button type="button" class="category-btn" data-admin-tab="quick" role="tab" aria-selected="false">빠른 작업</button>
+      <button type="button" class="category-btn" data-admin-tab="listing" role="tab" aria-selected="false">매물</button>
+      <button type="button" class="category-btn" data-admin-tab="stats" role="tab" aria-selected="false">통계</button>
+      <button type="button" class="category-btn" data-admin-tab="ops" role="tab" aria-selected="false">운영</button>
+      <button type="button" class="category-btn" data-admin-tab="site" role="tab" aria-selected="false">사이트</button>
     </div>
   </section>
 
-  <section class="workspace" aria-label="업무별 메뉴">
+  <section class="workspace-shell" aria-label="관리자 업무 패널">
     <div class="workspace-head">
-      <div class="workspace-title">
-        <strong>업무별 메뉴</strong>
-        <span>한 번에 전부 펼치지 않고, 필요한 메뉴 그룹만 바로 전환해 볼 수 있습니다.</span>
-      </div>
-      <div class="section-switcher" role="tablist" aria-label="관리자 메뉴 섹션">
-        <button type="button" class="switch-btn" data-admin-tab="listing" role="tab" aria-selected="false">매물</button>
-        <button type="button" class="switch-btn" data-admin-tab="ops" role="tab" aria-selected="false">운영·보안</button>
-        <button type="button" class="switch-btn" data-admin-tab="site" role="tab" aria-selected="false">사이트</button>
-      </div>
+      <strong>카테고리별 업무</strong>
+      <span>선택한 카테고리 메뉴만 아래에 표시됩니다.</span>
     </div>
 
-    <div class="panel" data-admin-panel="listing" role="tabpanel">
+    <div class="workspace-panel" data-admin-panel="quick" role="tabpanel">
       <div class="panel-head">
-        <h3>매물 업무</h3>
-        <p>등록, 수정, 지도 확인처럼 자주 쓰는 매물 관련 작업입니다.</p>
+        <h3>빠른 작업</h3>
+        <p>관리자 홈에서 가장 자주 들어가는 작업만 먼저 모았습니다.</p>
       </div>
       <div class="panel-grid">
-        <a href="{{ url_for('admin.maemul_list') }}" class="card">
-          <div class="card-top">
-            <div class="card-icon ic-purple">
-              <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-            </div>
-            <span class="card-arrow">→</span>
-          </div>
-          <div class="card-copy">
-            <strong>매물 관리</strong>
-            <span>등록된 매물 목록에서 수정, 삭제, 상태 확인을 진행합니다.</span>
-          </div>
-        </a>
-
-        <a href="{{ url_for('admin.maemul_new') }}" class="card">
-          <div class="card-top">
+        <a href="{{ url_for('admin.maemul_new') }}" class="menu-card">
+          <div class="menu-card-top">
             <div class="card-icon ic-green">
               <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
             </div>
             <span class="card-arrow">→</span>
           </div>
-          <div class="card-copy">
+          <div>
             <strong>매물 등록</strong>
-            <span>새 매물 정보를 입력해 바로 목록에 추가합니다.</span>
+            <span>새 매물을 바로 추가합니다.</span>
           </div>
         </a>
 
-        <a href="/map" class="card">
-          <div class="card-top">
-            <div class="card-icon ic-blue">
-              <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-            </div>
-            <span class="card-arrow">→</span>
-          </div>
-          <div class="card-copy">
-            <strong>지도 보기</strong>
-            <span>실제 사용자 화면 기준으로 매물 노출을 빠르게 확인합니다.</span>
-          </div>
-        </a>
-      </div>
-    </div>
-
-    <div class="panel" data-admin-panel="ops" role="tabpanel">
-      <div class="panel-head">
-        <h3>운영·보안 업무</h3>
-        <p>문의, 제보, 차단, 통계, 회원 관리 메뉴를 한 곳에서 전환합니다.</p>
-      </div>
-      <div class="panel-grid">
-        <a href="{{ url_for('admin.house_requests') }}" class="card">
-          <div class="card-top">
+        <a href="{{ url_for('admin.house_requests') }}" class="menu-card">
+          <div class="menu-card-top">
             <div class="card-icon ic-orange">
               <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 4h5v2h-5V7zm0 4h5v2h-5v-2zM7 7h3v3H7V7zm0 4h3v3H7v-3z"/></svg>
             </div>
             <span class="card-arrow">→</span>
           </div>
-          <div class="card-copy">
+          <div>
             <strong>집 요청 접수</strong>
-            <span>내놓기와 구하기 문의를 확인하고 처리합니다.</span>
+            <span>구하기와 내놓기 문의를 먼저 확인합니다.</span>
           </div>
         </a>
 
-        <a href="{{ url_for('admin.feedback_reports') }}" class="card">
-          <div class="card-top">
-            <div class="card-icon ic-pink">
-              <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21Zm12-3h-2v-2h2v2Zm0-4h-2v-4h2v4Z"/></svg>
+        <a href="{{ url_for('admin.maemul_list') }}" class="menu-card">
+          <div class="menu-card-top">
+            <div class="card-icon ic-purple">
+              <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
             </div>
             <span class="card-arrow">→</span>
           </div>
-          <div class="card-copy">
-            <strong>오류/개선 제보</strong>
-            <span>사용자 제보를 확인하고 개선 우선순위를 잡습니다.</span>
-          </div>
-        </a>
-
-        <a href="{{ url_for('admin.blocklist') }}" class="card">
-          <div class="card-top">
-            <div class="card-icon ic-red">
-              <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
-            </div>
-            <span class="card-arrow">→</span>
-          </div>
-          <div class="card-copy">
-            <strong>블랙리스트</strong>
-            <span>악의적 사용자 차단과 관련 이력을 관리합니다.</span>
-          </div>
-        </a>
-
-        <a href="{{ url_for('admin.analytics') }}" class="card">
-          <div class="card-top">
-            <div class="card-icon ic-blue">
-              <svg viewBox="0 0 24 24"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg>
-            </div>
-            <span class="card-arrow">→</span>
-          </div>
-          <div class="card-copy">
-            <strong>접속 통계</strong>
-            <span>방문 추이와 운영 로그를 확인합니다.</span>
-          </div>
-        </a>
-
-        <a href="{{ url_for('admin.members') }}" class="card">
-          <div class="card-top">
-            <div class="card-icon ic-gray">
-              <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-            </div>
-            <span class="card-arrow">→</span>
-          </div>
-          <div class="card-copy">
-            <strong>회원 관리</strong>
-            <span>가입 회원과 소셜 회원 상태를 확인하고 관리합니다.</span>
+          <div>
+            <strong>매물 관리</strong>
+            <span>등록된 매물을 수정하거나 정리합니다.</span>
           </div>
         </a>
       </div>
     </div>
 
-    <div class="panel" data-admin-panel="site" role="tabpanel">
+    <div class="workspace-panel" data-admin-panel="listing" role="tabpanel">
       <div class="panel-head">
-        <h3>사이트 이동</h3>
-        <p>운영 중 메인 화면 확인이 필요할 때 바로 이동할 수 있습니다.</p>
+        <h3>매물 카테고리</h3>
+        <p>매물 관련 작업만 분리해서 보고 싶을 때 사용하는 탭입니다.</p>
       </div>
       <div class="panel-grid">
-        <a href="/" class="card">
-          <div class="card-top">
+        <a href="{{ url_for('admin.maemul_list') }}" class="menu-card">
+          <div class="menu-card-top">
+            <div class="card-icon ic-purple">
+              <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+            </div>
+            <span class="card-arrow">→</span>
+          </div>
+          <div>
+            <strong>매물 관리</strong>
+            <span>매물 목록에서 수정, 삭제, 상태 확인을 진행합니다.</span>
+          </div>
+        </a>
+
+        <a href="{{ url_for('admin.maemul_new') }}" class="menu-card">
+          <div class="menu-card-top">
+            <div class="card-icon ic-green">
+              <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            </div>
+            <span class="card-arrow">→</span>
+          </div>
+          <div>
+            <strong>매물 등록</strong>
+            <span>새 매물 정보를 입력해 바로 추가합니다.</span>
+          </div>
+        </a>
+
+        <a href="/map" class="menu-card">
+          <div class="menu-card-top">
+            <div class="card-icon ic-blue">
+              <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            </div>
+            <span class="card-arrow">→</span>
+          </div>
+          <div>
+            <strong>지도 보기</strong>
+            <span>실제 사용자 화면 기준으로 노출 상태를 확인합니다.</span>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <div class="workspace-panel" data-admin-panel="stats" role="tabpanel">
+      <div class="panel-head">
+        <h3>통계 카테고리</h3>
+        <p>접속 흐름과 운영 현황을 따로 확인할 수 있게 분리한 탭입니다.</p>
+      </div>
+      <div class="panel-grid">
+        <a href="{{ url_for('admin.analytics') }}" class="menu-card">
+          <div class="menu-card-top">
+            <div class="card-icon ic-blue">
+              <svg viewBox="0 0 24 24"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg>
+            </div>
+            <span class="card-arrow">→</span>
+          </div>
+          <div>
+            <strong>접속 통계</strong>
+            <span>방문 추이와 운영 로그를 확인합니다.</span>
+          </div>
+        </a>
+
+        <a href="{{ url_for('admin.members') }}" class="menu-card">
+          <div class="menu-card-top">
+            <div class="card-icon ic-gray">
+              <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            </div>
+            <span class="card-arrow">→</span>
+          </div>
+          <div>
+            <strong>회원 관리</strong>
+            <span>회원 현황과 계정 운영 상태를 함께 확인합니다.</span>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <div class="workspace-panel" data-admin-panel="ops" role="tabpanel">
+      <div class="panel-head">
+        <h3>운영 카테고리</h3>
+        <p>문의 처리와 보안 대응 메뉴만 따로 확인할 수 있습니다.</p>
+      </div>
+      <div class="panel-grid">
+        <a href="{{ url_for('admin.house_requests') }}" class="menu-card">
+          <div class="menu-card-top">
+            <div class="card-icon ic-orange">
+              <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 4h5v2h-5V7zm0 4h5v2h-5v-2zM7 7h3v3H7V7zm0 4h3v3H7v-3z"/></svg>
+            </div>
+            <span class="card-arrow">→</span>
+          </div>
+          <div>
+            <strong>집 요청 접수</strong>
+            <span>내놓기와 구하기 문의를 확인하고 처리합니다.</span>
+          </div>
+        </a>
+
+        <a href="{{ url_for('admin.feedback_reports') }}" class="menu-card">
+          <div class="menu-card-top">
+            <div class="card-icon ic-pink">
+              <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21Zm12-3h-2v-2h2v2Zm0-4h-2v-4h2v4Z"/></svg>
+            </div>
+            <span class="card-arrow">→</span>
+          </div>
+          <div>
+            <strong>오류/개선 제보</strong>
+            <span>사용자 제보를 확인하고 개선 우선순위를 정리합니다.</span>
+          </div>
+        </a>
+
+        <a href="{{ url_for('admin.blocklist') }}" class="menu-card">
+          <div class="menu-card-top">
+            <div class="card-icon ic-red">
+              <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+            </div>
+            <span class="card-arrow">→</span>
+          </div>
+          <div>
+            <strong>블랙리스트</strong>
+            <span>악의적 사용자 차단과 관련 이력을 관리합니다.</span>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <div class="workspace-panel" data-admin-panel="site" role="tabpanel">
+      <div class="panel-head">
+        <h3>사이트 카테고리</h3>
+        <p>운영 중 사용자 메인 화면 확인이 필요할 때 바로 이동할 수 있습니다.</p>
+      </div>
+      <div class="panel-grid">
+        <a href="/" class="menu-card">
+          <div class="menu-card-top">
             <div class="card-icon ic-green">
               <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
             </div>
             <span class="card-arrow">→</span>
           </div>
-          <div class="card-copy">
+          <div>
             <strong>메인 홈</strong>
             <span>사용자 메인 홈으로 이동해 현재 노출 상태를 확인합니다.</span>
           </div>
