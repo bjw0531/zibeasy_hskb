@@ -287,6 +287,103 @@
   text-overflow: ellipsis;
   color: rgba(255,255,255,.54);
 }
+.detail-btn,
+.log-close-btn {
+  padding: .34rem .62rem;
+  border-radius: .45rem;
+  border: 1px solid rgba(96,165,250,.35);
+  background: rgba(59,130,246,.14);
+  color: #bfdbfe;
+  font-size: .72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.detail-btn:hover,
+.log-close-btn:hover {
+  background: rgba(59,130,246,.22);
+}
+
+.log-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+}
+.log-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(8,11,18,.72);
+  backdrop-filter: blur(3px);
+}
+.log-modal-panel {
+  position: relative;
+  width: min(920px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  margin: 12px auto;
+  background: #16141f;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: .95rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+}
+.log-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1rem .8rem;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.log-modal-title {
+  font-size: .95rem;
+  font-weight: 700;
+  color: #fff;
+}
+.log-modal-meta {
+  margin-top: .25rem;
+  font-size: .75rem;
+  color: rgba(255,255,255,.42);
+}
+.log-modal-body {
+  padding: .85rem 1rem 1rem;
+  overflow-y: auto;
+}
+.log-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+}
+.log-detail-item {
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: .75rem;
+  background: rgba(255,255,255,.04);
+  padding: .85rem;
+}
+.log-detail-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  margin-bottom: .65rem;
+}
+.log-detail-time {
+  font-size: .76rem;
+  color: rgba(255,255,255,.46);
+}
+.log-detail-main {
+  display: grid;
+  gap: .42rem;
+  font-size: .78rem;
+  color: #d6d2cb;
+}
+.log-detail-main strong {
+  color: rgba(255,255,255,.62);
+  margin-right: .35rem;
+}
+body.log-modal-open {
+  overflow: hidden;
+}
 
 /* ── 페이지네이션 ── */
 .pagination {

@@ -1628,7 +1628,7 @@ def analytics_breakdown():
 @bp.route('/analytics/api/logs')
 @login_required
 def analytics_logs():
-    """상세 로그 목록 JSON (정렬/필터/페이징)"""
+    """IP + visitor_id 기준 상세 로그 그룹 목록 JSON"""
     # 파라미터 수집
     mode    = request.args.get('mode', 'daily')
     date    = request.args.get('date', '')
@@ -1642,15 +1642,15 @@ def analytics_logs():
 
     # 정렬 컬럼 화이트리스트 (SQL 인젝션 방지)
     sort_map = {
-        'wdate_desc': 'wdate DESC',
-        'wdate_asc':  'wdate ASC',
+        'wdate_desc': 'last_wdate_utc DESC',
+        'wdate_asc':  'last_wdate_utc ASC',
         'ip':         'ip ASC',
         'browser':    'browser ASC',
         'os':         'os ASC',
         'device':     'device ASC',
         'source':     'source_name ASC',
     }
-    order_by = sort_map.get(sort, 'wdate DESC')
+    order_by = sort_map.get(sort, 'last_wdate_utc DESC')
 
     # WHERE 조건 동적 생성: 기간 조건은 _build_date_cond() 재사용
     date_cond, bind = _build_date_cond(mode, date)
@@ -1674,19 +1674,39 @@ def analytics_logs():
 
     with engine.connect() as conn:
         total_count = conn.execute(
-            text(f"SELECT COUNT(*) FROM zibeasy_access_log WHERE {where}"),
+            text(f"""
+                SELECT COUNT(*) FROM (
+                    SELECT 1
+                    FROM zibeasy_access_log
+                    WHERE {where}
+                    GROUP BY ip, COALESCE(visitor_id, '')
+                ) grouped
+            """),
             bind
         ).scalar()
 
         rows = conn.execute(
             text(f"""
-                SELECT id, DATE_ADD(wdate, INTERVAL 9 HOUR) AS local_wdate,
-                       ip, visitor_id, browser, os, device,
-                       page, referrer, language, code,
-                       source_type, source_name, source_host,
-                       landing_page, utm_source, utm_medium, utm_campaign
+                SELECT
+                    ip,
+                    COALESCE(visitor_id, '') AS visitor_id,
+                    MAX(wdate) AS last_wdate_utc,
+                    MIN(wdate) AS first_wdate_utc,
+                    DATE_ADD(MAX(wdate), INTERVAL 9 HOUR) AS last_wdate,
+                    DATE_ADD(MIN(wdate), INTERVAL 9 HOUR) AS first_wdate,
+                    COUNT(*) AS log_count,
+                    COUNT(DISTINCT page) AS page_count,
+                    COUNT(DISTINCT CASE WHEN code IS NOT NULL THEN code END) AS property_count,
+                    SUBSTRING_INDEX(GROUP_CONCAT(browser ORDER BY wdate DESC SEPARATOR '||'), '||', 1) AS browser,
+                    SUBSTRING_INDEX(GROUP_CONCAT(os ORDER BY wdate DESC SEPARATOR '||'), '||', 1) AS os,
+                    SUBSTRING_INDEX(GROUP_CONCAT(device ORDER BY wdate DESC SEPARATOR '||'), '||', 1) AS device,
+                    SUBSTRING_INDEX(GROUP_CONCAT(source_type ORDER BY wdate DESC SEPARATOR '||'), '||', 1) AS source_type,
+                    SUBSTRING_INDEX(GROUP_CONCAT(source_name ORDER BY wdate DESC SEPARATOR '||'), '||', 1) AS source_name,
+                    SUBSTRING_INDEX(GROUP_CONCAT(page ORDER BY wdate DESC SEPARATOR '||'), '||', 1) AS last_page,
+                    SUBSTRING_INDEX(GROUP_CONCAT(landing_page ORDER BY wdate ASC SEPARATOR '||'), '||', 1) AS first_landing_page
                 FROM zibeasy_access_log
                 WHERE {where}
+                GROUP BY ip, COALESCE(visitor_id, '')
                 ORDER BY {order_by}
                 LIMIT {per} OFFSET {offset}
             """),
@@ -1699,24 +1719,76 @@ def analytics_logs():
         'pages': (total_count + per - 1) // per,
         'logs': [
             {
-                'id':         r[0],
-                'wdate':      r[1].strftime('%m-%d %H:%M:%S') if r[1] else '',
-                'ip':         r[2],
-                'visitor_id': r[3],
-                'browser':    r[4],
-                'os':         r[5],
-                'device':     r[6],
-                'page':       r[7],
-                'referrer':   r[8],
-                'language':   r[9],
-                'code':       r[10],
-                'source_type': r[11],
-                'source_name': r[12],
-                'source_host': r[13],
-                'landing_page': r[14],
-                'utm_source': r[15],
-                'utm_medium': r[16],
-                'utm_campaign': r[17],
+                'ip': r[0],
+                'visitor_id': r[1],
+                'last_wdate': r[4].strftime('%m-%d %H:%M:%S') if r[4] else '',
+                'first_wdate': r[5].strftime('%m-%d %H:%M:%S') if r[5] else '',
+                'log_count': r[6],
+                'page_count': r[7],
+                'property_count': r[8],
+                'browser': r[9],
+                'os': r[10],
+                'device': r[11],
+                'source_type': r[12],
+                'source_name': r[13],
+                'last_page': r[14],
+                'first_landing_page': r[15],
+            }
+            for r in rows
+        ],
+    })
+
+
+@bp.route('/analytics/api/logs/detail')
+@login_required
+def analytics_log_detail():
+    """특정 IP + visitor_id의 전체 로그 기록 JSON"""
+    ip = request.args.get('ip', '').strip()
+    visitor_id = request.args.get('visitor_id', '').strip()
+
+    if not ip:
+        return jsonify({'logs': []})
+
+    with engine.connect() as conn:
+        rows = conn.execute(
+            text("""
+                SELECT
+                    DATE_ADD(wdate, INTERVAL 9 HOUR) AS local_wdate,
+                    ip, COALESCE(visitor_id, '') AS visitor_id,
+                    browser, os, device,
+                    source_type, source_name, page, landing_page,
+                    referrer, source_host,
+                    code, utm_source, utm_medium, utm_campaign
+                FROM zibeasy_access_log
+                WHERE ip = :ip
+                  AND COALESCE(visitor_id, '') = :visitor_id
+                ORDER BY wdate DESC, id DESC
+            """),
+            {'ip': ip, 'visitor_id': visitor_id}
+        ).fetchall()
+
+    return jsonify({
+        'ip': ip,
+        'visitor_id': visitor_id,
+        'total': len(rows),
+        'logs': [
+            {
+                'wdate': r[0].strftime('%Y-%m-%d %H:%M:%S') if r[0] else '',
+                'ip': r[1],
+                'visitor_id': r[2],
+                'browser': r[3],
+                'os': r[4],
+                'device': r[5],
+                'source_type': r[6],
+                'source_name': r[7],
+                'page': r[8],
+                'landing_page': r[9],
+                'referrer': r[10],
+                'source_host': r[11],
+                'code': r[12],
+                'utm_source': r[13],
+                'utm_medium': r[14],
+                'utm_campaign': r[15],
             }
             for r in rows
         ],

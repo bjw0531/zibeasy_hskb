@@ -207,9 +207,9 @@
       <table class="log-table">
         <thead>
           <tr>
-            <th>시각(KST)</th><th>IP</th><th>visitor_id</th>
-            <th>유입</th><th>브라우저</th><th>OS</th><th>기기</th>
-            <th>첫 진입</th><th>현재 페이지</th><th>referrer</th><th>매물</th>
+            <th>마지막 접속</th><th>첫 접속</th><th>IP</th><th>visitor_id</th>
+            <th>유입</th><th>브라우저</th><th>기기</th>
+            <th>진입 페이지</th><th>최근 페이지</th><th>로그 수</th><th>상세</th>
           </tr>
         </thead>
         <tbody id="log-tbody">
@@ -218,6 +218,23 @@
       </table>
     </div>
     <div class="pagination" id="pagination"></div>
+  </div>
+
+  <div class="log-modal" id="logDetailModal" hidden>
+    <div class="log-modal-backdrop" onclick="closeLogDetailModal()"></div>
+    <div class="log-modal-panel" role="dialog" aria-modal="true" aria-labelledby="logDetailTitle">
+      <div class="log-modal-header">
+        <div>
+          <div class="section-title" style="margin-bottom:.35rem;">방문 기록 상세</div>
+          <h2 id="logDetailTitle" class="log-modal-title">로딩 중…</h2>
+          <p id="logDetailMeta" class="log-modal-meta"></p>
+        </div>
+        <button type="button" class="log-close-btn" onclick="closeLogDetailModal()">닫기</button>
+      </div>
+      <div class="log-modal-body" id="logDetailBody">
+        <div class="loading">로딩 중…</div>
+      </div>
+    </div>
   </div>
 
 </div><!-- /page-wrap -->
@@ -340,6 +357,9 @@ function sourceLabel(name) {
 }
 function sourceBadgeClass(type) {
   return `source-${type || 'unknown'}`;
+}
+function detailButton(ip, visitorId) {
+  return `<button type="button" class="detail-btn" onclick="openLogDetailModal(${JSON.stringify(ip)}, ${JSON.stringify(visitorId || '')})">상세보기</button>`;
 }
 
 function makeOrUpdate(id, config) {
@@ -570,29 +590,75 @@ async function loadLogs() {
     const sourceBadge = (name, type) =>
       `<span class="source-badge ${sourceBadgeClass(type)}">${escapeHtml(sourceLabel(name))}</span>`;
     tbody.innerHTML = data.logs.map(r => `<tr>
-      <td style="color:rgba(255,255,255,.4);font-size:.72rem;">${r.wdate}</td>
+      <td style="color:rgba(255,255,255,.4);font-size:.72rem;">${r.last_wdate}</td>
+      <td style="color:rgba(255,255,255,.4);font-size:.72rem;">${r.first_wdate}</td>
       <td class="code-mono">${r.ip||'—'}</td>
       <td class="code-mono" title="${escapeHtml(r.visitor_id || '')}">${r.visitor_id ? `${escapeHtml(r.visitor_id.slice(0, 8))}…` : '—'}</td>
       <td>
         ${sourceBadge(r.source_name, r.source_type)}
-        ${r.utm_campaign ? `<div class="cell-sub" title="${escapeHtml(r.utm_campaign)}">캠페인: ${escapeHtml(shortText(r.utm_campaign, 18))}</div>` : ''}
       </td>
       <td>${r.browser||'—'}</td>
-      <td style="color:rgba(255,255,255,.5);">${r.os||'—'}</td>
       <td>${badge(r.device)}</td>
-      <td class="cell-ellipsis" title="${escapeHtml(r.landing_page || r.page || '')}">
-        ${escapeHtml(shortText(r.landing_page || r.page || '—', 34))}
+      <td class="cell-ellipsis" title="${escapeHtml(r.first_landing_page || '')}">
+        ${escapeHtml(shortText(r.first_landing_page || '—', 34))}
       </td>
-      <td class="cell-ellipsis" title="${escapeHtml(r.page || '')}">
-        ${escapeHtml(shortText(r.page || '—', 28))}
+      <td class="cell-ellipsis" title="${escapeHtml(r.last_page || '')}">
+        ${escapeHtml(shortText(r.last_page || '—', 28))}
       </td>
-      <td class="cell-ellipsis" title="${escapeHtml(r.referrer || r.source_host || '')}">
-        ${r.referrer ? escapeHtml(shortText(r.referrer, 42)) : (r.source_name === 'direct' ? '직접접속' : '—')}
-      </td>
-      <td>${r.code?`<a href="/view/${r.code}" target="_blank" class="code-mono">${r.code}</a>`:'—'}</td>
+      <td>${fmt(r.log_count)}<div class="cell-sub">${fmt(r.page_count)}개 페이지 · ${fmt(r.property_count)}개 매물</div></td>
+      <td>${detailButton(r.ip, r.visitor_id)}</td>
     </tr>`).join('');
   }
   renderPagination(data.page, data.pages);
+}
+
+async function openLogDetailModal(ip, visitorId) {
+  const modal = document.getElementById('logDetailModal');
+  const body = document.getElementById('logDetailBody');
+  const title = document.getElementById('logDetailTitle');
+  const meta = document.getElementById('logDetailMeta');
+
+  title.textContent = `${ip} / ${visitorId || 'visitor_id 없음'}`;
+  meta.textContent = '전체 기간 로그를 불러오는 중…';
+  body.innerHTML = '<div class="loading">로딩 중…</div>';
+  modal.hidden = false;
+  document.body.classList.add('log-modal-open');
+
+  const params = new URLSearchParams({ ip, visitor_id: visitorId || '' });
+  const res = await fetch(`/admin/analytics/api/logs/detail?${params}`);
+  const data = await res.json();
+
+  meta.textContent = `총 ${fmt(data.total)}건 · 전체 기간 · KST 기준`;
+
+  if (!data.logs.length) {
+    body.innerHTML = '<div class="empty-state">상세 로그가 없습니다</div>';
+    return;
+  }
+
+  body.innerHTML = `<div class="log-detail-list">${
+    data.logs.map(r => `
+      <div class="log-detail-item">
+        <div class="log-detail-top">
+          <span class="log-detail-time">${escapeHtml(r.wdate)}</span>
+          <span class="source-badge ${sourceBadgeClass(r.source_type)}">${escapeHtml(sourceLabel(r.source_name))}</span>
+        </div>
+        <div class="log-detail-main">
+          <div><strong>페이지</strong> ${escapeHtml(r.page || '—')}</div>
+          <div><strong>진입</strong> ${escapeHtml(r.landing_page || '—')}</div>
+          <div><strong>리퍼러</strong> ${escapeHtml(r.referrer || r.source_host || '—')}</div>
+          <div><strong>브라우저</strong> ${escapeHtml(r.browser || '—')} / ${escapeHtml(r.os || '—')} / ${escapeHtml(r.device || '—')}</div>
+          <div><strong>UTM</strong> ${escapeHtml(r.utm_source || '—')} / ${escapeHtml(r.utm_medium || '—')} / ${escapeHtml(r.utm_campaign || '—')}</div>
+          <div><strong>매물</strong> ${r.code ? `<a href="/view/${r.code}" target="_blank" class="code-mono">${r.code}</a>` : '—'}</div>
+        </div>
+      </div>
+    `).join('')
+  }</div>`;
+}
+
+function closeLogDetailModal() {
+  const modal = document.getElementById('logDetailModal');
+  modal.hidden = true;
+  document.body.classList.remove('log-modal-open');
 }
 
 function renderPagination(current, total) {
