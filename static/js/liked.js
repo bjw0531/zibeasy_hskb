@@ -37,7 +37,10 @@ function _fetchLikedFromServer() {
         .then(function(d) {
             if (d.success && Array.isArray(d.codes)) {
                 _likedCache = d.codes.map(String);
+                /* localStorage 동기화 → 하단 탭바 배지 갱신용 */
+                localStorage.setItem('liked', JSON.stringify(_likedCache));
                 _applyHeartState(_likedCache);
+                window.dispatchEvent(new CustomEvent('likedUpdated'));
             }
         })
         .catch(function() {});
@@ -90,6 +93,8 @@ function toggleLike(id) {
         } else {
             _likedCache = _likedCache.filter(function(c) { return c !== strId; });
         }
+        /* localStorage 동기화 → 하단 탭바 배지 갱신용 */
+        localStorage.setItem('liked', JSON.stringify(_likedCache));
         /* 하트 즉시 반영 */
         var btn = document.querySelector('[data-like-btn="' + strId + '"]');
         if (btn) {
