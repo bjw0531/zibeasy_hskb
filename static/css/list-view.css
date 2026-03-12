@@ -300,28 +300,25 @@ body.lv-body {
 .lv-thumb-dots {
     position: absolute;
     left: 50%;
-    bottom: 8px;
+    bottom: 10px;
     transform: translateX(-50%);
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 4px 6px;
-    border-radius: 999px;
-    background: rgba(0, 0, 0, 0.18);
+    gap: 10px;
     z-index: 8;
 }
 
 .lv-thumb-dot {
-    width: 4px;
-    height: 4px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.55);
-    transition: width 0.2s ease, background-color 0.2s ease;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.42);
+    transition: transform 0.2s ease, background-color 0.2s ease, opacity 0.2s ease;
 }
 
 .lv-thumb-dot.is-active {
-    width: 14px;
     background: #fff;
+    transform: scale(1.28);
 }
 
 /* 사진 안쪽 그림자 (지도형 패널 목록과 동일) */
