@@ -6,8 +6,9 @@ import time
 import logging
 import threading
 import os
+import uuid
 from urllib.parse import parse_qs, urlparse
-from flask import Flask, request, abort, jsonify
+from flask import Flask, request, abort, jsonify, g
 from flask_cors import CORS
 from sqlalchemy import text
 from config import Config
@@ -18,7 +19,13 @@ from app.utils.ua_parser import parse_user_agent
 
 # ── 페이지 접근 로그 설정 ──────────────────────────────────────────
 # 로깅할 페이지 경로 (정확한 경로 또는 prefix)
-_LOG_EXACT   = {'/', '/map', '/liked', '/profile', '/fee-calc/'}
+_LOG_EXACT   = {
+    '/', '/map', '/map-list', '/list',
+    '/liked', '/recent', '/recents', '/profile',
+    '/login', '/signup', '/terms', '/privacy',
+    '/feedback', '/request', '/compass', '/about',
+    '/fee-calc/',
+}
 _LOG_PREFIX  = ('/view/', '/fee-calc/')
 # 제외할 경로 (API·정적파일·이미지·관리자 등)
 _SKIP_PREFIX = ('/api/', '/static/', '/images/', '/admin/', '/sync/')
@@ -273,7 +280,14 @@ def _ensure_access_log_schema(db_engine):
                   AND column_name = :column_name
             """), {'column_name': column_name}).scalar() or 0
             if not exists:
-                conn.execute(text(ddl))
+                try:
+                    conn.execute(text(ddl))
+                except Exception as e:
+                    # 1060: Duplicate column name
+                    if '1060' in str(e):
+                        pass
+                    else:
+                        raise
 
         index_ddls = {
             'idx_access_log_wdate': """
@@ -299,9 +313,24 @@ def _ensure_access_log_schema(db_engine):
                   AND index_name = :index_name
             """), {'index_name': index_name}).scalar() or 0
             if not exists:
-                conn.execute(text(ddl))
+                try:
+                    conn.execute(text(ddl))
+                except Exception as e:
+                    # 1061: Duplicate key name
+                    if '1061' in str(e):
+                        pass
+                    else:
+                        raise
 
         conn.commit()
+
+
+def _get_request_visitor_id():
+    """현재 요청에서 사용할 visitor_id 반환"""
+    visitor_id = getattr(g, 'visitor_id', '')
+    if visitor_id:
+        return visitor_id
+    return request.cookies.get('visitor_id', '')
 
 
 def create_app(config_class=Config):
@@ -435,6 +464,24 @@ def create_app(config_class=Config):
             logging.info(f"블랙리스트 차단(visitor_id): {visitor_id} — {request.path}")
             abort(403)
 
+    @app.before_request
+    def ensure_visitor_id_context():
+        """첫 요청부터 visitor_id를 만들고 현재 요청 컨텍스트에 보관"""
+        path = request.path or '/'
+        if any(path.startswith(p) for p in _SKIP_PREFIX):
+            g.visitor_id = request.cookies.get('visitor_id', '')
+            g.should_set_visitor_id = False
+            return
+
+        cookie_visitor_id = request.cookies.get('visitor_id', '').strip()
+        if cookie_visitor_id:
+            g.visitor_id = cookie_visitor_id
+            g.should_set_visitor_id = False
+            return
+
+        g.visitor_id = str(uuid.uuid4())
+        g.should_set_visitor_id = True
+
     # ── CSRF 보호 미들웨어 ────────────────────────────────────────
     @app.before_request
     def enforce_csrf():
@@ -453,6 +500,26 @@ def create_app(config_class=Config):
             return jsonify({'success': False, 'error': 'invalid_csrf'}), 400
 
         abort(400)
+
+    @app.after_request
+    def persist_visitor_cookie(response):
+        """신규 방문자에게 visitor_id 쿠키 발급"""
+        if not getattr(g, 'should_set_visitor_id', False):
+            return response
+
+        visitor_id = getattr(g, 'visitor_id', '')
+        if not visitor_id:
+            return response
+
+        response.set_cookie(
+            'visitor_id',
+            visitor_id,
+            max_age=365 * 24 * 60 * 60,
+            httponly=True,
+            samesite='Lax',
+            secure=bool(app.config.get('SESSION_COOKIE_SECURE', False)),
+        )
+        return response
 
     # ── 페이지 접근 로그 미들웨어 ─────────────────────────────────
     @app.after_request
@@ -484,7 +551,7 @@ def create_app(config_class=Config):
         # ── 요청 데이터 스냅샷 (스레드에서 request context 없으므로 미리 캡처) ──
         visitor_ip  = request.headers.get('X-Forwarded-For', request.remote_addr or '')
         visitor_ip  = visitor_ip.split(',')[0].strip()
-        visitor_id  = request.cookies.get('visitor_id', '')
+        visitor_id  = _get_request_visitor_id()
         referrer    = (request.referrer or '')[:500]
         language    = (request.accept_languages.best or '')[:50]
         ua_string   = (request.user_agent.string or '')[:500]
@@ -524,7 +591,7 @@ def create_app(config_class=Config):
                                  utm_source, utm_medium, utm_campaign, utm_content, utm_term)
                             VALUES
                                 (:code, :visitor_id, :ip, :browser, :os, :device,
-                                 :referrer, :page, :language, :ua_string, NOW(),
+                                 :referrer, :page, :language, :ua_string, UTC_TIMESTAMP(),
                                  :source_type, :source_name, :source_host, :is_entry,
                                  :landing_page, :query_string,
                                  :utm_source, :utm_medium, :utm_campaign, :utm_content, :utm_term)

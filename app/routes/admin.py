@@ -1256,7 +1256,27 @@ def blocklist_delete(bl_id):
 import re as _analytics_re  # 모듈 수준에서 import (반복 방지)
 
 
-def _build_date_cond(mode, date):
+def _kst_ts(column='wdate'):
+    """UTC 저장 시각을 KST 기준 시각 표현식으로 변환"""
+    return f"DATE_ADD({column}, INTERVAL 9 HOUR)"
+
+
+def _kst_date(column='wdate'):
+    """UTC 저장 시각을 KST 날짜 표현식으로 변환"""
+    return f"DATE({_kst_ts(column)})"
+
+
+def _kst_hour(column='wdate'):
+    """UTC 저장 시각을 KST 시간대 표현식으로 변환"""
+    return f"HOUR({_kst_ts(column)})"
+
+
+def _kst_now():
+    """현재 시각의 KST 표현식"""
+    return "DATE_ADD(UTC_TIMESTAMP(), INTERVAL 9 HOUR)"
+
+
+def _build_date_cond(mode, date, column='wdate'):
     """
     mode/date 파라미터로 WHERE 조건과 바인드 파라미터 반환
       mode=daily  + date=YYYY-MM-DD → 해당 날짜
@@ -1268,16 +1288,19 @@ def _build_date_cond(mode, date):
     if date and not _analytics_re.match(r'^\d{4}-\d{2}-\d{2}$', date):
         date = ''
 
+    local_ts = _kst_ts(column)
+    local_date = _kst_date(column)
+
     if mode == 'weekly':
-        return 'wdate >= CURDATE() - INTERVAL 7 DAY', {}
+        return f'{local_ts} >= {_kst_now()} - INTERVAL 7 DAY', {}
     if mode == 'monthly':
-        return 'wdate >= CURDATE() - INTERVAL 30 DAY', {}
+        return f'{local_ts} >= {_kst_now()} - INTERVAL 30 DAY', {}
     if mode == 'all':
         return '1 = 1', {}
     # daily (기본)
     if date:
-        return 'DATE(wdate) = :date', {'date': date}
-    return 'DATE(wdate) = CURDATE()', {}
+        return f'{local_date} = :date', {'date': date}
+    return f'{local_date} = DATE({_kst_now()})', {}
 
 
 @bp.route('/analytics')
@@ -1294,14 +1317,15 @@ def analytics_summary():
     mode = request.args.get('mode', 'daily')
     date = request.args.get('date', '')
     date_cond, bind = _build_date_cond(mode, date)
+    local_date = _kst_date('wdate')
 
     # 비교 기간 조건 (daily만 전일 대비 지원)
     if mode == 'daily':
         if date:
-            prev_cond = 'DATE(wdate) = DATE(:date) - INTERVAL 1 DAY'
+            prev_cond = f'{local_date} = DATE(:date) - INTERVAL 1 DAY'
             prev_bind = bind
         else:
-            prev_cond = 'DATE(wdate) = CURDATE() - INTERVAL 1 DAY'
+            prev_cond = f'{local_date} = DATE({_kst_now()}) - INTERVAL 1 DAY'
             prev_bind = {}
     else:
         prev_cond = '1 = 0'  # 주간/월간/전체는 전일 비교 없음
@@ -1315,7 +1339,7 @@ def analytics_summary():
                     COUNT(DISTINCT visitor_id)  AS visitors,
                     COUNT(DISTINCT ip)          AS ips,
                     COUNT(DISTINCT CASE WHEN code IS NOT NULL
-                                   THEN CONCAT(ip, '-', code, '-', DATE(wdate)) END) AS properties
+                                   THEN CONCAT(ip, '-', code, '-', {local_date}) END) AS properties
                 FROM zibeasy_access_log
                 WHERE {date_cond}
             """),
@@ -1356,17 +1380,19 @@ def analytics_daily():
     # 기간별 일수 설정
     interval_map = {'weekly': 7, 'monthly': 30, 'all': 365}
     interval = interval_map.get(mode, 30)  # daily 선택 시에도 30일 추이 표시
+    local_ts = _kst_ts('wdate')
+    local_date = _kst_date('wdate')
 
     with engine.connect() as conn:
         rows = conn.execute(
             text(f"""
                 SELECT
-                    DATE(wdate)                 AS day,
+                    {local_date}               AS day,
                     COUNT(*)                    AS total,
                     COUNT(DISTINCT visitor_id)  AS visitors,
                     COUNT(DISTINCT ip)          AS ips
                 FROM zibeasy_access_log
-                WHERE wdate >= CURDATE() - INTERVAL {interval} DAY
+                WHERE {local_ts} >= {_kst_now()} - INTERVAL {interval} DAY
                 GROUP BY day
                 ORDER BY day
             """)
@@ -1386,13 +1412,15 @@ def analytics_hourly():
     if date and not _analytics_re.match(r'^\d{4}-\d{2}-\d{2}$', date):
         date = ''
 
-    date_cond = 'DATE(wdate) = :date' if date else 'DATE(wdate) = CURDATE()'
+    local_date = _kst_date('wdate')
+    local_hour = _kst_hour('wdate')
+    date_cond = f'{local_date} = :date' if date else f'{local_date} = DATE({_kst_now()})'
     bind = {'date': date} if date else {}
 
     with engine.connect() as conn:
         rows = conn.execute(
             text(f"""
-                SELECT HOUR(wdate) AS hour, COUNT(*) AS cnt
+                SELECT {local_hour} AS hour, COUNT(*) AS cnt
                 FROM zibeasy_access_log
                 WHERE {date_cond}
                 GROUP BY hour
@@ -1413,6 +1441,26 @@ def analytics_breakdown():
     mode = request.args.get('mode', 'daily')
     date = request.args.get('date', '')
     date_cond, bind = _build_date_cond(mode, date)
+    entry_cond, entry_bind = _build_date_cond(mode, date, 'e.wdate')
+    local_entry_date = _kst_date('e.wdate')
+    local_view_date = _kst_date('v.wdate')
+    detail_conversion_exists = f"""
+        EXISTS (
+            SELECT 1
+            FROM zibeasy_access_log v
+            WHERE v.page LIKE '/view/%'
+              AND {local_view_date} = {local_entry_date}
+              AND v.wdate >= e.wdate
+              AND (
+                  (e.visitor_id IS NOT NULL AND e.visitor_id <> '' AND v.visitor_id = e.visitor_id)
+                  OR (
+                      (e.visitor_id IS NULL OR e.visitor_id = '')
+                      AND e.ip IS NOT NULL AND e.ip <> ''
+                      AND v.ip = e.ip
+                  )
+              )
+        )
+    """
 
     with engine.connect() as conn:
         # ── 분포 조회 헬퍼 (conn 블록 내부에서 호출해야 함) ──
@@ -1449,7 +1497,7 @@ def analytics_breakdown():
         # 인기 매물 TOP 10 — 실제 조회수 로직 동일 적용 (ip + code + 날짜 기준 중복 제거)
         top_props = conn.execute(
             text(f"""
-                SELECT code, COUNT(DISTINCT CONCAT(ip, '-', DATE(wdate))) AS cnt
+                SELECT code, COUNT(DISTINCT CONCAT(ip, '-', {_kst_date('wdate')})) AS cnt
                 FROM zibeasy_access_log
                 WHERE {date_cond} AND code IS NOT NULL
                 GROUP BY code
@@ -1515,6 +1563,36 @@ def analytics_breakdown():
             bind
         ).fetchall()
 
+        source_conversions = conn.execute(
+            text(f"""
+                SELECT COALESCE(NULLIF(e.source_name, ''), 'unknown') AS label,
+                       COUNT(*) AS entry_cnt,
+                       SUM(CASE WHEN {detail_conversion_exists} THEN 1 ELSE 0 END) AS detail_cnt
+                FROM zibeasy_access_log e
+                WHERE {entry_cond}
+                  AND e.is_entry = 1
+                GROUP BY label
+                ORDER BY detail_cnt DESC, entry_cnt DESC
+                LIMIT 12
+            """),
+            entry_bind
+        ).fetchall()
+
+        landing_conversions = conn.execute(
+            text(f"""
+                SELECT COALESCE(NULLIF(e.landing_page, ''), e.page) AS landing,
+                       COUNT(*) AS entry_cnt,
+                       SUM(CASE WHEN {detail_conversion_exists} THEN 1 ELSE 0 END) AS detail_cnt
+                FROM zibeasy_access_log e
+                WHERE {entry_cond}
+                  AND e.is_entry = 1
+                GROUP BY landing
+                ORDER BY detail_cnt DESC, entry_cnt DESC
+                LIMIT 12
+            """),
+            entry_bind
+        ).fetchall()
+
     # with 블록 종료 후 이미 fetch 결과가 변수에 저장되어 있음
     return jsonify({
         'browser':    browser_data,
@@ -1526,6 +1604,24 @@ def analytics_breakdown():
         'top_referrers': [{'host': r[0], 'cnt': r[1]} for r in top_referrers],
         'top_landings': [{'landing': r[0], 'cnt': r[1]} for r in top_landings],
         'top_campaigns': [{'campaign': r[0], 'cnt': r[1]} for r in top_campaigns],
+        'source_conversions': [
+            {
+                'label': r[0],
+                'entry_cnt': r[1],
+                'detail_cnt': r[2],
+                'conversion_rate': round((r[2] / r[1]) * 100, 1) if r[1] else 0,
+            }
+            for r in source_conversions
+        ],
+        'landing_conversions': [
+            {
+                'landing': r[0],
+                'entry_cnt': r[1],
+                'detail_cnt': r[2],
+                'conversion_rate': round((r[2] / r[1]) * 100, 1) if r[1] else 0,
+            }
+            for r in landing_conversions
+        ],
     })
 
 
@@ -1584,7 +1680,8 @@ def analytics_logs():
 
         rows = conn.execute(
             text(f"""
-                SELECT id, wdate, ip, visitor_id, browser, os, device,
+                SELECT id, DATE_ADD(wdate, INTERVAL 9 HOUR) AS local_wdate,
+                       ip, visitor_id, browser, os, device,
                        page, referrer, language, code,
                        source_type, source_name, source_host,
                        landing_page, utm_source, utm_medium, utm_campaign

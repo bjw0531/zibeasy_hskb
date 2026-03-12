@@ -902,10 +902,6 @@ def view_property(code):
     liked_list = _parse_ids_cookie(request.cookies.get('liked', ''))
     is_liked = str(code) in liked_list
 
-    # ✅ visitor_id 쿠키 확인 — 없으면 신규 UUID 발급
-    visitor_id = request.cookies.get('visitor_id') or str(uuid.uuid4())
-    is_new_visitor = not request.cookies.get('visitor_id')
-
     try:
         with engine.connect() as conn:
             # code로 매물 검색
@@ -1034,16 +1030,6 @@ def view_property(code):
                         )
                 except Exception as e:
                     logging.error(f"최근 본 매물 기록 오류: {e}")
-
-            # ✅ 신규 방문자이면 visitor_id 쿠키 발급 (유효기간 1년)
-            if is_new_visitor:
-                resp.set_cookie(
-                    'visitor_id',
-                    visitor_id,
-                    max_age=365 * 24 * 60 * 60,  # 1년 (초 단위)
-                    httponly=True,
-                    samesite='Lax'
-                )
 
             return resp
 

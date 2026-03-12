@@ -220,6 +220,7 @@
 .top-rank.bronze { color: #f59e0b; }
 .top-bar-wrap { flex: 1; min-width: 0; }
 .top-label { font-size: .76rem; color: #d0cdc8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: .18rem; }
+.top-meta { display: block; margin-top: .18rem; font-size: .67rem; color: rgba(255,255,255,.38); }
 .top-bar { height: 4px; border-radius: 2px; background: linear-gradient(90deg,#3b82f6,#06b6d4); transition: width .6s ease; }
 .top-cnt { font-size: .73rem; font-weight: 700; color: rgba(255,255,255,.45); flex-shrink: 0; }
 
