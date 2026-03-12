@@ -337,10 +337,10 @@
 
         <div class="tabs">
             <button class="tab-btn" data-tab="find_home">집 구하기</button>
-            <button class="tab-btn active" data-tab="lease_out">집 내놓기</button>
+            <button class="tab-btn" data-tab="lease_out">집 내놓기</button>
         </div>
 
-        <section class="panel active" id="panel-lease_out">
+        <section class="panel" id="panel-lease_out">
             <div class="sf-shell">
                 <div class="panel-title">어떤 집을 내놓으세요?</div>
                 <p class="panel-lead">매물 정보와 조건을 남겨주시면 내용을 확인한 뒤 빠르게 연락드릴께요.</p>
@@ -421,7 +421,10 @@
             btn.addEventListener('click', () => switchTab(btn.dataset.tab));
         });
 
-        switchTab('lease_out');
+        /* URL ?type=put 이면 집 내놓기, 그 외는 집 구하기 */
+        const initTab = new URLSearchParams(window.location.search).get('type') === 'put'
+            ? 'lease_out' : 'find_home';
+        switchTab(initTab);
 
         closePrivacyModalBtn.addEventListener('click', () => {
             privacyModal.classList.remove('active');
