@@ -108,6 +108,18 @@
     </div>
   </div>
 
+  <!-- ⑥ 유입 경로 -->
+  <div class="chart-grid-2">
+    <div class="chart-wrap">
+      <div class="section-title">유입 출처</div>
+      <canvas id="chart-source"></canvas>
+    </div>
+    <div class="top-card">
+      <div class="section-title">외부 리퍼러 / 직접접속</div>
+      <div id="top-referrers"><div class="loading">로딩 중…</div></div>
+    </div>
+  </div>
+
   <!-- ⑥ TOP 10 -->
   <div class="top-grid">
     <div class="top-card">
@@ -115,8 +127,19 @@
       <div id="top-properties"><div class="loading">로딩 중…</div></div>
     </div>
     <div class="top-card">
+      <div class="section-title">첫 진입 페이지</div>
+      <div id="top-landings"><div class="loading">로딩 중…</div></div>
+    </div>
+  </div>
+
+  <div class="top-grid">
+    <div class="top-card">
       <div class="section-title">IP별 방문 횟수</div>
       <div id="top-ips"><div class="loading">로딩 중…</div></div>
+    </div>
+    <div class="top-card">
+      <div class="section-title">UTM 캠페인 TOP</div>
+      <div id="top-campaigns"><div class="loading">로딩 중…</div></div>
     </div>
   </div>
 
@@ -142,12 +165,28 @@
         <option value="Opera">Opera</option>
         <option value="unknown">기타</option>
       </select>
+      <select class="filter-select" id="filter-source">
+        <option value="">유입 전체</option>
+        <option value="direct">직접접속</option>
+        <option value="naver">네이버</option>
+        <option value="google">구글</option>
+        <option value="kakao">카카오</option>
+        <option value="instagram">인스타그램</option>
+        <option value="facebook">페이스북</option>
+        <option value="youtube">유튜브</option>
+        <option value="daum">다음</option>
+        <option value="chatgpt">ChatGPT</option>
+        <option value="referral">기타 리퍼러</option>
+        <option value="internal">내부이동</option>
+        <option value="unknown">기타</option>
+      </select>
       <select class="filter-select" id="filter-sort">
         <option value="wdate_desc">최신순</option>
         <option value="wdate_asc">오래된순</option>
         <option value="ip">IP순</option>
         <option value="browser">브라우저순</option>
         <option value="device">기기순</option>
+        <option value="source">유입순</option>
       </select>
       <span id="log-total-count"
             style="font-size:.73rem; color:rgba(255,255,255,.3); margin-left:.2rem;"></span>
@@ -158,11 +197,12 @@
         <thead>
           <tr>
             <th>시각</th><th>IP</th><th>visitor_id</th>
-            <th>브라우저</th><th>OS</th><th>기기</th><th>페이지</th><th>매물</th>
+            <th>유입</th><th>브라우저</th><th>OS</th><th>기기</th>
+            <th>첫 진입</th><th>현재 페이지</th><th>referrer</th><th>매물</th>
           </tr>
         </thead>
         <tbody id="log-tbody">
-          <tr><td colspan="8"><div class="loading">로딩 중…</div></td></tr>
+          <tr><td colspan="11"><div class="loading">로딩 중…</div></td></tr>
         </tbody>
       </table>
     </div>
@@ -184,6 +224,21 @@ Chart.defaults.borderColor = 'rgba(255,255,255,0.08)';
 Chart.defaults.font.family = "'Apple SD Gothic Neo','Noto Sans KR',sans-serif";
 
 const PALETTE = ['#60a5fa','#34d399','#fbbf24','#f87171','#a78bfa','#fb923c','#38bdf8','#4ade80'];
+const SOURCE_LABELS = {
+  direct: '직접접속',
+  internal: '내부이동',
+  naver: '네이버',
+  google: '구글',
+  daum: '다음',
+  bing: '빙',
+  kakao: '카카오',
+  instagram: '인스타그램',
+  facebook: '페이스북',
+  youtube: '유튜브',
+  chatgpt: 'ChatGPT',
+  referral: '외부링크',
+  unknown: '기타',
+};
 
 // ── Flatpickr 초기화 ──────────────────────────────────────────────
 const fp = flatpickr('#date-select', {
@@ -230,7 +285,7 @@ document.querySelectorAll('.period-tab').forEach(btn => {
 
 // ── 로그 필터 이벤트 ─────────────────────────────────────────────
 let filterTimer = null;
-['filter-device','filter-browser','filter-sort'].forEach(id => {
+['filter-device','filter-browser','filter-source','filter-sort'].forEach(id => {
   document.getElementById(id).addEventListener('change', () => {
     clearTimeout(filterTimer);
     filterTimer = setTimeout(() => { currentPage = 1; loadLogs(); }, 200);
@@ -256,6 +311,25 @@ function updatePeriodLabel() {
 
 // ── 유틸 ─────────────────────────────────────────────────────────
 function fmt(n) { return n == null ? '—' : n.toLocaleString('ko-KR'); }
+function shortText(value, limit = 42) {
+  const text = String(value || '');
+  return text.length > limit ? `${text.slice(0, limit - 1)}…` : text;
+}
+function escapeHtml(value) {
+  return String(value || '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }[ch]));
+}
+function sourceLabel(name) {
+  return SOURCE_LABELS[name] || name || '기타';
+}
+function sourceBadgeClass(type) {
+  return `source-${type || 'unknown'}`;
+}
 
 function makeOrUpdate(id, config) {
   if (charts[id]) { charts[id].destroy(); delete charts[id]; }
@@ -396,9 +470,21 @@ async function loadBreakdown() {
     makeDoughnut('chart-os2',      data.os);
   }
 
+  makeDoughnut('chart-source', data.sources);
+
   // TOP 10 목록
   renderTopList('top-properties', data.properties, item =>
     `<a href="/view/${item.code}" target="_blank" style="color:inherit; text-decoration:none;">매물 #${item.code}</a>`,
+    item => item.cnt
+  );
+
+  renderTopList('top-referrers', data.top_referrers,
+    item => `<span>${item.host === 'direct' ? '직접접속' : escapeHtml(item.host)}</span>`,
+    item => item.cnt
+  );
+
+  renderTopList('top-landings', data.top_landings,
+    item => `<span title="${escapeHtml(item.landing)}">${escapeHtml(shortText(item.landing, 42))}</span>`,
     item => item.cnt
   );
 
@@ -407,6 +493,11 @@ async function loadBreakdown() {
     item => `<span style="font-family:monospace;font-size:0.8rem;">${item.ip}</span>
              <span style="font-size:0.7rem;color:rgba(255,255,255,0.4);margin-left:0.4rem;">(${item.prop_cnt}종 매물)</span>`,
     item => item.visit_cnt
+  );
+
+  renderTopList('top-campaigns', data.top_campaigns,
+    item => `<span title="${escapeHtml(item.campaign)}">${escapeHtml(shortText(item.campaign, 34))}</span>`,
+    item => item.cnt
   );
 }
 
@@ -434,10 +525,11 @@ async function loadLogs() {
   const ip      = document.getElementById('filter-ip').value;
   const device  = document.getElementById('filter-device').value;
   const browser = document.getElementById('filter-browser').value;
+  const source  = document.getElementById('filter-source').value;
   const sort    = document.getElementById('filter-sort').value;
 
   const params = new URLSearchParams({
-    mode:currentMode, date:currentDate, ip, device, browser, sort, page:currentPage,
+    mode:currentMode, date:currentDate, ip, device, browser, source, sort, page:currentPage,
   });
   const res  = await fetch(`/admin/analytics/api/logs?${params}`);
   const data = await res.json();
@@ -446,21 +538,34 @@ async function loadLogs() {
 
   const tbody = document.getElementById('log-tbody');
   if (!data.logs.length) {
-    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">로그 없음</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11"><div class="empty-state">로그 없음</div></td></tr>';
   } else {
     const badge = d => {
       const cls = {mobile:'device-mobile',desktop:'device-desktop',tablet:'device-tablet'}[d]||'';
       return `<span class="device-badge ${cls}">${d||'—'}</span>`;
     };
+    const sourceBadge = (name, type) =>
+      `<span class="source-badge ${sourceBadgeClass(type)}">${escapeHtml(sourceLabel(name))}</span>`;
     tbody.innerHTML = data.logs.map(r => `<tr>
       <td style="color:rgba(255,255,255,.4);font-size:.72rem;">${r.wdate}</td>
       <td class="code-mono">${r.ip||'—'}</td>
-      <td class="code-mono" title="${r.visitor_id}">${(r.visitor_id||'').slice(0,8)}…</td>
+      <td class="code-mono" title="${escapeHtml(r.visitor_id || '')}">${r.visitor_id ? `${escapeHtml(r.visitor_id.slice(0, 8))}…` : '—'}</td>
+      <td>
+        ${sourceBadge(r.source_name, r.source_type)}
+        ${r.utm_campaign ? `<div class="cell-sub" title="${escapeHtml(r.utm_campaign)}">캠페인: ${escapeHtml(shortText(r.utm_campaign, 18))}</div>` : ''}
+      </td>
       <td>${r.browser||'—'}</td>
       <td style="color:rgba(255,255,255,.5);">${r.os||'—'}</td>
       <td>${badge(r.device)}</td>
-      <td style="max-width:170px;overflow:hidden;text-overflow:ellipsis;color:rgba(255,255,255,.5);"
-          title="${r.page}">${r.page||'—'}</td>
+      <td class="cell-ellipsis" title="${escapeHtml(r.landing_page || r.page || '')}">
+        ${escapeHtml(shortText(r.landing_page || r.page || '—', 34))}
+      </td>
+      <td class="cell-ellipsis" title="${escapeHtml(r.page || '')}">
+        ${escapeHtml(shortText(r.page || '—', 28))}
+      </td>
+      <td class="cell-ellipsis" title="${escapeHtml(r.referrer || r.source_host || '')}">
+        ${r.referrer ? escapeHtml(shortText(r.referrer, 42)) : (r.source_name === 'direct' ? '직접접속' : '—')}
+      </td>
       <td>${r.code?`<a href="/view/${r.code}" target="_blank" class="code-mono">${r.code}</a>`:'—'}</td>
     </tr>`).join('');
   }

@@ -259,7 +259,33 @@
 .device-mobile  { background: rgba(251,191,36,.15);  color: #fcd34d; }
 .device-desktop { background: rgba(59,130,246,.15);  color: #93c5fd; }
 .device-tablet  { background: rgba(167,139,250,.15); color: #c4b5fd; }
+.source-badge {
+  display: inline-block;
+  padding: .16rem .48rem;
+  border-radius: 9999px;
+  font-size: .65rem;
+  font-weight: 700;
+}
+.source-direct   { background: rgba(148,163,184,.15); color: #cbd5e1; }
+.source-internal { background: rgba(59,130,246,.14); color: #93c5fd; }
+.source-search   { background: rgba(16,185,129,.14); color: #6ee7b7; }
+.source-social   { background: rgba(244,114,182,.14); color: #f9a8d4; }
+.source-ad       { background: rgba(245,158,11,.14); color: #fcd34d; }
+.source-email    { background: rgba(168,85,247,.14); color: #d8b4fe; }
+.source-referral { background: rgba(56,189,248,.14); color: #7dd3fc; }
+.source-unknown  { background: rgba(148,163,184,.12); color: rgba(255,255,255,.58); }
 .code-mono { font-family: 'Courier New',monospace; font-size: .72rem; color: #a5b4fc; }
+.cell-sub {
+  margin-top: .22rem;
+  font-size: .67rem;
+  color: rgba(255,255,255,.4);
+}
+.cell-ellipsis {
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: rgba(255,255,255,.54);
+}
 
 /* ── 페이지네이션 ── */
 .pagination {

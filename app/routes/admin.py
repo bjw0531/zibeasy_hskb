@@ -1409,7 +1409,7 @@ def analytics_hourly():
 @bp.route('/analytics/api/breakdown')
 @login_required
 def analytics_breakdown():
-    """브라우저/OS/기기 분포 + TOP 10 JSON"""
+    """브라우저/OS/기기 분포 + 유입 출처 + TOP 목록 JSON"""
     mode = request.args.get('mode', 'daily')
     date = request.args.get('date', '')
     date_cond, bind = _build_date_cond(mode, date)
@@ -1434,6 +1434,17 @@ def analytics_breakdown():
         browser_data = fetch('browser')
         os_data      = fetch('os')
         device_data  = fetch('device')
+        source_data  = conn.execute(
+            text(f"""
+                SELECT COALESCE(NULLIF(source_name, ''), 'unknown') AS label,
+                       COUNT(*) AS cnt
+                FROM zibeasy_access_log
+                WHERE {date_cond} AND is_entry = 1
+                GROUP BY label
+                ORDER BY cnt DESC
+            """),
+            bind
+        ).fetchall()
 
         # 인기 매물 TOP 10 — 실제 조회수 로직 동일 적용 (ip + code + 날짜 기준 중복 제거)
         top_props = conn.execute(
@@ -1463,13 +1474,58 @@ def analytics_breakdown():
             bind
         ).fetchall()
 
+        top_referrers = conn.execute(
+            text(f"""
+                SELECT COALESCE(NULLIF(source_host, ''), 'direct') AS host,
+                       COUNT(*) AS cnt
+                FROM zibeasy_access_log
+                WHERE {date_cond} AND is_entry = 1
+                GROUP BY host
+                ORDER BY cnt DESC
+                LIMIT 15
+            """),
+            bind
+        ).fetchall()
+
+        top_landings = conn.execute(
+            text(f"""
+                SELECT COALESCE(NULLIF(landing_page, ''), page) AS landing,
+                       COUNT(*) AS cnt
+                FROM zibeasy_access_log
+                WHERE {date_cond} AND is_entry = 1
+                GROUP BY landing
+                ORDER BY cnt DESC
+                LIMIT 15
+            """),
+            bind
+        ).fetchall()
+
+        top_campaigns = conn.execute(
+            text(f"""
+                SELECT utm_campaign, COUNT(*) AS cnt
+                FROM zibeasy_access_log
+                WHERE {date_cond}
+                  AND is_entry = 1
+                  AND utm_campaign IS NOT NULL
+                  AND utm_campaign <> ''
+                GROUP BY utm_campaign
+                ORDER BY cnt DESC
+                LIMIT 15
+            """),
+            bind
+        ).fetchall()
+
     # with 블록 종료 후 이미 fetch 결과가 변수에 저장되어 있음
     return jsonify({
         'browser':    browser_data,
         'os':         os_data,
         'device':     device_data,
+        'sources':    [{'label': r[0], 'cnt': r[1]} for r in source_data],
         'properties': [{'code': r[0], 'cnt': r[1]} for r in top_props],
         'top_ips':    [{'ip': r[0], 'visit_cnt': r[1], 'prop_cnt': r[2]} for r in top_ips],
+        'top_referrers': [{'host': r[0], 'cnt': r[1]} for r in top_referrers],
+        'top_landings': [{'landing': r[0], 'cnt': r[1]} for r in top_landings],
+        'top_campaigns': [{'campaign': r[0], 'cnt': r[1]} for r in top_campaigns],
     })
 
 
@@ -1483,6 +1539,7 @@ def analytics_logs():
     ip      = request.args.get('ip', '').strip()
     device  = request.args.get('device', '').strip()
     browser = request.args.get('browser', '').strip()
+    source  = request.args.get('source', '').strip().lower()
     sort    = request.args.get('sort', 'wdate_desc')
     page    = max(1, int(request.args.get('page', 1)))
     per     = 50  # 페이지당 로그 수
@@ -1495,6 +1552,7 @@ def analytics_logs():
         'browser':    'browser ASC',
         'os':         'os ASC',
         'device':     'device ASC',
+        'source':     'source_name ASC',
     }
     order_by = sort_map.get(sort, 'wdate DESC')
 
@@ -1511,6 +1569,9 @@ def analytics_logs():
     if browser:
         conditions.append('browser = :browser')
         bind['browser'] = browser
+    if source:
+        conditions.append('source_name = :source')
+        bind['source'] = source
 
     where = ' AND '.join(conditions)
     offset = (page - 1) * per
@@ -1524,7 +1585,9 @@ def analytics_logs():
         rows = conn.execute(
             text(f"""
                 SELECT id, wdate, ip, visitor_id, browser, os, device,
-                       page, referrer, language, code
+                       page, referrer, language, code,
+                       source_type, source_name, source_host,
+                       landing_page, utm_source, utm_medium, utm_campaign
                 FROM zibeasy_access_log
                 WHERE {where}
                 ORDER BY {order_by}
@@ -1550,6 +1613,13 @@ def analytics_logs():
                 'referrer':   r[8],
                 'language':   r[9],
                 'code':       r[10],
+                'source_type': r[11],
+                'source_name': r[12],
+                'source_host': r[13],
+                'landing_page': r[14],
+                'utm_source': r[15],
+                'utm_medium': r[16],
+                'utm_campaign': r[17],
             }
             for r in rows
         ],
