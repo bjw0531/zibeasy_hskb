@@ -8,6 +8,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalSlidesEl = document.getElementById('total-slides');
     const currentSlideEl = document.getElementById('current-slide');
     const propertyCode = window.viewData?.code;
+    const autoplayToggleBtn = document.getElementById('slide-autoplay-toggle');
+    const autoplayIconEl = document.getElementById('slide-autoplay-icon');
+    const autoplayTextEl = document.getElementById('slide-autoplay-text');
+    const AUTOPLAY_DELAY = 2000;
+    let autoplayTimerId = null;
+    let isAutoplayRunning = false;
 
     const swiper = new Swiper('.mySwiper', {
         loop: false,
@@ -21,6 +27,66 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+
+    function clearAutoplayTimer() {
+        if (autoplayTimerId !== null) {
+            window.clearTimeout(autoplayTimerId);
+            autoplayTimerId = null;
+        }
+    }
+
+    function updateAutoplayButton() {
+        if (!autoplayToggleBtn) return;
+        const isRunning = isAutoplayRunning;
+        autoplayToggleBtn.setAttribute('aria-pressed', isRunning ? 'true' : 'false');
+        autoplayToggleBtn.setAttribute('aria-label', isRunning ? '자동 슬라이드 일시정지' : '자동 슬라이드 재생');
+        if (autoplayIconEl) autoplayIconEl.textContent = isRunning ? '❚❚' : '▶';
+        if (autoplayTextEl) autoplayTextEl.textContent = isRunning ? '정지' : '재생';
+    }
+
+    function stopAutoplay(resetToFirstSlide = false) {
+        clearAutoplayTimer();
+        isAutoplayRunning = false;
+
+        if (resetToFirstSlide && swiper.slides.length > 0 && swiper.activeIndex !== 0) {
+            swiper.slideTo(0);
+        }
+
+        updateAutoplayButton();
+    }
+
+    function scheduleNextAutoplayStep() {
+        clearAutoplayTimer();
+
+        if (!isAutoplayRunning || swiper.slides.length <= 1) {
+            updateAutoplayButton();
+            return;
+        }
+
+        autoplayTimerId = window.setTimeout(() => {
+            if (!isAutoplayRunning) return;
+
+            if (swiper.activeIndex >= swiper.slides.length - 1) {
+                stopAutoplay(true);
+                return;
+            }
+
+            swiper.slideNext();
+            scheduleNextAutoplayStep();
+        }, AUTOPLAY_DELAY);
+    }
+
+    function startAutoplay() {
+        if (swiper.slides.length <= 1) {
+            stopAutoplay(false);
+            if (autoplayToggleBtn) autoplayToggleBtn.hidden = true;
+            return;
+        }
+
+        isAutoplayRunning = true;
+        updateAutoplayButton();
+        scheduleNextAutoplayStep();
+    }
 
     /* 계약완료 매물은 사진 클릭 차단 */
     const isContractCompleted = window.viewData?.contract === '계약완료';
@@ -36,5 +102,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (totalSlidesEl && !totalSlidesEl.textContent) {
         totalSlidesEl.textContent = swiper.slides.length;
+    }
+
+    if (autoplayToggleBtn) {
+        autoplayToggleBtn.hidden = isContractCompleted || swiper.slides.length <= 1;
+        autoplayToggleBtn.addEventListener('click', () => {
+            if (isAutoplayRunning) {
+                stopAutoplay(false);
+                return;
+            }
+
+            startAutoplay();
+        });
+    }
+
+    swiper.on('touchStart', () => {
+        if (isAutoplayRunning) {
+            stopAutoplay(false);
+        }
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden && isAutoplayRunning) {
+            stopAutoplay(false);
+        }
+    });
+
+    window.addEventListener('pagehide', () => {
+        stopAutoplay(false);
+    });
+
+    if (!isContractCompleted && swiper.slides.length > 1) {
+        startAutoplay();
+    } else {
+        updateAutoplayButton();
     }
 });
