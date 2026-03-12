@@ -360,7 +360,7 @@ class MapManager {
             const params = new URLSearchParams({
                 dong: dongName,
                 mode: 'full', // 상세 정보 요청
-                limit: 1000   // 충분한 수량
+                limit: 5000   // 전체 매물 수용
             });
 
             // 카테고리 필터가 있으면 적용
@@ -545,6 +545,7 @@ class MapManager {
             //     expandedBounds.mode = 'full';
             // }
             expandedBounds.mode = 'full';
+            expandedBounds.limit = 5000; // 전체 매물 수용
 
             // 캐시 확인
             const cacheKey = this.getBoundsKey(expandedBounds);

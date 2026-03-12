@@ -111,7 +111,7 @@ def get_properties():
                 'category': request.args.get('category', ''),
                 'code': request.args.get('code', '').strip(),
                 'codes': _json_body.get('codes', '') or request.args.get('codes', ''),  # POST body 우선
-                'limit': int(request.args.get('limit', 1000)),
+                'limit': int(request.args.get('limit', 5000)),
                 'offset': int(request.args.get('offset', 0)),
                 'count_only': request.args.get('count_only', '').lower() == 'true'
             }
