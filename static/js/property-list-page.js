@@ -177,7 +177,8 @@ function buildApiParams(offset = 0) {
         'area_min', 'area_max',
         'floor', 'building_age',
         'options', 'thema', 'thema_categories',
-        'dong', 'codes'
+        'dong', 'codes',
+        'property_status', 'listing_scope'
     ];
 
     filterKeys.forEach(key => {
