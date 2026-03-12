@@ -257,6 +257,11 @@ body.lv-body {
     transform: scale(0.97);
 }
 
+.lv-card.lv-card--swiping,
+.lv-card.lv-card--swiping:active {
+    transform: none;
+}
+
 /* ── 카드 썸네일 (사진) ─────────────────────────────────────── */
 .lv-card-thumb {
     position: relative;
@@ -266,6 +271,57 @@ body.lv-body {
     border-radius: 4px;
     background: #ebebeb;
     overflow: hidden;
+}
+
+.lv-thumb-slider {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    touch-action: pan-y;
+    user-select: none;
+}
+
+.lv-thumb-track {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
+}
+
+.lv-thumb-slide {
+    flex: 0 0 100%;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #ebebeb;
+}
+
+.lv-thumb-dots {
+    position: absolute;
+    left: 50%;
+    bottom: 8px;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 6px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.18);
+    z-index: 8;
+}
+
+.lv-thumb-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.55);
+    transition: width 0.2s ease, background-color 0.2s ease;
+}
+
+.lv-thumb-dot.is-active {
+    width: 14px;
+    background: #fff;
 }
 
 /* 사진 안쪽 그림자 (지도형 패널 목록과 동일) */

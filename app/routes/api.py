@@ -493,7 +493,7 @@ def get_properties():
                     idx, code, category, si, gu, dong, ri, title, 
                     lat, lng, geohash, size, maemae_money, jen_money, traffice,
                     security_money, month_money, public_money, now_floor, total_floor,
-                    picname1, ldate, state, contract, movie,
+                    picname1, picname3, picname5, picname7, ldate, state, contract, movie,
                     aspect, etc1, etc4, electron4, electron5, security5, public_money1
                 """
 
