@@ -1278,16 +1278,16 @@ function lvCloseAreaFilter(event, options) {
     }
     if (chip) chip.classList.remove('is-open');
 
+    lvAreaSheetCloseTimer = window.setTimeout(() => {
+        if (backdrop) backdrop.classList.remove('closing');
+        lvAreaSheetCloseTimer = null;
+    }, LV_AREA_SHEET_ANIMATION_MS);
+
     if (window._lvAreaPushed && !settings.fromPopstate && !settings.skipHistory) {
         window._lvAreaPushed = false;
         history.back();
         return;
     }
-
-    lvAreaSheetCloseTimer = window.setTimeout(() => {
-        if (backdrop) backdrop.classList.remove('closing');
-        lvAreaSheetCloseTimer = null;
-    }, LV_AREA_SHEET_ANIMATION_MS);
     window._lvAreaPushed = false;
 }
 
