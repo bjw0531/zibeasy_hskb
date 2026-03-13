@@ -87,12 +87,12 @@
         });
     }
 
-    function createStepCard(title) {
+    function createStepCard(titleHtml) {
         const card = document.createElement('div');
         card.className = 'fh-step-card';
         const heading = document.createElement('div');
         heading.className = 'fh-step-title';
-        heading.textContent = title;
+        heading.innerHTML = titleHtml;
         card.appendChild(heading);
         return card;
     }
@@ -283,7 +283,7 @@
     }
 
     function renderAreaStep() {
-        const card = createStepCard('어느 지역을 원하세요? (필수) (중복선택 가능)');
+        const card = createStepCard('<span class="text-red-500">*</span> 어느 지역을 원하세요? (필수) <span class="text-sm font-normal">(중복선택 가능)</span>');
         const field = document.createElement('div');
         field.className = 'fh-field';
 
@@ -346,7 +346,7 @@
     }
 
     function renderTypeStep() {
-        const card = createStepCard('어떤 집을 원하세요? (필수)');
+        const card = createStepCard('<span class="text-red-500">*</span> 어떤 집을 원하세요? (필수)');
         const field = document.createElement('div');
         field.className = 'fh-field';
 
@@ -385,7 +385,7 @@
     }
 
     function renderBudgetStep() {
-        const card = createStepCard('어느 가격대로 원하세요? (필수)');
+        const card = createStepCard('<span class="text-red-500">*</span> 어느 가격대로 원하세요? (필수)');
 
         const field = document.createElement('div');
         field.className = 'fh-field';
@@ -516,7 +516,7 @@
     }
 
     function renderMoveInStep() {
-        const card = createStepCard('언제 입주를 희망하세요? (필수)');
+        const card = createStepCard('<span class="text-red-500">*</span> 언제 입주를 희망하세요? (필수)');
         const field = document.createElement('div');
         field.className = 'fh-field rq-date-field';
 
@@ -614,7 +614,7 @@
     }
 
     function renderContactStep() {
-        const card = createStepCard('이름과 연락처를 알려주세요. (필수)');
+        const card = createStepCard('<span class="text-red-500">*</span> 이름과 연락처를 알려주세요. (필수)');
 
         const grid = document.createElement('div');
         grid.className = 'fh-contact-grid';

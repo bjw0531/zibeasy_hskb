@@ -333,7 +333,9 @@
 
         const labelEl = document.createElement('div');
         labelEl.className = 'sf-active-label';
-        labelEl.textContent = `${label} (${step.optional ? '선택' : '필수'})`;
+        const requiredText = step.optional ? '(선택)' : '(필수)';
+        const asteriskHtml = step.optional ? '' : '<span class="text-red-500">*</span> ';
+        labelEl.innerHTML = `${asteriskHtml}${label} ${requiredText}`;
         card.appendChild(labelEl);
 
         switch (step.type) {
