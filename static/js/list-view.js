@@ -29,6 +29,7 @@ let lvSelectedArea  = null;  /* 현재 선택된 지역 필터 */
 let lvAreaDraft     = null;  /* 바텀 시트에서 임시 선택 중인 지역 */
 let lvAreaSheetCloseTimer = null;
 let lvAreaSheetDragState = null;
+const LV_AREA_SHEET_ANIMATION_MS = 320;
 /* 최근 검색어 */
 let lvRecentSearches = [];
 
@@ -1229,6 +1230,7 @@ function lvOpenAreaFilter() {
         sheet.classList.remove('is-dragging');
         sheet.style.transform = '';
     }
+    backdrop.classList.remove('closing');
 
     const currentSelection = lvGetKnownAreaFromFilter() || lvSelectedArea;
     if (currentSelection) {
@@ -1270,7 +1272,10 @@ function lvCloseAreaFilter(event, options) {
         sheet.classList.remove('is-dragging');
         sheet.style.transform = '';
     }
-    if (backdrop) backdrop.classList.remove('open');
+    if (backdrop) {
+        backdrop.classList.remove('open');
+        backdrop.classList.add('closing');
+    }
     if (chip) chip.classList.remove('is-open');
 
     if (window._lvAreaPushed && !settings.fromPopstate && !settings.skipHistory) {
@@ -1280,8 +1285,9 @@ function lvCloseAreaFilter(event, options) {
     }
 
     lvAreaSheetCloseTimer = window.setTimeout(() => {
+        if (backdrop) backdrop.classList.remove('closing');
         lvAreaSheetCloseTimer = null;
-    }, 320);
+    }, LV_AREA_SHEET_ANIMATION_MS);
     window._lvAreaPushed = false;
 }
 

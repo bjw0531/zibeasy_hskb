@@ -948,13 +948,16 @@ body.lv-body {
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    opacity: 0;
+    visibility: hidden;
     pointer-events: none;
-    transition: opacity 0.22s ease;
+}
+
+.lv-area-sheet-backdrop.open,
+.lv-area-sheet-backdrop.closing {
+    visibility: visible;
 }
 
 .lv-area-sheet-backdrop.open {
-    opacity: 1;
     pointer-events: auto;
 }
 
