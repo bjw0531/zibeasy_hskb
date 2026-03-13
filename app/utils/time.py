@@ -2,12 +2,29 @@
 시간 관련 유틸리티
 """
 from datetime import datetime
+from zoneinfo import ZoneInfo
+
+KST = ZoneInfo("Asia/Seoul")
+
+
+def _as_kst_datetime(dt: datetime) -> datetime | None:
+    """DB datetime을 KST 기준 datetime으로 정규화한다."""
+    if not isinstance(dt, datetime):
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=KST)
+    return dt.astimezone(KST)
+
 
 def time_ago(dt: datetime) -> str:
     """경과 시간을 한국어로 표시"""
-    now = datetime.now()
-    diff = now - dt
-    seconds = diff.total_seconds()
+    target = _as_kst_datetime(dt)
+    if target is None:
+        return "확인필요"
+
+    now = datetime.now(KST)
+    diff = now - target
+    seconds = max(diff.total_seconds(), 0)
 
     if seconds < 60:
         return "방금 전"
