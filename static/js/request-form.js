@@ -13,7 +13,7 @@
     const JEONSE_NOTICE = '죄송합니다. 전세는 거래를 하지 않고 있습니다.';
 
     const STEPS = [
-        { id: 'address', label: '내놓으실 집 주소는요?', type: 'text', field: 'property_address', placeholder: '예: 천안시 서북구 두정동 000번지', requiredMessage: '매물 주소를 입력해 주세요.' },
+        { id: 'address', label: '내놓으실 집 주소는요?', type: 'text', field: 'property_address', placeholder: '예: 두정동 0000번지', requiredMessage: '매물 주소를 입력해 주세요.' },
         { id: 'building', label: '건물이름과 호실은요?', type: 'dual', fields: [
             { label: '건물명', placeholder: '예: OO빌라', field: 'building_name' },
             { label: '호실', placeholder: '예: 301호', field: 'room_number' }
@@ -23,7 +23,7 @@
         { id: 'tx_type', label: '거래 유형을 선택해 주세요.', type: 'choice', field: 'transaction_type',
             choices: ['월세', '전세', '매매'] },
         { id: 'price', label: '', type: 'dynamic_price' },
-        { id: 'maint', label: '고정 관리비는 얼마인가요?', type: 'maintenance_range', field: 'maintenance_fee' },
+        { id: 'maint', label: '고정 관리비는 얼마인가요?', type: 'text', field: 'maintenance_fee', placeholder: '예: 10만원', requiredMessage: '고정 관리비를 입력해 주세요.' },
         { id: 'move_date', label: '입주가 가능한 날짜는 언제부터인가요?', type: 'date', field: 'move_in_date' },
         { id: 'details', label: '추가로 전달하실 내용이 있으신가요?', type: 'textarea', field: 'details', placeholder: '특이사항, 옵션 등', optional: true },
         { id: 'contact', label: '이름과 연락처를 알려주세요.', type: 'contact' },
@@ -229,7 +229,7 @@
 
     function createRangeMeta(minLabel, maxLabel) {
         const meta = document.createElement('div');
-        meta.className = 'fh-range-meta';
+        meta.className = 'sf-range-meta';
         const left = document.createElement('span');
         left.textContent = minLabel;
         const right = document.createElement('span');
@@ -350,9 +350,6 @@
                 break;
             case 'dynamic_price':
                 card.appendChild(buildPriceInput());
-                break;
-            case 'maintenance_range':
-                card.appendChild(buildMaintenanceRange());
                 break;
             case 'date':
                 card.appendChild(buildDateInput(step));
@@ -523,17 +520,17 @@
         }
 
         const wrap = document.createElement('div');
-        wrap.className = 'fh-range-wrap';
+        wrap.className = 'sf-range-wrap';
 
         const head = document.createElement('div');
-        head.className = 'fh-range-head';
+        head.className = 'sf-range-head';
 
         const title = document.createElement('span');
-        title.className = 'fh-range-label';
+        title.className = 'sf-range-label';
         title.textContent = label;
 
         const value = document.createElement('span');
-        value.className = 'fh-range-value';
+        value.className = 'sf-range-value';
         value.textContent = formatBudgetValue(answers[answerKey]);
 
         head.appendChild(title);
@@ -541,7 +538,7 @@
 
         const range = document.createElement('input');
         range.type = 'range';
-        range.className = 'fh-range';
+        range.className = 'sf-range';
         range.min = '0';
         range.max = String(options.length - 1);
         range.step = '1';
@@ -626,60 +623,6 @@
         return wrap;
     }
 
-    function buildMaintenanceRange() {
-        if (answers.maintenance_fee === '') {
-            answers.maintenance_fee = MAINTENANCE_OPTIONS[0];
-        }
-
-        const wrap = document.createElement('div');
-        const rangeWrap = document.createElement('div');
-        rangeWrap.className = 'fh-range-wrap';
-
-        const head = document.createElement('div');
-        head.className = 'fh-range-head';
-
-        const label = document.createElement('span');
-        label.className = 'fh-range-label';
-        label.textContent = '관리비';
-
-        const value = document.createElement('span');
-        value.className = 'fh-range-value';
-        value.textContent = formatBudgetValue(answers.maintenance_fee);
-
-        head.appendChild(label);
-        head.appendChild(value);
-
-        const range = document.createElement('input');
-        range.type = 'range';
-        range.className = 'fh-range';
-        range.min = '0';
-        range.max = String(MAINTENANCE_OPTIONS.length - 1);
-        range.step = '1';
-        range.value = String(Math.max(0, MAINTENANCE_OPTIONS.indexOf(answers.maintenance_fee)));
-        range.setAttribute('data-autofocus', 'true');
-        range.addEventListener('input', () => {
-            const index = Number(range.value);
-            answers.maintenance_fee = MAINTENANCE_OPTIONS[index] || MAINTENANCE_OPTIONS[0];
-            value.textContent = formatBudgetValue(answers.maintenance_fee);
-            setRangeProgress(range);
-            restartAnimation(value, 'is-pulsing');
-            restartAnimation(range, 'is-bumping');
-        });
-        setRangeProgress(range);
-
-        rangeWrap.appendChild(head);
-        rangeWrap.appendChild(range);
-        rangeWrap.appendChild(createRangeMeta('0만원', '30만원'));
-
-        const nextBtn = createNextBtn();
-        nextBtn.addEventListener('click', () => {
-            advance();
-        });
-
-        wrap.appendChild(rangeWrap);
-        wrap.appendChild(createActions(nextBtn));
-        return wrap;
-    }
 
     function buildDateInput(step) {
         const wrap = document.createElement('div');

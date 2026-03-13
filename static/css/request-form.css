@@ -989,6 +989,104 @@
     gap: 8px;
 }
 
+/* SF (List a Home) Range styling - Pink Theme */
+.sf-range-wrap {
+    margin-top: 4px;
+    border: 1px solid #fce7f3;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #fff 0%, #fdf2f8 100%);
+    padding: 12px 12px 10px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.sf-range-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+.sf-range-label {
+    font-size: 13px;
+    font-weight: 650;
+    color: #1f2937;
+}
+.sf-range-value {
+    font-size: 13px;
+    font-weight: 750;
+    color: #be123c;
+    transform-origin: 100% 50%;
+}
+.sf-range-value.is-pulsing {
+    animation: fhRangeValuePulse 0.22s ease-out;
+}
+.sf-range {
+    width: 100%;
+    --range-progress: 0%;
+    appearance: none;
+    -webkit-appearance: none;
+    height: 6px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #e65b79 0%, #f43f5e var(--range-progress), #fce7f3 var(--range-progress), #fce7f3 100%);
+    outline: none;
+    cursor: pointer;
+}
+.sf-range::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 999px;
+    background: transparent;
+}
+.sf-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    margin-top: -6px;
+    border-radius: 50%;
+    border: 2px solid #ffffff;
+    background: #e65b79;
+    box-shadow: 0 4px 10px rgba(230, 91, 121, 0.28);
+    transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+.sf-range::-moz-range-track {
+    height: 6px;
+    border-radius: 999px;
+    background: #fce7f3;
+}
+.sf-range::-moz-range-progress {
+    height: 6px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #e65b79 0%, #f43f5e 100%);
+}
+.sf-range::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid #ffffff;
+    background: #e65b79;
+    box-shadow: 0 4px 10px rgba(230, 91, 121, 0.28);
+    transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+.sf-range:active::-webkit-slider-thumb,
+.sf-range:focus-visible::-webkit-slider-thumb,
+.sf-range:active::-moz-range-thumb,
+.sf-range:focus-visible::-moz-range-thumb {
+    transform: scale(1.08);
+    box-shadow: 0 6px 14px rgba(230, 91, 121, 0.34);
+}
+.sf-range.is-bumping::-webkit-slider-thumb {
+    animation: fhRangeThumbBounce 0.22s ease-out;
+}
+.sf-range.is-bumping::-moz-range-thumb {
+    animation: fhRangeThumbBounce 0.22s ease-out;
+}
+.sf-range-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    color: #94a3b8;
+    font-size: 11px;
+    font-weight: 600;
+}
+
 .fh-prev-btn {
     min-width: 88px;
     height: 44px;
@@ -1092,6 +1190,14 @@
     gap: 8px;
     color: #374151;
     font-size: 13px;
+}
+
+.fh-privacy label input[type="checkbox"] {
+    margin: 0;
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    accent-color: #e65b79;
 }
 
 .fh-privacy-link {
