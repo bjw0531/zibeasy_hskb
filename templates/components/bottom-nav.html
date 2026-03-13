@@ -184,28 +184,37 @@
     tabRootExitArmedUntil = Date.now() + TAB_ROOT_EXIT_TOAST_MS;
 
     var toast = document.createElement('div');
-    toast.textContent = '한번 더 뒤로가면 종료됩니다.';
     toast.setAttribute('role', 'status');
     toast.setAttribute('aria-live', 'polite');
     toast.style.cssText = [
       'position:fixed',
       'left:50%',
       'bottom:calc(86px + env(safe-area-inset-bottom, 0px))',
-      'transform:translateX(-50%)',
-      'background:rgba(25,28,34,0.92)',
+      'transform:translateX(-50%) translateY(10px)',
+      'display:flex',
+      'align-items:center',
+      'gap:10px',
+      'min-width:max-content',
+      'max-width:calc(100vw - 32px)',
+      'background:rgba(31,34,42,0.96)',
       'color:#fff',
-      'padding:12px 18px',
+      'padding:10px 16px 10px 10px',
       'border-radius:999px',
-      'font-size:14px',
-      'font-weight:600',
-      'line-height:1',
-      'box-shadow:0 10px 24px rgba(15,23,42,0.22)',
+      'border:1px solid rgba(255,255,255,0.08)',
+      'box-shadow:0 14px 32px rgba(15,23,42,0.28)',
       'z-index:10020',
-      'white-space:nowrap',
       'pointer-events:none',
       'opacity:0',
+      'backdrop-filter:blur(10px)',
       'transition:opacity 0.18s ease, transform 0.18s ease'
     ].join(';');
+    toast.innerHTML = ''
+      + '<span style="width:28px;height:28px;border-radius:999px;background:#1fc46b;display:inline-flex;align-items:center;justify-content:center;flex:0 0 28px;">'
+      +   '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">'
+      +     '<path d="M4 8.2l2.3 2.3L12 4.8" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>'
+      +   '</svg>'
+      + '</span>'
+      + '<span style="font-size:14px;font-weight:700;line-height:1.2;letter-spacing:-0.02em;white-space:nowrap;">한 번 더 뒤로가면 종료됩니다.</span>';
 
     document.body.appendChild(toast);
     tabRootExitToastEl = toast;
@@ -213,13 +222,13 @@
     requestAnimationFrame(function() {
       if (!tabRootExitToastEl) return;
       tabRootExitToastEl.style.opacity = '1';
-      tabRootExitToastEl.style.transform = 'translateX(-50%) translateY(-4px)';
+      tabRootExitToastEl.style.transform = 'translateX(-50%) translateY(0)';
     });
 
     tabRootExitToastTimer = setTimeout(function() {
       if (!tabRootExitToastEl) return;
       tabRootExitToastEl.style.opacity = '0';
-      tabRootExitToastEl.style.transform = 'translateX(-50%) translateY(4px)';
+      tabRootExitToastEl.style.transform = 'translateX(-50%) translateY(8px)';
       setTimeout(hideExitToast, 180);
     }, TAB_ROOT_EXIT_TOAST_MS);
   }
