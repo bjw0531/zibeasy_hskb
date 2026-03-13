@@ -25,6 +25,8 @@ let lvTypeLabel     = '매물종류'; /* 현재 선택된 매물종류 표시 �
 let lvObserver      = null;  /* IntersectionObserver (무한 스크롤) */
 /* 검색 필터 상태 */
 let lvSearchFilter  = null;  /* null = 전체 / { type:'dong', dong, ri } / { type:'station', lat, lng, radius } / { type:'code', code } */
+let lvSelectedArea  = null;  /* 현재 선택된 지역 필터 */
+let lvAreaDraft     = null;  /* 바텀 시트에서 임시 선택 중인 지역 */
 /* 최근 검색어 */
 let lvRecentSearches = [];
 
@@ -36,10 +38,22 @@ const LV_STATIONS = [
     { id: 'ssangyong', name: '쌍용역',  lat: 36.793721, lng: 127.121369 },
 ];
 
+const LV_AREA_OPTIONS = {
+    seobuk: {
+        label: '천안시 서북구',
+        items: ['두정동', '성정동', '백석동', '쌍용동', '성성동', '부대동', '차암동', '신당동', '불당동', '직산읍', '성환읍', '성거읍']
+    },
+    dongnam: {
+        label: '천안시 동남구',
+        items: ['봉명동', '신부동', '다가동', '신방동', '구성동', '청수동', '청당동', '삼룡동', '원성동', '목천읍']
+    }
+};
+
 /* ── 초기화 ───────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
     /* 최근 검색어 로드 */
     lvLoadRecentSearches();
+    lvSyncAreaFilterUI();
 
     /* 검색창 이벤트 */
     const realInput = document.getElementById('searchPageInput');
@@ -661,6 +675,45 @@ function lvCalcDistance(lat1, lng1, lat2, lng2) {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
+function lvFindAreaByDongName(name) {
+    const target = String(name || '').trim();
+    if (!target) return null;
+
+    for (const [guKey, config] of Object.entries(LV_AREA_OPTIONS)) {
+        const matchedDong = config.items.find((item) => item === target);
+        if (matchedDong) {
+            return {
+                guKey,
+                guLabel: config.label,
+                dong: matchedDong
+            };
+        }
+    }
+
+    return null;
+}
+
+function lvGetKnownAreaFromFilter(filter = lvSearchFilter) {
+    if (!filter || filter.type !== 'dong') return null;
+    return lvFindAreaByDongName(filter.ri || filter.dong || '');
+}
+
+function lvSyncAreaFilterUI() {
+    const chip = document.getElementById('lvFilterArea');
+    const text = document.getElementById('lvFilterAreaText');
+    const selection = lvGetKnownAreaFromFilter();
+
+    lvSelectedArea = selection;
+
+    if (chip) {
+        chip.classList.toggle('active', !!selection);
+    }
+
+    if (text) {
+        text.textContent = selection ? selection.dong : '지역';
+    }
+}
+
 /* ════════════════════════════════════════════════════════════
    매물종류 필터
    ════════════════════════════════════════════════════════════ */
@@ -864,6 +917,13 @@ window.addEventListener('popstate', function(e) {
         return;
     }
 
+    /* 지역 바텀 시트 */
+    const areaSheet = document.getElementById('lvAreaSheetBackdrop');
+    if (areaSheet && areaSheet.classList.contains('open')) {
+        lvCloseAreaFilter(null, { fromPopstate: true });
+        return;
+    }
+
     /* 테마 모달 */
     const recommendModal = document.getElementById('recommendModal');
     if (recommendModal && recommendModal.classList.contains('active')) {
@@ -1063,6 +1123,7 @@ function lvSelectLocation(dong, ri, fullAddress) {
     /* 검색창 텍스트 표시 */
     const placeholder = document.getElementById('lvSearchPlaceholder');
     if (placeholder) placeholder.textContent = name + ' 검색 중';
+    lvSyncAreaFilterUI();
 }
 
 /**
@@ -1079,6 +1140,7 @@ function lvSelectStation(stationId) {
 
     const placeholder = document.getElementById('lvSearchPlaceholder');
     if (placeholder) placeholder.textContent = station.name + ' 주변 검색 중';
+    lvSyncAreaFilterUI();
 }
 
 /**
@@ -1088,6 +1150,7 @@ function lvClearSearch() {
     lvSearchFilter = null;
     const placeholder = document.getElementById('lvSearchPlaceholder');
     if (placeholder) placeholder.textContent = '매물번호로 검색';
+    lvSyncAreaFilterUI();
     lvLoadProperties(true);
 }
 
@@ -1147,10 +1210,145 @@ function lvOpenPriceFilter() {
 }
 
 /**
- * 지역 필터 (Phase 2 — 지금은 검색 오버레이로 대체)
+ * 지역 필터 바텀 시트 열기
  */
 function lvOpenAreaFilter() {
-    lvOpenSearch();
+    const backdrop = document.getElementById('lvAreaSheetBackdrop');
+    const chip = document.getElementById('lvFilterArea');
+    if (!backdrop) return;
+
+    const currentSelection = lvGetKnownAreaFromFilter() || lvSelectedArea;
+    if (currentSelection) {
+        lvAreaDraft = { ...currentSelection };
+    } else {
+        lvAreaDraft = {
+            guKey: 'seobuk',
+            guLabel: LV_AREA_OPTIONS.seobuk.label,
+            dong: ''
+        };
+    }
+
+    lvRenderAreaSheet();
+    backdrop.classList.add('open');
+    if (chip) chip.classList.add('is-open');
+
+    if (!window._lvAreaPushed) {
+        history.pushState({ lvArea: true }, '');
+        window._lvAreaPushed = true;
+    }
+}
+
+function lvCloseAreaFilter(event, options) {
+    if (event && event.target !== event.currentTarget) return;
+
+    const settings = options || {};
+    const backdrop = document.getElementById('lvAreaSheetBackdrop');
+    const chip = document.getElementById('lvFilterArea');
+
+    if (backdrop) backdrop.classList.remove('open');
+    if (chip) chip.classList.remove('is-open');
+
+    if (window._lvAreaPushed && !settings.fromPopstate && !settings.skipHistory) {
+        window._lvAreaPushed = false;
+        history.back();
+        return;
+    }
+
+    window._lvAreaPushed = false;
+}
+
+function lvRenderAreaSheet() {
+    const guList = document.getElementById('lvAreaGuList');
+    const dongList = document.getElementById('lvAreaDongList');
+    const currentText = document.getElementById('lvAreaCurrentText');
+    const applyBtn = document.getElementById('lvAreaApplyBtn');
+    if (!guList || !dongList || !currentText || !applyBtn) return;
+
+    const selectedGuKey = lvAreaDraft?.guKey && LV_AREA_OPTIONS[lvAreaDraft.guKey]
+        ? lvAreaDraft.guKey
+        : 'seobuk';
+    const selectedGu = LV_AREA_OPTIONS[selectedGuKey];
+
+    guList.innerHTML = Object.entries(LV_AREA_OPTIONS).map(([guKey, config]) => `
+        <button
+            type="button"
+            class="lv-area-gu-btn${guKey === selectedGuKey ? ' is-selected' : ''}"
+            onclick="lvSelectAreaGu('${guKey}')"
+        >${config.label}</button>
+    `).join('');
+
+    dongList.innerHTML = selectedGu.items.map((dong) => `
+        <button
+            type="button"
+            class="lv-area-dong-btn${lvAreaDraft?.dong === dong ? ' is-selected' : ''}"
+            onclick="lvSelectAreaDong('${dong}')"
+        >${dong}</button>
+    `).join('');
+
+    currentText.textContent = lvAreaDraft?.dong
+        ? `${selectedGu.label} ${lvAreaDraft.dong}을 선택했습니다.`
+        : `${selectedGu.label}에서 읍/면/동을 선택해 주세요.`;
+    applyBtn.disabled = !lvAreaDraft?.dong;
+}
+
+function lvSelectAreaGu(guKey) {
+    const config = LV_AREA_OPTIONS[guKey];
+    if (!config) return;
+
+    const nextDong = config.items.includes(lvAreaDraft?.dong || '') ? lvAreaDraft.dong : '';
+    lvAreaDraft = {
+        guKey,
+        guLabel: config.label,
+        dong: nextDong
+    };
+    lvRenderAreaSheet();
+}
+
+function lvSelectAreaDong(dong) {
+    const guKey = lvAreaDraft?.guKey && LV_AREA_OPTIONS[lvAreaDraft.guKey]
+        ? lvAreaDraft.guKey
+        : 'seobuk';
+    lvAreaDraft = {
+        guKey,
+        guLabel: LV_AREA_OPTIONS[guKey].label,
+        dong
+    };
+    lvRenderAreaSheet();
+}
+
+function lvApplyAreaFilter() {
+    if (!lvAreaDraft || !lvAreaDraft.dong) return;
+
+    lvSearchFilter = {
+        type: 'dong',
+        dong: lvAreaDraft.dong,
+        ri: ''
+    };
+    lvSelectedArea = { ...lvAreaDraft };
+
+    const placeholder = document.getElementById('lvSearchPlaceholder');
+    if (placeholder) {
+        placeholder.textContent = `${lvAreaDraft.guLabel} ${lvAreaDraft.dong} 검색 중`;
+    }
+
+    lvSyncAreaFilterUI();
+    lvCloseAreaFilter(null, { skipHistory: false });
+    lvLoadProperties(true);
+}
+
+function lvResetAreaFilter() {
+    lvAreaDraft = null;
+    lvSelectedArea = null;
+    lvSearchFilter = null;
+
+    const placeholder = document.getElementById('lvSearchPlaceholder');
+    if (placeholder) {
+        placeholder.textContent = '매물번호로 검색';
+    }
+
+    lvSyncAreaFilterUI();
+    lvCloseAreaFilter();
+    lvLoadProperties(true);
 }
 
 /**

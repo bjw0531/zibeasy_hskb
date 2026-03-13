@@ -16,7 +16,7 @@
     <!-- 하단 내비게이션 바 스타일 -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bottom-nav.css') }}?v=7">
     <!-- 리스트 뷰 전용 스타일 -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/list-view.css') }}?v=14">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/list-view.css') }}?v=15">
     <!-- ✅ 전체 필터 + 테마 모달 스타일 (지도 페이지와 공유) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/full-filter.css') }}?v=8">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/quick-filter.css') }}?v=7">
@@ -93,7 +93,7 @@
 
         {# 지역 필터 버튼 #}
         <button class="lv-filter-chip" id="lvFilterArea" onclick="lvOpenAreaFilter()">
-            <span>지역</span>
+            <span id="lvFilterAreaText">지역</span>
             <span class="lv-filter-arrow">▼</span>
         </button>
 
@@ -186,6 +186,39 @@
         </div>
     </div>
 
+    {# ── 지역 선택 바텀 시트 ── #}
+    <div class="lv-area-sheet-backdrop" id="lvAreaSheetBackdrop" onclick="lvCloseAreaFilter(event)">
+        <div class="lv-area-sheet" id="lvAreaSheet" onclick="event.stopPropagation()">
+            <div class="lv-area-sheet-handle" aria-hidden="true"></div>
+            <div class="lv-area-sheet-head">
+                <div>
+                    <div class="lv-area-sheet-title">지역 선택</div>
+                    <div class="lv-area-sheet-sub">시/군/구와 읍/면/동을 차례로 선택해 주세요.</div>
+                </div>
+                <button type="button" class="lv-area-sheet-reset" onclick="lvResetAreaFilter()">전체 보기</button>
+            </div>
+
+            <div class="lv-area-sheet-current" id="lvAreaCurrentText">전체 지역을 보고 있습니다.</div>
+
+            <div class="lv-area-sheet-body">
+                <section class="lv-area-section">
+                    <div class="lv-area-section-title">시/군/구 선택</div>
+                    <div class="lv-area-gu-grid" id="lvAreaGuList"></div>
+                </section>
+
+                <section class="lv-area-section">
+                    <div class="lv-area-section-title">읍/면/동 선택</div>
+                    <div class="lv-area-dong-grid" id="lvAreaDongList"></div>
+                </section>
+            </div>
+
+            <div class="lv-area-sheet-actions">
+                <button type="button" class="lv-area-action lv-area-action-secondary" onclick="lvCloseAreaFilter()">닫기</button>
+                <button type="button" class="lv-area-action lv-area-action-primary" id="lvAreaApplyBtn" onclick="lvApplyAreaFilter()">적용하기</button>
+            </div>
+        </div>
+    </div>
+
     {# ── ✅ 전체 필터 모달 (지도 페이지와 동일 컴포넌트 재사용) ── #}
     {% include 'components/modal_full_filter.html' %}
 
@@ -199,7 +232,7 @@
     <script src="{{ url_for('static', filename='js/full-filter.js') }}?v=10"></script>
 
     {# ── 리스트 뷰 전용 JS ── #}
-    <script src="{{ url_for('static', filename='js/list-view.js') }}?v=13"></script>
+    <script src="{{ url_for('static', filename='js/list-view.js') }}?v=14"></script>
 
     {# ── 하단 내비게이션 바 (리스트 탭 활성) ── #}
     {% set active_nav = 'browse' %}

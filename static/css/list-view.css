@@ -208,6 +208,10 @@ body.lv-body {
     transform: rotate(180deg);
 }
 
+.lv-filter-chip.is-open .lv-filter-arrow {
+    transform: rotate(180deg);
+}
+
 /* ── 스크롤 영역 (매물 목록) ────────────────────────────────── */
 .lv-scroll {
     position: fixed;
@@ -933,6 +937,206 @@ body.lv-body {
 
 .lv-type-modal.closing {
     animation: lvModalSlideOut 0.2s ease-out forwards;
+}
+
+/* ── 지역 바텀 시트 ───────────────────────────────────────── */
+.lv-area-sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 9050;
+    background: rgba(15, 23, 42, 0.38);
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.lv-area-sheet-backdrop.open {
+    display: flex;
+}
+
+.lv-area-sheet {
+    width: min(100%, 640px);
+    max-height: min(78vh, 720px);
+    background: #fff;
+    border-radius: 24px 24px 0 0;
+    box-shadow: 0 -12px 36px rgba(15, 23, 42, 0.2);
+    padding: 10px 16px calc(env(safe-area-inset-bottom, 0px) + 16px);
+    display: flex;
+    flex-direction: column;
+    animation: lvAreaSheetUp 0.24s ease-out;
+}
+
+.lv-area-sheet-handle {
+    width: 44px;
+    height: 5px;
+    border-radius: 999px;
+    background: #d1d5db;
+    margin: 0 auto 12px;
+}
+
+.lv-area-sheet-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.lv-area-sheet-title {
+    font-size: 19px;
+    font-weight: 700;
+    color: #111827;
+    line-height: 1.25;
+}
+
+.lv-area-sheet-sub {
+    margin-top: 4px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #6b7280;
+}
+
+.lv-area-sheet-reset {
+    border: 0;
+    background: transparent;
+    color: #ff6469;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 6px 0;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.lv-area-sheet-current {
+    border: 1px solid #f1d5d7;
+    background: #fff7f7;
+    color: #b94046;
+    border-radius: 14px;
+    padding: 12px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.45;
+    margin-bottom: 14px;
+}
+
+.lv-area-sheet-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-bottom: 12px;
+}
+
+.lv-area-section + .lv-area-section {
+    margin-top: 16px;
+}
+
+.lv-area-section-title {
+    margin-bottom: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #374151;
+}
+
+.lv-area-gu-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.lv-area-dong-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.lv-area-gu-btn,
+.lv-area-dong-btn {
+    min-height: 44px;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #374151;
+    padding: 11px 12px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.35;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.18s ease, background-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.lv-area-gu-btn.is-selected,
+.lv-area-dong-btn.is-selected {
+    border-color: #ff8a8f;
+    background: #fff3f3;
+    color: #c24148;
+    box-shadow: 0 0 0 3px rgba(255, 100, 105, 0.12);
+}
+
+.lv-area-gu-btn:active,
+.lv-area-dong-btn:active {
+    transform: scale(0.985);
+}
+
+.lv-area-sheet-actions {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 10px;
+    padding-top: 12px;
+    border-top: 1px solid #eef0f3;
+}
+
+.lv-area-action {
+    height: 46px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s ease, opacity 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.lv-area-action:active {
+    transform: scale(0.985);
+}
+
+.lv-area-action-secondary {
+    border: 1px solid #d1d5db;
+    background: #fff;
+    color: #4b5563;
+}
+
+.lv-area-action-primary {
+    border: 1px solid #ff6469;
+    background: #ff6469;
+    color: #fff;
+}
+
+.lv-area-action-primary:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+@keyframes lvAreaSheetUp {
+    from {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 420px) {
+    .lv-area-sheet {
+        padding-inline: 14px;
+    }
+
+    .lv-area-sheet-title {
+        font-size: 18px;
+    }
 }
 
 /* ── 결과 카운트 헤더 (우측 끝 정렬) ───────────────────────── */
