@@ -2,8 +2,8 @@
 사용자 로그인 라우트
 - 카카오 OAuth 2.0
 - 네이버 OAuth 2.0
-- 일반 회원가입 (아이디 + 이메일 + 비밀번호)
-- 일반 로그인 (아이디 + 비밀번호)
+- 일반 회원가입 (이메일 + 비밀번호)
+- 일반 로그인 (이메일 또는 기존 아이디 + 비밀번호)
 - 로그아웃
 - 현재 로그인 사용자 정보 API
 """
@@ -40,8 +40,18 @@ NAVER_TOKEN_URL = 'https://nid.naver.com/oauth2.0/token'
 NAVER_USER_URL  = 'https://openapi.naver.com/v1/nid/me'
 
 # ── 일반 회원가입 유효성 검사 정규식 ─────────────────────────────
-_USERNAME_RE = re.compile(r'^[a-zA-Z0-9_]{4,20}$')  # 영문/숫자/언더스코어 4-20자
 _EMAIL_RE    = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')  # 기본 이메일 형식
+
+
+def _normalize_email(value: str) -> str:
+    """이메일 비교/저장을 위해 소문자 기준으로 정규화."""
+    return (value or '').strip().lower()
+
+
+def _default_nickname_from_email(email: str) -> str:
+    """이메일 가입자의 기본 표시 이름."""
+    local_part = (email or '').split('@', 1)[0].strip()
+    return (local_part or email or '사용자')[:30]
 
 
 def _get_redirect_uri(provider: str) -> str:
@@ -257,20 +267,16 @@ def naver_callback():
 
 @bp.route('/register', methods=['POST'])
 def register():
-    """일반 회원가입 처리 (아이디 + 이메일 + 비밀번호)"""
+    """일반 회원가입 처리 (이메일 + 비밀번호)"""
     allowed, _ = check_rate_limit('auth_register', client_ip(), limit=5, window_sec=600)
     if not allowed:
         return redirect(url_for('main.signup_page', error='too_many_requests'))
 
-    username         = request.form.get('username', '').strip()
-    email            = request.form.get('email', '').strip()
+    email            = _normalize_email(request.form.get('email', ''))
     password         = request.form.get('password', '')
     password_confirm = request.form.get('password_confirm', '')
 
     # ── 입력값 검증 ──────────────────────────────────────────
-    if not _USERNAME_RE.match(username):
-        return redirect(url_for('main.signup_page', error='invalid_username'))
-
     if not _EMAIL_RE.match(email):
         return redirect(url_for('main.signup_page', error='invalid_email'))
 
@@ -280,36 +286,30 @@ def register():
     if password != password_confirm:
         return redirect(url_for('main.signup_page', error='password_mismatch'))
 
-    # ── 중복 체크 (username, email) ──────────────────────────
+    # ── 중복 체크 (email / email을 username으로 쓰는 기존 데이터 포함) ──
     try:
         with engine.connect() as conn:
-            dup_user = conn.execute(
-                text('SELECT idx FROM users WHERE username = :u LIMIT 1'),
-                {'u': username}
-            ).fetchone()
-            if dup_user:
-                return redirect(url_for('main.signup_page', error='username_taken'))
-
             dup_email = conn.execute(
-                text('SELECT idx FROM users WHERE email = :e AND email != "" LIMIT 1'),
-                {'e': email}
+                text('SELECT idx FROM users WHERE username = :login_id OR email = :email LIMIT 1'),
+                {'login_id': email, 'email': email}
             ).fetchone()
             if dup_email:
                 return redirect(url_for('main.signup_page', error='email_taken'))
 
         # ── 비밀번호 해싱 후 신규 계정 생성 ──────────────────
         pw_hash = generate_password_hash(password)
+        nickname = _default_nickname_from_email(email)
 
         with engine.begin() as conn:
             result = conn.execute(
                 text('INSERT INTO users (username, email, nickname, password, last_login) '
                      'VALUES (:u, :e, :n, :pw, NOW())'),
-                {'u': username, 'e': email, 'n': username, 'pw': pw_hash}
+                {'u': email, 'e': email, 'n': nickname, 'pw': pw_hash}
             )
             user_idx = result.lastrowid
 
         # ── 자동 로그인 + 홈 리다이렉트 ──────────────────────
-        _set_user_session({'idx': user_idx, 'name': username, 'profile': ''})
+        _set_user_session({'idx': user_idx, 'name': nickname, 'profile': ''})
         next_url = session.pop('next_url', None) or url_for('main.home')
         return redirect(next_url)
 
@@ -319,9 +319,7 @@ def register():
         logging.error(f"회원가입 오류: {e}")
         # DB 유니크 제약 위반 (SELECT 체크 통과 후 동시 가입 등 엣지 케이스)
         if '1062' in err_str or 'Duplicate entry' in err_str:
-            if 'username' in err_str:
-                return redirect(url_for('main.signup_page', error='username_taken'))
-            if 'email' in err_str:
+            if 'username' in err_str or 'email' in err_str:
                 return redirect(url_for('main.signup_page', error='email_taken'))
         return redirect(url_for('main.signup_page', error='server_error'))
 
@@ -330,12 +328,13 @@ def register():
 
 @bp.route('/login', methods=['POST'])
 def email_login():
-    """일반 로그인 처리 (아이디 + 비밀번호)"""
+    """일반 로그인 처리 (이메일 또는 기존 아이디 + 비밀번호)"""
     allowed, _ = check_rate_limit('auth_login', client_ip(), limit=10, window_sec=300)
     if not allowed:
         return redirect(url_for('main.login_page', error='too_many_requests'))
 
     username = request.form.get('username', '').strip()
+    normalized_email = _normalize_email(username)
     password = request.form.get('password', '')
 
     if not username or not password:
@@ -344,9 +343,9 @@ def email_login():
     try:
         with engine.connect() as conn:
             row = conn.execute(
-                text('SELECT idx, nickname, profile_img, password FROM users '
-                     'WHERE username = :u LIMIT 1'),
-                {'u': username}
+                text('SELECT idx, nickname, profile_img, password, username, email FROM users '
+                     'WHERE username = :login_id OR email = :email_id LIMIT 1'),
+                {'login_id': username, 'email_id': normalized_email}
             ).fetchone()
 
         # ── 아이디 없거나 비밀번호 없는 계정(소셜 전용)이면 실패 ──
@@ -367,7 +366,7 @@ def email_login():
         # ── 세션 저장 + 리다이렉트 ────────────────────────────
         _set_user_session({
             'idx':     row[0],
-            'name':    row[1] or username,
+            'name':    row[1] or row[5] or row[4] or username,
             'profile': row[2] or '',
         })
         next_url = session.pop('next_url', None) or url_for('main.home')

@@ -323,10 +323,8 @@
         {% if error %}
         <div class="error-box">
             <i data-lucide="alert-circle" style="width:16px;height:16px;flex-shrink:0;"></i>
-            {% if error == 'username_taken' %}이미 사용 중인 아이디입니다. 다른 아이디를 입력해주세요.
-            {% elif error == 'email_taken' %}이미 가입된 이메일 주소입니다.
+            {% if error == 'username_taken' or error == 'email_taken' %}이미 가입된 이메일 주소입니다.
             {% elif error == 'password_mismatch' %}비밀번호가 일치하지 않습니다.
-            {% elif error == 'invalid_username' %}아이디는 영문/숫자/언더스코어(_) 4~20자로 입력해주세요.
             {% elif error == 'invalid_email' %}올바른 이메일 주소를 입력해주세요.
             {% elif error == 'invalid_password' %}비밀번호는 8자 이상이어야 합니다.
             {% elif error == 'too_many_requests' %}요청이 너무 많습니다. 잠시 후 다시 시도해주세요.
@@ -358,23 +356,6 @@
         <form class="signup-form" method="POST" action="/auth/register" autocomplete="on">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
-            <!-- 아이디 -->
-            <div class="input-wrap">
-                <input
-                    type="text"
-                    name="username"
-                    class="input-field"
-                    placeholder="아이디 (영문/숫자/_ 4-20자)"
-                    autocomplete="username"
-                    required
-                    maxlength="20"
-                    pattern="[a-zA-Z0-9_]{4,20}"
-                    value="{{ request.form.get('username', '') if error else '' }}">
-            </div>
-            <p class="input-hint">영문, 숫자, 언더스코어(_)만 사용 가능</p>
-
-            <div class="form-divider"></div>
-
             <!-- 이메일 -->
             <div class="input-wrap">
                 <input
@@ -386,6 +367,7 @@
                     required
                     value="{{ request.form.get('email', '') if error else '' }}">
             </div>
+            <p class="input-hint">이메일 주소로 로그인하게 됩니다.</p>
 
             <div class="form-divider"></div>
 

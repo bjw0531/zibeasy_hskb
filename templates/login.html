@@ -343,19 +343,19 @@
         <!-- 이메일 로그인 구분선 -->
         <div class="divider"><span>이메일로 시작</span></div>
 
-        <!-- 이메일(아이디) + 비밀번호 로그인 폼 -->
+        <!-- 이메일 + 비밀번호 로그인 폼 -->
         <form class="email-form" method="POST" action="/auth/login" autocomplete="on">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <!-- 아이디 입력 -->
+            <!-- 이메일 입력 -->
             <div class="input-wrap">
                 <input
                     type="text"
                     name="username"
                     class="input-field"
-                    placeholder="아이디"
+                    placeholder="이메일 주소 또는 기존 아이디"
                     autocomplete="username"
                     required
-                    maxlength="20">
+                    maxlength="120">
             </div>
             <!-- 비밀번호 입력 (눈 아이콘 토글) -->
             <div class="input-wrap">
