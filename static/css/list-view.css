@@ -942,7 +942,10 @@ body.lv-body {
 /* ── 지역 바텀 시트 ───────────────────────────────────────── */
 .lv-area-sheet-backdrop {
     position: fixed;
-    inset: 0;
+    top: 0;
+    right: 0;
+    bottom: calc(52px + env(safe-area-inset-bottom, 0px));
+    left: 0;
     z-index: 9050;
     background: rgba(15, 23, 42, 0.38);
     display: none;
@@ -958,9 +961,9 @@ body.lv-body {
     width: min(100%, 640px);
     max-height: min(78vh, 720px);
     background: #fff;
-    border-radius: 24px 24px 0 0;
+    border-radius: 22px 22px 0 0;
     box-shadow: 0 -12px 36px rgba(15, 23, 42, 0.2);
-    padding: 10px 16px calc(env(safe-area-inset-bottom, 0px) + 16px);
+    padding: 9px 14px 14px;
     display: flex;
     flex-direction: column;
     animation: lvAreaSheetUp 0.24s ease-out;
@@ -979,19 +982,19 @@ body.lv-body {
     align-items: flex-start;
     justify-content: space-between;
     gap: 12px;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .lv-area-sheet-title {
-    font-size: 19px;
+    font-size: 18px;
     font-weight: 700;
     color: #111827;
     line-height: 1.25;
 }
 
 .lv-area-sheet-sub {
-    margin-top: 4px;
-    font-size: 13px;
+    margin-top: 3px;
+    font-size: 12px;
     line-height: 1.5;
     color: #6b7280;
 }
@@ -1011,12 +1014,12 @@ body.lv-body {
     border: 1px solid #f1d5d7;
     background: #fff7f7;
     color: #b94046;
-    border-radius: 14px;
-    padding: 12px 14px;
-    font-size: 13px;
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 12px;
     font-weight: 600;
     line-height: 1.45;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
 }
 
 .lv-area-sheet-body {
@@ -1027,12 +1030,12 @@ body.lv-body {
 }
 
 .lv-area-section + .lv-area-section {
-    margin-top: 16px;
+    margin-top: 14px;
 }
 
 .lv-area-section-title {
-    margin-bottom: 10px;
-    font-size: 13px;
+    margin-bottom: 8px;
+    font-size: 12px;
     font-weight: 700;
     color: #374151;
 }
@@ -1040,26 +1043,26 @@ body.lv-body {
 .lv-area-gu-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: 7px;
 }
 
 .lv-area-dong-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: 7px;
 }
 
 .lv-area-gu-btn,
 .lv-area-dong-btn {
-    min-height: 44px;
-    border-radius: 14px;
+    min-height: 38px;
+    border-radius: 12px;
     border: 1px solid #e5e7eb;
     background: #fff;
     color: #374151;
-    padding: 11px 12px;
-    font-size: 14px;
+    padding: 8px 10px;
+    font-size: 13px;
     font-weight: 600;
-    line-height: 1.35;
+    line-height: 1.25;
     text-align: center;
     cursor: pointer;
     transition: border-color 0.18s ease, background-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
@@ -1082,15 +1085,15 @@ body.lv-body {
 .lv-area-sheet-actions {
     display: grid;
     grid-template-columns: 1fr 1.3fr;
-    gap: 10px;
-    padding-top: 12px;
+    gap: 8px;
+    padding-top: 10px;
     border-top: 1px solid #eef0f3;
 }
 
 .lv-area-action {
-    height: 46px;
-    border-radius: 14px;
-    font-size: 14px;
+    height: 40px;
+    border-radius: 12px;
+    font-size: 13px;
     font-weight: 700;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
