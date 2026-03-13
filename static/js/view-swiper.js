@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const autoplayPlayIconEl = document.getElementById('slide-autoplay-play-icon');
     const autoplayPauseIconEl = document.getElementById('slide-autoplay-pause-icon');
     const autoplayTextEl = document.getElementById('slide-autoplay-text');
-    const AUTOPLAY_DELAY = 3000;
+    const AUTOPLAY_DELAY = 2000;
     let autoplayTimerId = null;
     let isAutoplayRunning = false;
 
