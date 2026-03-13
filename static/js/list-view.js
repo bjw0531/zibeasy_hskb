@@ -27,6 +27,8 @@ let lvObserver      = null;  /* IntersectionObserver (무한 스크롤) */
 let lvSearchFilter  = null;  /* null = 전체 / { type:'dong', dong, ri } / { type:'station', lat, lng, radius } / { type:'code', code } */
 let lvSelectedArea  = null;  /* 현재 선택된 지역 필터 */
 let lvAreaDraft     = null;  /* 바텀 시트에서 임시 선택 중인 지역 */
+let lvAreaSheetCloseTimer = null;
+let lvAreaSheetDragState = null;
 /* 최근 검색어 */
 let lvRecentSearches = [];
 
@@ -54,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /* 최근 검색어 로드 */
     lvLoadRecentSearches();
     lvSyncAreaFilterUI();
+    lvInitAreaSheetDrag();
 
     /* 검색창 이벤트 */
     const realInput = document.getElementById('searchPageInput');
@@ -1215,7 +1218,17 @@ function lvOpenPriceFilter() {
 function lvOpenAreaFilter() {
     const backdrop = document.getElementById('lvAreaSheetBackdrop');
     const chip = document.getElementById('lvFilterArea');
+    const sheet = document.getElementById('lvAreaSheet');
     if (!backdrop) return;
+
+    if (lvAreaSheetCloseTimer) {
+        window.clearTimeout(lvAreaSheetCloseTimer);
+        lvAreaSheetCloseTimer = null;
+    }
+    if (sheet) {
+        sheet.classList.remove('is-dragging');
+        sheet.style.transform = '';
+    }
 
     const currentSelection = lvGetKnownAreaFromFilter() || lvSelectedArea;
     if (currentSelection) {
@@ -1229,7 +1242,9 @@ function lvOpenAreaFilter() {
     }
 
     lvRenderAreaSheet();
-    backdrop.classList.add('open');
+    requestAnimationFrame(() => {
+        backdrop.classList.add('open');
+    });
     if (chip) chip.classList.add('is-open');
 
     if (!window._lvAreaPushed) {
@@ -1244,7 +1259,17 @@ function lvCloseAreaFilter(event, options) {
     const settings = options || {};
     const backdrop = document.getElementById('lvAreaSheetBackdrop');
     const chip = document.getElementById('lvFilterArea');
+    const sheet = document.getElementById('lvAreaSheet');
 
+    if (lvAreaSheetCloseTimer) {
+        window.clearTimeout(lvAreaSheetCloseTimer);
+        lvAreaSheetCloseTimer = null;
+    }
+
+    if (sheet) {
+        sheet.classList.remove('is-dragging');
+        sheet.style.transform = '';
+    }
     if (backdrop) backdrop.classList.remove('open');
     if (chip) chip.classList.remove('is-open');
 
@@ -1254,6 +1279,9 @@ function lvCloseAreaFilter(event, options) {
         return;
     }
 
+    lvAreaSheetCloseTimer = window.setTimeout(() => {
+        lvAreaSheetCloseTimer = null;
+    }, 320);
     window._lvAreaPushed = false;
 }
 
@@ -1345,6 +1373,65 @@ function lvResetAreaFilter() {
     lvSyncAreaFilterUI();
     lvCloseAreaFilter();
     lvLoadProperties(true);
+}
+
+function lvInitAreaSheetDrag() {
+    const sheet = document.getElementById('lvAreaSheet');
+    const handle = document.getElementById('lvAreaSheetHandle');
+    const head = document.getElementById('lvAreaSheetHead');
+    const body = document.querySelector('#lvAreaSheet .lv-area-sheet-body');
+    if (!sheet || !handle || !head) return;
+    if (sheet.dataset.dragReady === '1') return;
+    sheet.dataset.dragReady = '1';
+
+    function canStartDrag(target) {
+        if (target.closest('button')) return false;
+        return target === handle || handle.contains(target) || target === head || head.contains(target);
+    }
+
+    function startDrag(clientY, target) {
+        if (!canStartDrag(target)) return;
+        if (body && body.scrollTop > 0) return;
+
+        lvAreaSheetDragState = {
+            startY: clientY,
+            currentY: clientY
+        };
+        sheet.classList.add('is-dragging');
+    }
+
+    function moveDrag(clientY) {
+        if (!lvAreaSheetDragState) return;
+        lvAreaSheetDragState.currentY = clientY;
+        const deltaY = Math.max(clientY - lvAreaSheetDragState.startY, 0);
+        sheet.style.transform = `translate3d(0, ${deltaY}px, 0)`;
+    }
+
+    function endDrag() {
+        if (!lvAreaSheetDragState) return;
+        const deltaY = Math.max(lvAreaSheetDragState.currentY - lvAreaSheetDragState.startY, 0);
+        lvAreaSheetDragState = null;
+        sheet.classList.remove('is-dragging');
+
+        if (deltaY > 110) {
+            lvCloseAreaFilter();
+            return;
+        }
+
+        sheet.style.transform = '';
+    }
+
+    sheet.addEventListener('pointerdown', (event) => {
+        if (event.pointerType === 'mouse' && event.button !== 0) return;
+        startDrag(event.clientY, event.target);
+    });
+
+    window.addEventListener('pointermove', (event) => {
+        moveDrag(event.clientY);
+    });
+
+    window.addEventListener('pointerup', endDrag);
+    window.addEventListener('pointercancel', endDrag);
 }
 
 /**
