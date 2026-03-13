@@ -82,7 +82,12 @@
   var TAB_ROOT_BASE_KEY = '__tabRootBase';
   var TAB_ROOT_GUARD_KEY = '__tabRootGuard';
   var TAB_ROOT_PATH_KEY = '__tabRootPath';
-  var tabRootGuardEnabled = false;
+  var TAB_ROOT_EXIT_TOAST_MS = 2200;
+  var tabRootGuardEnabled = true;
+  var tabRootExitToastEl = null;
+  var tabRootExitToastTimer = null;
+  var tabRootExitArmedUntil = 0;
+  var tabRootExitInProgress = false;
 
   function getExitInvoker() {
     if (window.appManager && typeof window.appManager.handleAppExit === 'function') {
@@ -124,16 +129,32 @@
   }
 
   function closeTabRootPage() {
+    if (tabRootExitInProgress) return;
+    tabRootExitInProgress = true;
+    hideExitToast();
+
     var exitInvoker = getExitInvoker();
     try {
       if (exitInvoker) {
         exitInvoker();
         return;
       }
-      window.close();
+      history.back();
     } catch (e) {
-      window.close();
+      try {
+        window.close();
+      } catch (err) {}
     }
+
+    setTimeout(function() {
+      if (!document.hidden) {
+        try {
+          window.close();
+        } catch (e) {}
+        tabRootExitInProgress = false;
+        initTabRootGuard();
+      }
+    }, 180);
   }
 
   function rearmTabRootGuard() {
@@ -145,9 +166,65 @@
     } catch (e) {}
   }
 
+  function hideExitToast() {
+    if (tabRootExitToastTimer) {
+      clearTimeout(tabRootExitToastTimer);
+      tabRootExitToastTimer = null;
+    }
+    tabRootExitArmedUntil = 0;
+    if (tabRootExitToastEl && tabRootExitToastEl.parentNode) {
+      tabRootExitToastEl.parentNode.removeChild(tabRootExitToastEl);
+    }
+    tabRootExitToastEl = null;
+  }
+
+  function showExitToast() {
+    hideExitToast();
+
+    tabRootExitArmedUntil = Date.now() + TAB_ROOT_EXIT_TOAST_MS;
+
+    var toast = document.createElement('div');
+    toast.textContent = '한번 더 뒤로가면 종료됩니다.';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+    toast.style.cssText = [
+      'position:fixed',
+      'left:50%',
+      'bottom:calc(86px + env(safe-area-inset-bottom, 0px))',
+      'transform:translateX(-50%)',
+      'background:rgba(25,28,34,0.92)',
+      'color:#fff',
+      'padding:12px 18px',
+      'border-radius:999px',
+      'font-size:14px',
+      'font-weight:600',
+      'line-height:1',
+      'box-shadow:0 10px 24px rgba(15,23,42,0.22)',
+      'z-index:10020',
+      'white-space:nowrap',
+      'pointer-events:none',
+      'opacity:0',
+      'transition:opacity 0.18s ease, transform 0.18s ease'
+    ].join(';');
+
+    document.body.appendChild(toast);
+    tabRootExitToastEl = toast;
+
+    requestAnimationFrame(function() {
+      if (!tabRootExitToastEl) return;
+      tabRootExitToastEl.style.opacity = '1';
+      tabRootExitToastEl.style.transform = 'translateX(-50%) translateY(-4px)';
+    });
+
+    tabRootExitToastTimer = setTimeout(function() {
+      if (!tabRootExitToastEl) return;
+      tabRootExitToastEl.style.opacity = '0';
+      tabRootExitToastEl.style.transform = 'translateX(-50%) translateY(4px)';
+      setTimeout(hideExitToast, 180);
+    }, TAB_ROOT_EXIT_TOAST_MS);
+  }
+
   function initTabRootGuard() {
-    var exitInvoker = getExitInvoker();
-    tabRootGuardEnabled = !!exitInvoker;
     if (!tabRootGuardEnabled) return;
 
     try {
@@ -190,15 +267,17 @@
   /* ── 2. 탭 루트 페이지 뒤로가기 = 종료 처리 ── */
   initTabRootGuard();
   window.addEventListener('popstate', function(event) {
-    if (!tabRootGuardEnabled) return;
+    if (!tabRootGuardEnabled || tabRootExitInProgress) return;
     var state = event.state || {};
     if (!state[TAB_ROOT_BASE_KEY] || state[TAB_ROOT_PATH_KEY] !== location.pathname) return;
-    closeTabRootPage();
-    setTimeout(function() {
-      if (!document.hidden) {
-        rearmTabRootGuard();
-      }
-    }, 0);
+
+    if (Date.now() < tabRootExitArmedUntil) {
+      closeTabRootPage();
+      return;
+    }
+
+    showExitToast();
+    rearmTabRootGuard();
   });
 
   /* ── 3. 탭바 전환 시 히스토리 교체 (뒤로가기 스택 방지) ── */
