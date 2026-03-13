@@ -72,6 +72,7 @@
 }
 
 .request-page .flatpickr-months {
+    position: relative;
     align-items: center;
     margin-bottom: 8px;
     padding: 0;
@@ -117,25 +118,37 @@
 
 .request-page .flatpickr-prev-month,
 .request-page .flatpickr-next-month {
-    top: 2px;
-    width: 32px;
-    height: 32px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    top: 50% !important;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
     padding: 0;
-    color: #374151;
-    border-radius: 999px;
+    color: #111827;
+    border-radius: 8px; /* Slightly squarer or round, let's keep 999px or 8px */
     transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+.request-page .flatpickr-prev-month {
+    left: 8px !important;
+}
+.request-page .flatpickr-next-month {
+    right: 8px !important;
 }
 
 .request-page .flatpickr-prev-month:hover,
 .request-page .flatpickr-next-month:hover {
-    background: #f3f4f6;
-    color: #111827;
+    background: #f1f5f9;
+    color: #000;
 }
 
 .request-page .flatpickr-prev-month svg,
 .request-page .flatpickr-next-month svg {
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
 }
 
 .request-page .flatpickr-weekdays {
