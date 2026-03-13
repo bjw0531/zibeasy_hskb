@@ -681,10 +681,15 @@
 
     function buildDateInput(step) {
         const wrap = document.createElement('div');
+        wrap.classList.add('rq-date-field');
+
         const input = document.createElement('input');
         input.type = 'text';
-        input.className = 'flatpickr-input';
+        input.className = 'flatpickr-input rq-date-input';
         input.placeholder = '날짜를 선택해 주세요';
+        input.readOnly = true;
+        input.setAttribute('inputmode', 'none');
+        input.setAttribute('aria-label', step.label);
         input.value = answers[step.field] || '';
 
         const fieldState = attachInputState(input, {

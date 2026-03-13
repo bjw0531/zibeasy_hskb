@@ -518,14 +518,16 @@
     function renderMoveInStep() {
         const card = createStepCard('언제 입주를 희망하세요? (필수)');
         const field = document.createElement('div');
-        field.className = 'fh-field';
+        field.className = 'fh-field rq-date-field';
 
         const input = document.createElement('input');
         input.type = 'text';
-        input.className = 'fh-input';
-        input.classList.add('flatpickr-input');
+        input.className = 'fh-input flatpickr-input rq-date-input';
         input.placeholder = '날짜를 선택해 주세요';
         input.value = state.move_in_date || '';
+        input.readOnly = true;
+        input.setAttribute('inputmode', 'none');
+        input.setAttribute('aria-label', '입주 희망일');
         input.setAttribute('data-autofocus', 'true');
         field.appendChild(input);
         card.appendChild(field);

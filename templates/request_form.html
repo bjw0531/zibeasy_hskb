@@ -329,7 +329,7 @@
         }
     </style>
     <!-- Conversational UI 스타일 -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/request-form.css') }}?v=20260312b">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/request-form.css') }}?v=20260313a">
 </head>
 <body class="request-page" data-active-tab="lease_out">
     <main class="page">
@@ -413,15 +413,49 @@
             document.body.setAttribute('data-active-tab', tab);
         }
 
+        function syncDateFieldState(instance, isOpen) {
+            const field = instance?.input?.closest('.rq-date-field');
+            if (!field) return;
+            field.classList.toggle('is-open', !!isOpen);
+        }
+
         window.initHouseDatePicker = function(input, options) {
             if (!input || typeof flatpickr === 'undefined') return null;
             if (input._flatpickr) input._flatpickr.destroy();
+
+            const userOptions = options || {};
+            const userOnReady = userOptions.onReady;
+            const userOnOpen = userOptions.onOpen;
+            const userOnClose = userOptions.onClose;
+
             return flatpickr(input, {
                 locale: flatpickr.l10ns.ko || 'ko',
                 dateFormat: 'Y-m-d',
                 disableMobile: true,
                 allowInput: false,
-                ...options
+                minDate: 'today',
+                monthSelectorType: 'static',
+                prevArrow: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"/></svg>',
+                nextArrow: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"/></svg>',
+                ...userOptions,
+                onReady(selectedDates, dateStr, instance) {
+                    syncDateFieldState(instance, false);
+                    if (typeof userOnReady === 'function') {
+                        userOnReady(selectedDates, dateStr, instance);
+                    }
+                },
+                onOpen(selectedDates, dateStr, instance) {
+                    syncDateFieldState(instance, true);
+                    if (typeof userOnOpen === 'function') {
+                        userOnOpen(selectedDates, dateStr, instance);
+                    }
+                },
+                onClose(selectedDates, dateStr, instance) {
+                    syncDateFieldState(instance, false);
+                    if (typeof userOnClose === 'function') {
+                        userOnClose(selectedDates, dateStr, instance);
+                    }
+                }
             });
         };
 
@@ -448,7 +482,7 @@
     </script>
     <!-- Conversational UI: 집 내놓기 -->
     <script src="{{ url_for('static', filename='js/request-input-states.js') }}?v=20260312b"></script>
-    <script src="{{ url_for('static', filename='js/request-form.js') }}?v=20260312b"></script>
-    <script src="{{ url_for('static', filename='js/request-find-home.js') }}?v=20260312b"></script>
+    <script src="{{ url_for('static', filename='js/request-form.js') }}?v=20260313a"></script>
+    <script src="{{ url_for('static', filename='js/request-find-home.js') }}?v=20260313a"></script>
 </body>
 </html>
