@@ -1007,18 +1007,6 @@ body.lv-body {
     white-space: nowrap;
 }
 
-.lv-area-sheet-current {
-    border: 1px solid #f1d5d7;
-    background: #fff7f7;
-    color: #b94046;
-    border-radius: 14px;
-    padding: 12px 14px;
-    font-size: 13px;
-    font-weight: 600;
-    line-height: 1.45;
-    margin-bottom: 14px;
-}
-
 .lv-area-sheet-body {
     flex: 1;
     min-height: 0;
@@ -1045,7 +1033,7 @@ body.lv-body {
 
 .lv-area-dong-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
 }
 

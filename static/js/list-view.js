@@ -1260,9 +1260,8 @@ function lvCloseAreaFilter(event, options) {
 function lvRenderAreaSheet() {
     const guList = document.getElementById('lvAreaGuList');
     const dongList = document.getElementById('lvAreaDongList');
-    const currentText = document.getElementById('lvAreaCurrentText');
     const applyBtn = document.getElementById('lvAreaApplyBtn');
-    if (!guList || !dongList || !currentText || !applyBtn) return;
+    if (!guList || !dongList || !applyBtn) return;
 
     const selectedGuKey = lvAreaDraft?.guKey && LV_AREA_OPTIONS[lvAreaDraft.guKey]
         ? lvAreaDraft.guKey
@@ -1285,9 +1284,6 @@ function lvRenderAreaSheet() {
         >${dong}</button>
     `).join('');
 
-    currentText.textContent = lvAreaDraft?.dong
-        ? `${selectedGu.label} ${lvAreaDraft.dong}을 선택했습니다.`
-        : `${selectedGu.label}에서 읍/면/동을 선택해 주세요.`;
     applyBtn.disabled = !lvAreaDraft?.dong;
 }
 
