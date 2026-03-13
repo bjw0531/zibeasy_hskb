@@ -963,7 +963,8 @@ body.lv-body {
     padding: 10px 16px calc(env(safe-area-inset-bottom, 0px) + 16px);
     display: flex;
     flex-direction: column;
-    animation: lvAreaSheetUp 0.24s ease-out;
+    will-change: transform;
+    animation: lvAreaSheetUp 0.28s cubic-bezier(0.22, 0.9, 0.2, 1);
 }
 
 .lv-area-sheet-handle {
@@ -1108,12 +1109,12 @@ body.lv-body {
 
 @keyframes lvAreaSheetUp {
     from {
-        opacity: 0;
-        transform: translateY(24px);
+        opacity: 0.98;
+        transform: translate3d(0, 72px, 0);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translate3d(0, 0, 0);
     }
 }
 
