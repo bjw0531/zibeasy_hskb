@@ -263,19 +263,18 @@ body {
     justify-content: flex-start;
     gap: 8px;
     min-height: 152px;
-    padding: 10px;
-    border-radius: 10px;
+    padding: 0;
+    border-radius: 0;
     text-decoration: none;
-    border: 1px solid #e7edf5;
-    background: #fff;
+    border: none;
+    background: transparent;
     color: inherit;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-    transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+    box-shadow: none;
+    transition: transform 0.16s ease;
 }
 
 .home-continue-item:hover {
-    border-color: #d8e1ed;
-    box-shadow: 0 6px 16px rgba(30, 41, 59, 0.08);
+    box-shadow: none;
 }
 
 .home-continue-item:active {
@@ -298,7 +297,7 @@ body {
     width: 100%;
     aspect-ratio: 1 / 1;
     overflow: hidden;
-    border-radius: 10px;
+    border-radius: 12px;
     background: #f4f6f8;
 }
 
@@ -310,12 +309,12 @@ body {
 }
 
 .home-continue-item-property {
-    background: linear-gradient(180deg, #ffffff 0%, #fafcfe 100%);
+    background: transparent;
 }
 
 .home-continue-item-empty {
     justify-content: center;
-    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    background: transparent;
 }
 
 .home-continue-item-empty .continue-thumb-empty {
@@ -327,6 +326,7 @@ body {
     font-size: 12px;
     font-weight: 600;
     text-align: center;
+    border-radius: 12px;
 }
 
 /* 리스트 아이콘 (빨간 줄무늬) */
