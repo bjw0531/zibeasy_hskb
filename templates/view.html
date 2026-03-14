@@ -75,44 +75,46 @@
     <!-- 슬라이드 애니메이션 래퍼 — 이 div만 transform -->
 
     <div id="view-slide-wrapper">
-        <!-- 헤더 -->
-        <header class="flex items-center justify-between px-4 py-3 bg-white shadow-sm sticky top-0 z-[100]">
-            <div class="flex items-center gap-1">
-                <button data-detail-close="1" class="text-gray-600 text-xl py-1 px-2 cursor-pointer"
-                    onclick="history.back()">←</button>
-                <h1 class="text-lg font-semibold">매물번호 {{ property.code }}</h1>
-            </div>
-            <div id="button-div" class="absolute right-4 flex justify-end gap-1">
-                <!-- 좋아요 -->
-                <button onclick="toggleLike('{{ property.code or property.idx }}')" class="flex items-center justify-between px-1.5 py-1 rounded-lg border transition-all duration-200 ease-in-out cursor-pointer
-                       text-gray-600 bg-white border-gray-200">
-                    <svg class="w-6 h-6 heart-unliked" data-like-btn="{{ property.code or property.idx }}"
-                        xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" stroke="black" stroke-width="0"
-                        fill="currentColor">
-                        <path
-                            d="M223,57a58.07,58.07,0,0,0-81.92-.1L128,69.05 114.91,56.86A58,58,0,0,0,33,139l89.35,90.66a8,8,0,0,0,11.4,0L223,139a58,58,0,0,0,0-82Z">
-                        </path>
-                    </svg>
-                </button>
-                <!-- 공유 -->
-                <button id="share-btn" onclick="openShareModal()"
-                    class="flex items-center justify-center gap-2 px-2.5 py-1 rounded-lg border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 transition-all cursor-pointer">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                        <polyline points="16 6 12 2 8 6" />
-                        <line x1="12" y1="2" x2="12" y2="15" />
-                    </svg>
-                </button>
-                <!-- 닫기 -->
-                <button data-detail-close="1" onclick="history.back()"
-                    class="flex items-center justify-center px-2.5 py-1 ml-2 text-gray-600 cursor-pointer"
-                    aria-label="닫기">✕</button>
-            </div>
-        </header>
-        <!-- {{ property }} -->
-        <!-- 이미지 섹션 -->
-        <section class="relative w-full overflow-hidden">
+        <div class="detail-intro-shell">
+            <div class="detail-visual-sticky">
+                <!-- 헤더 -->
+                <header class="detail-header flex items-center justify-between px-4 py-3 bg-white shadow-sm">
+                    <div class="flex items-center gap-1">
+                        <button data-detail-close="1" class="text-gray-600 text-xl py-1 px-2 cursor-pointer"
+                            onclick="history.back()">←</button>
+                        <h1 class="text-lg font-semibold">매물번호 {{ property.code }}</h1>
+                    </div>
+                    <div id="button-div" class="absolute right-4 flex justify-end gap-1">
+                        <!-- 좋아요 -->
+                        <button onclick="toggleLike('{{ property.code or property.idx }}')" class="flex items-center justify-between px-1.5 py-1 rounded-lg border transition-all duration-200 ease-in-out cursor-pointer
+                               text-gray-600 bg-white border-gray-200">
+                            <svg class="w-6 h-6 heart-unliked" data-like-btn="{{ property.code or property.idx }}"
+                                xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" stroke="black" stroke-width="0"
+                                fill="currentColor">
+                                <path
+                                    d="M223,57a58.07,58.07,0,0,0-81.92-.1L128,69.05 114.91,56.86A58,58,0,0,0,33,139l89.35,90.66a8,8,0,0,0,11.4,0L223,139a58,58,0,0,0,0-82Z">
+                                </path>
+                            </svg>
+                        </button>
+                        <!-- 공유 -->
+                        <button id="share-btn" onclick="openShareModal()"
+                            class="flex items-center justify-center gap-2 px-2.5 py-1 rounded-lg border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 transition-all cursor-pointer">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                                <polyline points="16 6 12 2 8 6" />
+                                <line x1="12" y1="2" x2="12" y2="15" />
+                            </svg>
+                        </button>
+                        <!-- 닫기 -->
+                        <button data-detail-close="1" onclick="history.back()"
+                            class="flex items-center justify-center px-2.5 py-1 ml-2 text-gray-600 cursor-pointer"
+                            aria-label="닫기">✕</button>
+                    </div>
+                </header>
+                <!-- {{ property }} -->
+                <!-- 이미지 섹션 -->
+                <section class="detail-photo-section relative w-full overflow-hidden">
             <!-- ✅ 계약완료 오버레이 -->
             {% if property.contract == '계약완료' %}
             <div class="absolute inset-0 z-[50] pointer-events-none">
@@ -184,7 +186,219 @@
                     {% endfor %}
                 </div>
             </div>
-        </section>
+                </section>
+            </div>
+
+            <!-- 제목 섹션 -->
+            <section class="py-3 px-4 bg-white">
+                <div class="mb-1">
+                    <div class="flex items-center justify-between text-gray-600 font-medium mb-3 text-sm">
+                        <div class="flex items-center gap-2">
+                            <p class="h-7 flex items-center bg-[rgb(240,240,240)] py-1 px-2.5 rounded-sm text-sm">
+                                매물번호 {{ property.code }}
+                            </p>
+
+                            {% if property.youtube_url and property.contract != '계약완료' %}
+                            <button id="video-btn" onclick="toggleVideo()"
+                                class="h-7 flex items-center justify-center gap-2 px-2.5 py-1 rounded-sm border border-gray-200 text-gray-600 bg-white cursor-pointer text-sm font-medium">
+                                <div class="w-5 h-5 flex items-center shrink-0">
+                                    <img class="w-full" src="/static/images/movie_icon.png" alt="영상 있음">
+                                </div>
+                                영상 보기
+                            </button>
+                            {% endif %}
+                        </div>
+                        <!-- ✅ 계약완료면 수정일 숨김 -->
+                        {% if property.contract != '계약완료' %}
+                        <div class="flex items-center gap-1 relative">
+                            <!-- 설명 아이콘 -->
+                            <span id="last-edit-info-icon" onclick="toggleLastEditTooltip(event)"
+                                style="cursor: pointer; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: #f0f0f0; color: #888; font-size: 10px; font-weight: bold;">?</span>
+                            <p>{{ property.last_edit }}</p>
+                            <!-- 툴팁 팝업 (말풍선 스타일) -->
+                            <div id="last-edit-tooltip"
+                                class="hidden absolute top-full right-0 mt-3 text-gray-700 p-2 rounded-lg shadow-lg border border-gray-200 z-50 text-xs leading-tight"
+                                style="width: 180px; background: #f9f9f9;">
+                                <!-- 말풍선 꼬리 (위쪽 화살표) -->
+                                <div
+                                    style="position: absolute; top: -7px; right: 24px; width: 12px; height: 12px; background: #f9f9f9; border-left: 1px solid #e5e7eb; border-top: 1px solid #e5e7eb; transform: rotate(45deg);">
+                                </div>
+                                <p class="font-semibold mb-0.5">매물 최종 확인일</p>
+                                <p class="text-gray-500" style="line-height: 1.3;">*확인필요: 매물 확인한지 오래되어 재확인이 필요한 매물</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <!-- ✅ 계약완료면 가격 대신 "계약완료" 표시 -->
+                    {% if property.contract == '계약완료' %}
+                    <h2 class="text-xl font-bold text-[#e53935] mb-4 flex items-center gap-2">
+                        계약완료
+                    </h2>
+                    {% else %}
+                    <h2 class="text-xl font-bold text-[rgb(50,50,50)] mb-4 flex items-center gap-2">
+                        {{ property.price_text }} <span class="text-sm font-normal text-[rgb(120,120,120)]">(관리비 {{
+                            property.public_money
+                            }}만원)</span>
+                    </h2>
+                    {% endif %}
+                    <!-- 매물종류 및 층 정보 -->
+                    <div class="flex items-center gap-4 mb-4 text-[15px] text-gray-700">
+                        <!-- 지역명 -->
+                        <div class="flex items-center gap-1">
+                            <img src="{{ url_for('static', filename='images/icon-area.png') }}" alt="지역" class="w-6 h-6">
+                            <span>{% if property.ri %}{{ property.dong }} {{ property.ri }}{% else %}{{ property.dong }}{%
+                                endif
+                                %}</span>
+                        </div>
+                        <!-- 매물종류 -->
+                        <div class="flex items-center gap-1">
+                            <img src="{{ url_for('static', filename='images/icon-1,2,3.png') }}" alt="매물종류" class="w-5 h-5">
+                            <span>{% if property.category == '90' %}원룸{% elif property.category == '91' %}투베이{% elif
+                                property.category == '92' %}무보증/단기{% elif property.category == '93' %}투룸{% elif
+                                property.category == '94' %}쓰리룸{% else %}{{ property.category }}{% endif %}</span>
+                        </div>
+                        <!-- ✅ 계약완료가 아닐 때만 층 정보 표시 -->
+                        {% if property.contract != '계약완료' %}
+                        <div class="flex items-center gap-1">
+                            <img src="{{ url_for('static', filename='images/icon-fllor.png') }}" alt="층정보" class="w-5 h-5">
+                            <span>총 {{ property.total_floor }}층 중 {{ property.now_floor }}층</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <!-- ✅ 계약완료가 아닐 때만 제목 표시 -->
+                {% if property.contract != '계약완료' %}
+                <h2 class="text-sm font-normal text-[rgb(100,100,100)] mb-1">{{ property.title }}</h2>
+                {% endif %}
+
+            </section>
+            <!-- 기본정보 섹션 -->
+            <section class="py-[2px] px-[15px] mt-2 bg-white">
+                <ul class="text-base font-light divide-y divide-gray-100">
+
+                    <!-- 지역구분 -->
+                    <li class="flex items-center py-3">
+                        <div class="w-[6em] shrink-0 font-semibold text-[14px]">지역구분</div>
+                        <div class="flex-1 text-[14px]">{{ property.si + " " + property.gu + " " + property.dong }}</div>
+                    </li>
+
+                    <!-- 형태 -->
+                    <li class="flex items-center py-3">
+                        <div class="w-[6em] shrink-0 font-semibold text-[14px]">형태</div>
+                        <div class="flex-1 text-[14px]">
+                            {% if property.gudxo -%}방 {{ property.gudxo }}{%- endif -%}
+                            {% if property.gudxo1 -%}, 거실 {{ property.gudxo1 }}{%- endif -%}
+                            {% if property.gudxo2 -%}, 욕실 {{ property.gudxo2 }}{%- endif -%}
+                        </div>
+                    </li>
+
+                    <!-- ✅ 계약완료가 아닐 때만 아래 항목들 표시 -->
+                    {% if property.contract != '계약완료' %}
+
+                    <!-- 구조 -->
+                    <li class="flex items-center py-3">
+                        <div class="w-[6em] shrink-0 font-semibold text-[14px]">구조</div>
+                        <div class="flex-1 text-[14px]">주방 : {{ property.room1 }} / 베란다 : {{ property.room2 }}</div>
+                    </li>
+
+                    <!-- 전용면적 + 주차 (2항목 1행 — 각 항목 내부도 동일 w-[6em] 레이블 기준) -->
+                    <li class="flex items-center py-3 text-[14px]">
+                        <!-- 전용면적 -->
+                        <div class="flex flex-1 items-center min-w-0">
+                            <span class="w-[6em] shrink-0 font-semibold">전용면적</span>
+                            <div class="flex flex-1 items-center gap-1.5 min-w-0">
+                                <span id="area-display" class="whitespace-nowrap">{{ property.size | int }}m²</span>
+                                <button
+                                    class="font-medium text-[10px] text-gray-500 border border-gray-300 rounded px-1 py-0.5 flex items-center gap-0.5 cursor-pointer hover:bg-gray-50 shrink-0"
+                                    id="area-convert-btn">
+                                    <i data-lucide="arrow-left-right" class="w-3 h-3"></i>
+                                    <span>평</span>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- 구분선: margin-left로 주차 영역 오른쪽 이동 -->
+                        <span class="text-gray-200 px-2 shrink-0" style="margin-left: 2em;">|</span>
+                        <!-- 주차 -->
+                        <div class="flex flex-1 items-center min-w-0">
+                            <span class="w-[3em] shrink-0 font-semibold">주차</span>
+                            <span class="flex-1 whitespace-nowrap text-gray-700">총 {{ property.parking }}대</span>
+                        </div>
+                    </li>
+
+                    <!-- 관리비 -->
+                    <li class="flex items-start py-3">
+                        <div class="w-[6em] shrink-0 font-semibold text-[14px]">관리비</div>
+                        <div class="flex-1 text-[14px]">
+                            <div class="flex items-center gap-2">
+                                <span>{{ property.public_money }}만원</span>
+                                {% if property.public_money_detail == True %}
+                                <button
+                                    class="text-xs text-gray-500 border border-gray-300 rounded px-1 py-0.5 cursor-pointer"
+                                    id="public-money-btn">상세 내역</button>
+                                {% endif %}
+                            </div>
+                            <div class="text-sm text-gray-500">({{ property.public_money1 }}) ({{ property.public_money_opt
+                                }} 별도)</div>
+                        </div>
+                    </li>
+
+                    <!-- 관리비 상세 모달 (위치 유지) -->
+                    <div id="public-money-modal"
+                        class="fixed inset-0 items-center justify-center bg-black/50 hidden z-[200]">
+                        <div class="bg-white p-5 rounded-lg shadow-lg w-72 font-light" onclick="event.stopPropagation()">
+                            <h2 class="text-base font-semibold mb-3">관리비 상세</h2>
+                            <div class="text-sm">
+                                <ul class="list-disc pl-4">
+                                    <li>일반(공용)관리비 : {{ property.public_money_main }}</li>
+                                    <li>
+                                        사용료
+                                        <ul class="list-disc pl-4 mt-1">
+                                            <li>전기료 : {{ property.public_money_electric }}</li>
+                                            <li>가스비 : {{ property.public_money_gas }}</li>
+                                            <li>난방비 : {{ property.public_money_heat }}</li>
+                                            <li>수도세 : {{ property.public_money_water }}</li>
+                                            <li>TV방송료 : {{ property.public_money_tv }}</li>
+                                            <li>인터넷비 : {{ property.public_money_internet }}</li>
+                                        </ul>
+                                    </li>
+                                    <li>기타관리비(건물 유지보수외) : {{ property.public_money_etc }}</li>
+                                </ul>
+                            </div>
+                            <button id="close-modal"
+                                class="mt-3 px-3 py-1 text-sm border-gray-300 rounded border cursor-pointer">닫기</button>
+                        </div>
+                    </div>
+
+                    <!-- 입주가능일 -->
+                    <li class="flex items-center py-3">
+                        <div class="w-[6em] shrink-0 font-semibold text-[14px]">입주가능일</div>
+                        <div class="flex-1 text-[14px]">{{ property.movein_day }}</div>
+                    </li>
+
+                    <!-- 건축물종류 -->
+                    <li class="flex items-center py-3">
+                        <div class="w-[6em] shrink-0 font-semibold text-[14px]">건축물종류</div>
+                        <div class="flex-1 text-[14px]">{{ property.build_use_type }}</div>
+                    </li>
+
+                    <!-- 사용승인일 -->
+                    <li class="flex items-center py-3">
+                        <div class="w-[6em] shrink-0 font-semibold text-[14px]">사용승인일</div>
+                        <div class="flex-1 text-[14px]">{{ property.build_access_date }}</div>
+                    </li>
+
+                    <!-- 방향 -->
+                    <li class="flex items-center py-3">
+                        <div class="w-[6em] shrink-0 font-semibold text-[14px]">방향</div>
+                        <div class="flex-1 text-[14px]">
+                            {% if property.aspect %}{{ property.aspect }} (주실/베란다 창문){% endif %}
+                        </div>
+                    </li>
+
+                    {% endif %}
+                </ul>
+            </section>
+        </div>
 
         <!-- 전체화면 사진 뷰어 -->
         <div id="photoViewerOverlay" class="photo-viewer-overlay" aria-hidden="true">
@@ -210,216 +424,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- 제목 섹션 -->
-        <section class="py-3 px-4 bg-white">
-            <div class="mb-1">
-                <div class="flex items-center justify-between text-gray-600 font-medium mb-3 text-sm">
-                    <div class="flex items-center gap-2">
-                        <p class="h-7 flex items-center bg-[rgb(240,240,240)] py-1 px-2.5 rounded-sm text-sm">
-                            매물번호 {{ property.code }}
-                        </p>
-
-                        {% if property.youtube_url and property.contract != '계약완료' %}
-                        <button id="video-btn" onclick="toggleVideo()"
-                            class="h-7 flex items-center justify-center gap-2 px-2.5 py-1 rounded-sm border border-gray-200 text-gray-600 bg-white cursor-pointer text-sm font-medium">
-                            <div class="w-5 h-5 flex items-center shrink-0">
-                                <img class="w-full" src="/static/images/movie_icon.png" alt="영상 있음">
-                            </div>
-                            영상 보기
-                        </button>
-                        {% endif %}
-                    </div>
-                    <!-- ✅ 계약완료면 수정일 숨김 -->
-                    {% if property.contract != '계약완료' %}
-                    <div class="flex items-center gap-1 relative">
-                        <!-- 설명 아이콘 -->
-                        <span id="last-edit-info-icon" onclick="toggleLastEditTooltip(event)"
-                            style="cursor: pointer; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: #f0f0f0; color: #888; font-size: 10px; font-weight: bold;">?</span>
-                        <p>{{ property.last_edit }}</p>
-                        <!-- 툴팁 팝업 (말풍선 스타일) -->
-                        <div id="last-edit-tooltip"
-                            class="hidden absolute top-full right-0 mt-3 text-gray-700 p-2 rounded-lg shadow-lg border border-gray-200 z-50 text-xs leading-tight"
-                            style="width: 180px; background: #f9f9f9;">
-                            <!-- 말풍선 꼬리 (위쪽 화살표) -->
-                            <div
-                                style="position: absolute; top: -7px; right: 24px; width: 12px; height: 12px; background: #f9f9f9; border-left: 1px solid #e5e7eb; border-top: 1px solid #e5e7eb; transform: rotate(45deg);">
-                            </div>
-                            <p class="font-semibold mb-0.5">매물 최종 확인일</p>
-                            <p class="text-gray-500" style="line-height: 1.3;">*확인필요: 매물 확인한지 오래되어 재확인이 필요한 매물</p>
-                        </div>
-                    </div>
-                    {% endif %}
-                </div>
-                <!-- ✅ 계약완료면 가격 대신 "계약완료" 표시 -->
-                {% if property.contract == '계약완료' %}
-                <h2 class="text-xl font-bold text-[#e53935] mb-4 flex items-center gap-2">
-                    계약완료
-                </h2>
-                {% else %}
-                <h2 class="text-xl font-bold text-[rgb(50,50,50)] mb-4 flex items-center gap-2">
-                    {{ property.price_text }} <span class="text-sm font-normal text-[rgb(120,120,120)]">(관리비 {{
-                        property.public_money
-                        }}만원)</span>
-                </h2>
-                {% endif %}
-                <!-- 매물종류 및 층 정보 -->
-                <div class="flex items-center gap-4 mb-4 text-[15px] text-gray-700">
-                    <!-- 지역명 -->
-                    <div class="flex items-center gap-1">
-                        <img src="{{ url_for('static', filename='images/icon-area.png') }}" alt="지역" class="w-6 h-6">
-                        <span>{% if property.ri %}{{ property.dong }} {{ property.ri }}{% else %}{{ property.dong }}{%
-                            endif
-                            %}</span>
-                    </div>
-                    <!-- 매물종류 -->
-                    <div class="flex items-center gap-1">
-                        <img src="{{ url_for('static', filename='images/icon-1,2,3.png') }}" alt="매물종류" class="w-5 h-5">
-                        <span>{% if property.category == '90' %}원룸{% elif property.category == '91' %}투베이{% elif
-                            property.category == '92' %}무보증/단기{% elif property.category == '93' %}투룸{% elif
-                            property.category == '94' %}쓰리룸{% else %}{{ property.category }}{% endif %}</span>
-                    </div>
-                    <!-- ✅ 계약완료가 아닐 때만 층 정보 표시 -->
-                    {% if property.contract != '계약완료' %}
-                    <div class="flex items-center gap-1">
-                        <img src="{{ url_for('static', filename='images/icon-fllor.png') }}" alt="층정보" class="w-5 h-5">
-                        <span>총 {{ property.total_floor }}층 중 {{ property.now_floor }}층</span>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-            <!-- ✅ 계약완료가 아닐 때만 제목 표시 -->
-            {% if property.contract != '계약완료' %}
-            <h2 class="text-sm font-normal text-[rgb(100,100,100)] mb-1">{{ property.title }}</h2>
-            {% endif %}
-
-        </section>
-        <!-- 기본정보 섹션 -->
-        <section class="py-[2px] px-[15px] mt-2 bg-white">
-            <ul class="text-base font-light divide-y divide-gray-100">
-
-                <!-- 지역구분 -->
-                <li class="flex items-center py-3">
-                    <div class="w-[6em] shrink-0 font-semibold text-[14px]">지역구분</div>
-                    <div class="flex-1 text-[14px]">{{ property.si + " " + property.gu + " " + property.dong }}</div>
-                </li>
-
-                <!-- 형태 -->
-                <li class="flex items-center py-3">
-                    <div class="w-[6em] shrink-0 font-semibold text-[14px]">형태</div>
-                    <div class="flex-1 text-[14px]">
-                        {% if property.gudxo -%}방 {{ property.gudxo }}{%- endif -%}
-                        {% if property.gudxo1 -%}, 거실 {{ property.gudxo1 }}{%- endif -%}
-                        {% if property.gudxo2 -%}, 욕실 {{ property.gudxo2 }}{%- endif -%}
-                    </div>
-                </li>
-
-                <!-- ✅ 계약완료가 아닐 때만 아래 항목들 표시 -->
-                {% if property.contract != '계약완료' %}
-
-                <!-- 구조 -->
-                <li class="flex items-center py-3">
-                    <div class="w-[6em] shrink-0 font-semibold text-[14px]">구조</div>
-                    <div class="flex-1 text-[14px]">주방 : {{ property.room1 }} / 베란다 : {{ property.room2 }}</div>
-                </li>
-
-                <!-- 전용면적 + 주차 (2항목 1행 — 각 항목 내부도 동일 w-[6em] 레이블 기준) -->
-                <li class="flex items-center py-3 text-[14px]">
-                    <!-- 전용면적 -->
-                    <div class="flex flex-1 items-center min-w-0">
-                        <span class="w-[6em] shrink-0 font-semibold">전용면적</span>
-                        <div class="flex flex-1 items-center gap-1.5 min-w-0">
-                            <span id="area-display" class="whitespace-nowrap">{{ property.size | int }}m²</span>
-                            <button
-                                class="font-medium text-[10px] text-gray-500 border border-gray-300 rounded px-1 py-0.5 flex items-center gap-0.5 cursor-pointer hover:bg-gray-50 shrink-0"
-                                id="area-convert-btn">
-                                <i data-lucide="arrow-left-right" class="w-3 h-3"></i>
-                                <span>평</span>
-                            </button>
-                        </div>
-                    </div>
-                    <!-- 구분선: margin-left로 주차 영역 오른쪽 이동 -->
-                    <span class="text-gray-200 px-2 shrink-0" style="margin-left: 2em;">|</span>
-                    <!-- 주차 -->
-                    <div class="flex flex-1 items-center min-w-0">
-                        <span class="w-[3em] shrink-0 font-semibold">주차</span>
-                        <span class="flex-1 whitespace-nowrap text-gray-700">총 {{ property.parking }}대</span>
-                    </div>
-                </li>
-
-                <!-- 관리비 -->
-                <li class="flex items-start py-3">
-                    <div class="w-[6em] shrink-0 font-semibold text-[14px]">관리비</div>
-                    <div class="flex-1 text-[14px]">
-                        <div class="flex items-center gap-2">
-                            <span>{{ property.public_money }}만원</span>
-                            {% if property.public_money_detail == True %}
-                            <button
-                                class="text-xs text-gray-500 border border-gray-300 rounded px-1 py-0.5 cursor-pointer"
-                                id="public-money-btn">상세 내역</button>
-                            {% endif %}
-                        </div>
-                        <div class="text-sm text-gray-500">({{ property.public_money1 }}) ({{ property.public_money_opt
-                            }} 별도)</div>
-                    </div>
-                </li>
-
-                <!-- 관리비 상세 모달 (위치 유지) -->
-                <div id="public-money-modal"
-                    class="fixed inset-0 items-center justify-center bg-black/50 hidden z-[200]">
-                    <div class="bg-white p-5 rounded-lg shadow-lg w-72 font-light" onclick="event.stopPropagation()">
-                        <h2 class="text-base font-semibold mb-3">관리비 상세</h2>
-                        <div class="text-sm">
-                            <ul class="list-disc pl-4">
-                                <li>일반(공용)관리비 : {{ property.public_money_main }}</li>
-                                <li>
-                                    사용료
-                                    <ul class="list-disc pl-4 mt-1">
-                                        <li>전기료 : {{ property.public_money_electric }}</li>
-                                        <li>가스비 : {{ property.public_money_gas }}</li>
-                                        <li>난방비 : {{ property.public_money_heat }}</li>
-                                        <li>수도세 : {{ property.public_money_water }}</li>
-                                        <li>TV방송료 : {{ property.public_money_tv }}</li>
-                                        <li>인터넷비 : {{ property.public_money_internet }}</li>
-                                    </ul>
-                                </li>
-                                <li>기타관리비(건물 유지보수외) : {{ property.public_money_etc }}</li>
-                            </ul>
-                        </div>
-                        <button id="close-modal"
-                            class="mt-3 px-3 py-1 text-sm border-gray-300 rounded border cursor-pointer">닫기</button>
-                    </div>
-                </div>
-
-                <!-- 입주가능일 -->
-                <li class="flex items-center py-3">
-                    <div class="w-[6em] shrink-0 font-semibold text-[14px]">입주가능일</div>
-                    <div class="flex-1 text-[14px]">{{ property.movein_day }}</div>
-                </li>
-
-                <!-- 건축물종류 -->
-                <li class="flex items-center py-3">
-                    <div class="w-[6em] shrink-0 font-semibold text-[14px]">건축물종류</div>
-                    <div class="flex-1 text-[14px]">{{ property.build_use_type }}</div>
-                </li>
-
-                <!-- 사용승인일 -->
-                <li class="flex items-center py-3">
-                    <div class="w-[6em] shrink-0 font-semibold text-[14px]">사용승인일</div>
-                    <div class="flex-1 text-[14px]">{{ property.build_access_date }}</div>
-                </li>
-
-                <!-- 방향 -->
-                <li class="flex items-center py-3">
-                    <div class="w-[6em] shrink-0 font-semibold text-[14px]">방향</div>
-                    <div class="flex-1 text-[14px]">
-                        {% if property.aspect %}{{ property.aspect }} (주실/베란다 창문){% endif %}
-                    </div>
-                </li>
-
-                {% endif %}
-            </ul>
-        </section>
         <!-- ✅ 계약완료가 아닐 때만 옵션정보와 위치정보 표시 -->
         {% if property.contract != '계약완료' %}
         <!-- 옵션정보 -->

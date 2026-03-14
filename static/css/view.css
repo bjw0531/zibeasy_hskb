@@ -34,6 +34,26 @@ body {
     padding-bottom: calc(60px + env(safe-area-inset-bottom));
 }
 
+/* ── 상세 상단 비주얼 영역 ── */
+.detail-intro-shell {
+    position: relative;
+    z-index: 1;
+}
+.detail-visual-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #fff;
+}
+.detail-header {
+    position: relative;
+    z-index: 2;
+}
+.detail-photo-section {
+    background: #fff;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
 /* ── 메인 이미지 스와이퍼 ── */
 .mySwiper {
     width: 100%;
@@ -237,11 +257,12 @@ body {
     body {
         background: white;
     }
-    header {
+    .detail-header {
         max-width: 644px;
         margin: 0 auto;
     }
     body > section,
+    #view-slide-wrapper > .detail-intro-shell > section,
     #view-slide-wrapper > section {
         max-width: 644px;
         margin-left: auto;
