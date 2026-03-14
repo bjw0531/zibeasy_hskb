@@ -83,7 +83,6 @@
   var TAB_HOME_REDIRECT_PATHS = {
     '/list': true,
     '/map': true,
-    '/map-list': true,
     '/liked': true,
     '/recents': true,
     '/profile': true
@@ -156,7 +155,6 @@
         exitInvoker();
         return;
       }
-      history.back();
     } catch (e) {
       try {
         window.close();
