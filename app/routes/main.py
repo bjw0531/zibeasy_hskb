@@ -58,7 +58,36 @@ def _policy_context():
 @bp.route('/')
 def home():
     """메인 홈 화면"""
-    return render_template('home.html')
+    recent_ids = []
+
+    if 'user_idx' in session:
+        try:
+            with engine.connect() as conn:
+                recent_rows = conn.execute(
+                    text('SELECT code FROM user_recent WHERE user_idx=:uid ORDER BY viewed_at DESC LIMIT 2'),
+                    {'uid': session['user_idx']}
+                ).fetchall()
+            recent_ids = [str(r[0]) for r in recent_rows]
+        except Exception as e:
+            logging.error(f"홈 최근 본 매물 DB 조회 오류: {e}")
+    else:
+        try:
+            recent_ids = _parse_ids_cookie(request.cookies.get('recentViewed', ''))[:2]
+        except Exception:
+            recent_ids = []
+
+    recent_preview_map = _fetch_previews(recent_ids)
+    recent_home_props = []
+    for recent_id in recent_ids:
+        if recent_id not in recent_preview_map:
+            continue
+        item = recent_preview_map[recent_id]
+        price_parts = (item.get('price_text') or '').split(' ', 1)
+        item['home_price_text'] = price_parts[1] if len(price_parts) > 1 and price_parts[0] == '월세' else (item.get('price_text') or '')
+        item['home_summary_text'] = ', '.join(filter(None, [item.get('category_name'), item.get('home_price_text')]))
+        recent_home_props.append(item)
+
+    return render_template('home.html', recent_home_props=recent_home_props[:2])
 
 @bp.route('/fee-calc')
 def fee_calc_redirect():

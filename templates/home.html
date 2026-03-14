@@ -140,33 +140,30 @@
                 </a>
             </div>
 
-            <!-- 중간 이어보기 섹션 -->
-            <section class="home-continue" aria-label="이어보기">
+            <!-- 내가 봤던 매물 섹션 -->
+            <section class="home-continue" aria-label="내가 봤던 매물">
                 <div class="home-continue-head">
-                    <h2>이어보기</h2>
-                    <p>자주 보는 메뉴를 바로 이동하세요</p>
+                    <h2>내가 봤던 매물</h2>
                 </div>
 
                 <div class="home-continue-grid">
-                    <a href="/liked?tab=liked" class="home-continue-item home-continue-item-liked">
-                        <span class="continue-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
-                            </svg>
+                    {% for item in recent_home_props %}
+                    <a href="/view/{{ item.code }}" class="home-continue-item home-continue-item-property">
+                        <span class="continue-summary">{{ item.home_summary_text }}</span>
+                        <span class="continue-thumb">
+                            <img src="{{ '/images/maemul/thumb/' ~ item.picname1 if item.picname1 else '/static/images/no-image.png' }}"
+                                 alt="최근 본 매물 {{ item.code }}"
+                                 loading="lazy"
+                                 onerror="this.src='/static/images/no-image.png'">
                         </span>
-                        <span class="continue-title">관심목록</span>
-                        <span class="continue-desc">찜한 매물 빠르게 확인</span>
                     </a>
-
-                    <a href="/recents?tab=recent" class="home-continue-item home-continue-item-recent">
-                        <span class="continue-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M13 3a9 9 0 1 0 0 18A9 9 0 0 0 13 3zm0 16a7 7 0 1 1 0-14A7 7 0 0 1 13 19zm.5-11H12v6l5.25 3.15.75-1.23-4.5-2.67V8z"></path>
-                            </svg>
-                        </span>
-                        <span class="continue-title">최근 본 매물</span>
-                        <span class="continue-desc">방문했던 매물 다시 보기</span>
+                    {% endfor %}
+                    {% for _ in range(2 - (recent_home_props|length)) %}
+                    <a href="/recents?tab=recent" class="home-continue-item home-continue-item-empty">
+                        <span class="continue-summary">최근 본 매물이 없어요</span>
+                        <span class="continue-thumb continue-thumb-empty">최근 본 매물을 확인해보세요</span>
                     </a>
+                    {% endfor %}
                 </div>
             </section>
         </div>
