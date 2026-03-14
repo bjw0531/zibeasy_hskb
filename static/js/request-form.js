@@ -926,6 +926,7 @@
                     </div>
                     <div class="sf-done-title">신청이 완료되었습니다!</div>
                     <div class="sf-done-desc">접수 내용을 확인 후<br>빠른 시일 내에 연락드리겠습니다.</div>
+                    <a href="/" class="sf-done-home-btn">홈으로 이동</a>
                 </div>
             `;
         } catch (err) {

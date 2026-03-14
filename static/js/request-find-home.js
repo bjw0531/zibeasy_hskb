@@ -804,6 +804,7 @@
                     </div>
                     <div class="fh-done-title">신청이 완료되었습니다!</div>
                     <div class="fh-done-desc">조건에 맞는 매물을 확인해<br>빠르게 연락드리겠습니다.</div>
+                    <a href="/" class="fh-done-home-btn">홈으로 이동</a>
                 </div>
             `;
         } catch (err) {
