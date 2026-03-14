@@ -75,46 +75,46 @@
     <!-- 슬라이드 애니메이션 래퍼 — 이 div만 transform -->
 
     <div id="view-slide-wrapper">
+        <!-- 헤더 -->
+        <header class="detail-header flex items-center justify-between px-4 py-3 bg-white shadow-sm">
+            <div class="flex items-center gap-1">
+                <button data-detail-close="1" class="text-gray-600 text-xl py-1 px-2 cursor-pointer"
+                    onclick="history.back()">←</button>
+                <h1 class="text-lg font-semibold">매물번호 {{ property.code }}</h1>
+            </div>
+            <div id="button-div" class="absolute right-4 flex justify-end gap-1">
+                <!-- 좋아요 -->
+                <button onclick="toggleLike('{{ property.code or property.idx }}')" class="flex items-center justify-between px-1.5 py-1 rounded-lg border transition-all duration-200 ease-in-out cursor-pointer
+                       text-gray-600 bg-white border-gray-200">
+                    <svg class="w-6 h-6 heart-unliked" data-like-btn="{{ property.code or property.idx }}"
+                        xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" stroke="black" stroke-width="0"
+                        fill="currentColor">
+                        <path
+                            d="M223,57a58.07,58.07,0,0,0-81.92-.1L128,69.05 114.91,56.86A58,58,0,0,0,33,139l89.35,90.66a8,8,0,0,0,11.4,0L223,139a58,58,0,0,0,0-82Z">
+                        </path>
+                    </svg>
+                </button>
+                <!-- 공유 -->
+                <button id="share-btn" onclick="openShareModal()"
+                    class="flex items-center justify-center gap-2 px-2.5 py-1 rounded-lg border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 transition-all cursor-pointer">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                        <polyline points="16 6 12 2 8 6" />
+                        <line x1="12" y1="2" x2="12" y2="15" />
+                    </svg>
+                </button>
+                <!-- 닫기 -->
+                <button data-detail-close="1" onclick="history.back()"
+                    class="flex items-center justify-center px-2.5 py-1 ml-2 text-gray-600 cursor-pointer"
+                    aria-label="닫기">✕</button>
+            </div>
+        </header>
+
         <div class="detail-intro-shell">
-            <div class="detail-visual-sticky">
-                <!-- 헤더 -->
-                <header class="detail-header flex items-center justify-between px-4 py-3 bg-white shadow-sm">
-                    <div class="flex items-center gap-1">
-                        <button data-detail-close="1" class="text-gray-600 text-xl py-1 px-2 cursor-pointer"
-                            onclick="history.back()">←</button>
-                        <h1 class="text-lg font-semibold">매물번호 {{ property.code }}</h1>
-                    </div>
-                    <div id="button-div" class="absolute right-4 flex justify-end gap-1">
-                        <!-- 좋아요 -->
-                        <button onclick="toggleLike('{{ property.code or property.idx }}')" class="flex items-center justify-between px-1.5 py-1 rounded-lg border transition-all duration-200 ease-in-out cursor-pointer
-                               text-gray-600 bg-white border-gray-200">
-                            <svg class="w-6 h-6 heart-unliked" data-like-btn="{{ property.code or property.idx }}"
-                                xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" stroke="black" stroke-width="0"
-                                fill="currentColor">
-                                <path
-                                    d="M223,57a58.07,58.07,0,0,0-81.92-.1L128,69.05 114.91,56.86A58,58,0,0,0,33,139l89.35,90.66a8,8,0,0,0,11.4,0L223,139a58,58,0,0,0,0-82Z">
-                                </path>
-                            </svg>
-                        </button>
-                        <!-- 공유 -->
-                        <button id="share-btn" onclick="openShareModal()"
-                            class="flex items-center justify-center gap-2 px-2.5 py-1 rounded-lg border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 transition-all cursor-pointer">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-                                stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                                <polyline points="16 6 12 2 8 6" />
-                                <line x1="12" y1="2" x2="12" y2="15" />
-                            </svg>
-                        </button>
-                        <!-- 닫기 -->
-                        <button data-detail-close="1" onclick="history.back()"
-                            class="flex items-center justify-center px-2.5 py-1 ml-2 text-gray-600 cursor-pointer"
-                            aria-label="닫기">✕</button>
-                    </div>
-                </header>
-                <!-- {{ property }} -->
-                <!-- 이미지 섹션 -->
-                <section class="detail-photo-section relative w-full overflow-hidden">
+            <!-- {{ property }} -->
+            <!-- 이미지 섹션 -->
+            <section class="detail-photo-section relative w-full overflow-hidden">
             <!-- ✅ 계약완료 오버레이 -->
             {% if property.contract == '계약완료' %}
             <div class="absolute inset-0 z-[50] pointer-events-none">
@@ -186,8 +186,7 @@
                     {% endfor %}
                 </div>
             </div>
-                </section>
-            </div>
+            </section>
 
             <!-- 제목 섹션 -->
             <section class="py-3 px-4 bg-white">
