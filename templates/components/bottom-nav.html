@@ -79,15 +79,32 @@
 {# 찜 뱃지 카운트 업데이트 + 아이콘 폰트 동기화 스크립트 #}
 <script>
 (function() {
+  var HOME_PATH = '/';
+  var TAB_HOME_REDIRECT_PATHS = {
+    '/list': true,
+    '/map': true,
+    '/map-list': true,
+    '/liked': true,
+    '/recents': true,
+    '/profile': true
+  };
   var TAB_ROOT_BASE_KEY = '__tabRootBase';
   var TAB_ROOT_GUARD_KEY = '__tabRootGuard';
   var TAB_ROOT_PATH_KEY = '__tabRootPath';
   var TAB_ROOT_EXIT_TOAST_MS = 2200;
-  var tabRootGuardEnabled = true;
   var tabRootExitToastEl = null;
   var tabRootExitToastTimer = null;
   var tabRootExitArmedUntil = 0;
   var tabRootExitInProgress = false;
+
+  function getTabRootBehavior() {
+    if (location.pathname === HOME_PATH) return 'exit';
+    if (TAB_HOME_REDIRECT_PATHS[location.pathname]) return 'home';
+    return 'none';
+  }
+
+  var tabRootBehavior = getTabRootBehavior();
+  var tabRootGuardEnabled = tabRootBehavior !== 'none';
 
   function getExitInvoker() {
     if (window.appManager && typeof window.appManager.handleAppExit === 'function') {
@@ -151,10 +168,24 @@
         try {
           window.close();
         } catch (e) {}
+        if (!document.hidden) {
+          try {
+            location.replace('about:blank');
+            return;
+          } catch (err) {}
+        }
         tabRootExitInProgress = false;
         initTabRootGuard();
       }
     }, 180);
+  }
+
+  function moveTabRootToHome() {
+    hideExitToast();
+    try {
+      sessionStorage.setItem('navDirection', 'slide-down');
+    } catch (e) {}
+    location.replace(HOME_PATH);
   }
 
   function rearmTabRootGuard() {
@@ -214,7 +245,7 @@
       +     '<path d="M4 8.2l2.3 2.3L12 4.8" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>'
       +   '</svg>'
       + '</span>'
-      + '<span style="font-size:14px;font-weight:700;line-height:1.2;letter-spacing:-0.02em;white-space:nowrap;">한 번 더 뒤로가면 종료됩니다.</span>';
+      + '<span style="font-size:14px;font-weight:700;line-height:1.2;letter-spacing:-0.02em;white-space:nowrap;">한번 더 뒤로가기 누르면 종료됩니다.</span>';
 
     document.body.appendChild(toast);
     tabRootExitToastEl = toast;
@@ -273,12 +304,19 @@
   window.addEventListener('storage', updateLikedBadge);
   window.addEventListener('likedUpdated', updateLikedBadge);
 
-  /* ── 2. 탭 루트 페이지 뒤로가기 = 종료 처리 ── */
+  /* ── 2. 탭 루트 페이지 뒤로가기 ──
+     홈(/): 안내 문구 후 한 번 더 누르면 종료
+     비홈 탭 루트: 뒤로가기 시 홈으로 이동 */
   initTabRootGuard();
   window.addEventListener('popstate', function(event) {
     if (!tabRootGuardEnabled || tabRootExitInProgress) return;
     var state = event.state || {};
     if (!state[TAB_ROOT_BASE_KEY] || state[TAB_ROOT_PATH_KEY] !== location.pathname) return;
+
+    if (tabRootBehavior === 'home') {
+      moveTabRootToHome();
+      return;
+    }
 
     if (Date.now() < tabRootExitArmedUntil) {
       closeTabRootPage();
@@ -297,6 +335,7 @@
       /* 이미 활성 탭이면 무시 */
       if (item.classList.contains('active')) { e.preventDefault(); return; }
       e.preventDefault();
+      hideExitToast();
       location.replace(href);
     });
   });
