@@ -149,13 +149,14 @@
                 <div class="home-continue-grid">
                     {% for item in recent_home_props %}
                     <a href="/view/{{ item.code }}" class="home-continue-item home-continue-item-property">
-                        <span class="continue-summary">{{ item.home_summary_text }}</span>
+                        <span class="continue-summary">{{ item.category_name }}</span>
                         <span class="continue-thumb">
                             <img src="{{ '/images/maemul/thumb/' ~ item.picname1 if item.picname1 else '/static/images/no-image.png' }}"
                                  alt="최근 본 매물 {{ item.code }}"
                                  loading="lazy"
                                  onerror="this.src='/static/images/no-image.png'">
                         </span>
+                        <span class="continue-price">{{ item.home_price_text }}</span>
                     </a>
                     {% endfor %}
                     {% for _ in range(2 - (recent_home_props|length)) %}
