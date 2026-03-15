@@ -122,19 +122,42 @@
                 <a href="/map" class="home-btn-big btn-primary" id="btnMapView">
                     <span class="btn-text">지도에서<br>매물 찾기</span>
                     <span class="btn-icon">
-                        <svg width="40" height="40" viewBox="0 -960 960 960" fill="#ff5055">
-                            <path
-                                d="M480-80q-106 0-173-33.5T240-200q0-35 29-61t80-41l23 76q-17 5-31 12.5T322-200q13 16 60 28t98 12q51 0 98.5-12t60.5-28q-5-6-19-13.5T589-226l23-76q51 15 79.5 41t28.5 61q0 53-67 86.5T480-80Zm0-120q-11 0-20-6.5T447-224q-23-71-58-119t-68-92q-32-44-55.5-91T242-642q0-100 69-169t169-69q100 0 169 69t69 169q0 69-23 116t-56 91q-32 44-67.5 92T513-224q-4 11-13 17.5t-20 6.5Zm0-357q35 0 60-25t25-60q0-35-25-60t-60-25q-35 0-60 25t-25 60q0 35 25 60t60 25Z" />
+                        <!-- 하단탭바 지도 아이콘과 동일한 path (물방울+원 stroke 스타일) -->
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ff5055" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 21.5s-6.9-5.4-6.9-10.4a6.9 6.9 0 1 1 13.8 0c0 5-6.9 10.4-6.9 10.4z"/>
+                            <circle cx="12" cy="11.1" r="2.6"/>
                         </svg>
                     </span>
                 </a>
 
-                <a href="/request" class="home-btn-big home-btn-request" id="btnFindHome">
-                    <span class="btn-text">집 구하기<br>/ 내놓기</span>
+                <a href="/request" class="home-btn-half" id="btnFindHome">
+                    <span class="btn-text">집 구하기</span>
                     <span class="btn-icon">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ff5055" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M4.8 11.3l5.9-5.3a1.9 1.9 0 0 1 2.6 0l5.9 5.3a2.1 2.1 0 0 1 .7 1.6v5.4a2.4 2.4 0 0 1-2.4 2.4h-11a2.4 2.4 0 0 1-2.4-2.4v-5.4a2.1 2.1 0 0 1 .7-1.6z"/>
-                            <path d="M9.2 20.2v-2.7a2.8 2.8 0 0 1 5.6 0v2.7"/>
+                        <!-- 집 모양: 하단탭바 홈 아이콘과 동일한 path (85% 축소) + 검색 표시 -->
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <g transform="translate(12,13) scale(0.85) translate(-12,-13)">
+                                <path d="M4.8 11.3l5.9-5.3a1.9 1.9 0 0 1 2.6 0l5.9 5.3a2.1 2.1 0 0 1 .7 1.6v5.4a2.4 2.4 0 0 1-2.4 2.4h-11a2.4 2.4 0 0 1-2.4-2.4v-5.4a2.1 2.1 0 0 1 .7-1.6z"/>
+                                <path d="M9.2 20.2v-2.7a2.8 2.8 0 0 1 5.6 0v2.7"/>
+                            </g>
+                            <!-- 돋보기 (검색 표시) -->
+                            <circle cx="19.5" cy="19.5" r="2.4" stroke-width="1.8"/>
+                            <line x1="21.2" y1="21.2" x2="23" y2="23" stroke-width="1.8"/>
+                        </svg>
+                    </span>
+                </a>
+
+                <a href="/request?type=put" class="home-btn-half" id="btnPutHome">
+                    <span class="btn-text">집 내놓기</span>
+                    <span class="btn-icon">
+                        <!-- 집 모양: 하단탭바 홈 아이콘과 동일한 path (85% 축소) + 플러스 표시 -->
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <g transform="translate(12,13) scale(0.85) translate(-12,-13)">
+                                <path d="M4.8 11.3l5.9-5.3a1.9 1.9 0 0 1 2.6 0l5.9 5.3a2.1 2.1 0 0 1 .7 1.6v5.4a2.4 2.4 0 0 1-2.4 2.4h-11a2.4 2.4 0 0 1-2.4-2.4v-5.4a2.1 2.1 0 0 1 .7-1.6z"/>
+                                <path d="M9.2 20.2v-2.7a2.8 2.8 0 0 1 5.6 0v2.7"/>
+                            </g>
+                            <!-- 플러스 (내놓기 표시) -->
+                            <line x1="17" y1="20" x2="23" y2="20" stroke-width="1.8"/>
+                            <line x1="20" y1="17" x2="20" y2="23" stroke-width="1.8"/>
                         </svg>
                     </span>
                 </a>
@@ -179,7 +202,7 @@
                     <polyline points="7 10 12 15 17 10"/>
                     <line x1="12" y1="15" x2="12" y2="3"/>
                 </svg>
-                <span class="menu-text">앱<br>다운로드</span>
+                <span class="menu-text">앱 다운로드</span>
             </a>
 
             <!-- 중개보수 계산기 — 라인 아이콘 -->
@@ -194,7 +217,7 @@
                     <line x1="8" y1="18" x2="10" y2="18"/>
                     <line x1="14" y1="18" x2="16" y2="18"/>
                 </svg>
-                <span class="menu-text">중개보수<br>계산기</span>
+                <span class="menu-text">중개보수 계산기</span>
             </a>
 
             <!-- 나침반 — 라인 아이콘 -->
@@ -382,7 +405,7 @@
             var totalItems = 3;
             var currentIndex = 0;
             var itemHeight = 24;
-            var interval = 3000;
+            var interval = 5000;
             var isTransitioning = false;
 
             setInterval(function () {
